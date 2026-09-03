@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+generated/
+.env
+*.local
+*.tsbuildinfo
+
+# AI coding agent tooling (not part of the project)
+.agents/
+.claude/
+.cursor/
+.devin/
