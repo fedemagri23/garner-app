@@ -6,3 +6,43 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+/// Account identity. Owned by the users domain; auth reads it through the
+/// users domain's repository port, never by touching this table itself.
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  role         UserRole @default(USER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+/// One row per issued refresh token. Tokens are stored hashed, and rotation
+/// marks the previous row revoked so a replayed token can be detected.
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime  @db.Timestamptz(3)
+  revokedAt DateTime? @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}

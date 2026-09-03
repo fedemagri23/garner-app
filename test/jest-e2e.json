@@ -1,9 +1,13 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "..",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "extensionsToTreatAsEsm": [".ts"],
+  "globalSetup": "<rootDir>/test/global-setup.js",
+  "setupFilesAfterEnv": ["<rootDir>/test/jest-esm-globals.ts"],
+  "testTimeout": 30000,
+  "maxWorkers": 1,
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", { "useESM": true }]
   },

@@ -15,6 +15,7 @@ const config: Config = {
   rootDir: '.',
   testRegex: '.*\\.spec\\.ts$',
   extensionsToTreatAsEsm: ['.ts'],
+  setupFilesAfterEnv: ['<rootDir>/test/jest-esm-globals.ts'],
   transform: {
     '^.+\\.(t|j)s$': ['ts-jest', { useESM: true }],
   },

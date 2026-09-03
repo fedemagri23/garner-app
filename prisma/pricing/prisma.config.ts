@@ -1,4 +1,5 @@
-import { defineConfig, env } from 'prisma/config';
+import 'dotenv/config';
+import { defineConfig } from 'prisma/config';
 
 export default defineConfig({
   schema: './schema.prisma',
@@ -6,6 +7,7 @@ export default defineConfig({
     path: './migrations',
   },
   datasource: {
-    url: env('PRICING_DB_URL'),
+    // See prisma/core/prisma.config.ts for why this reads process.env directly.
+    url: process.env.PRICING_DB_URL,
   },
 });
