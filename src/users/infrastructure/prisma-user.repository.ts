@@ -5,6 +5,7 @@ import type { UserRole } from '../../security/domain/user-role.js';
 import {
   normalizeEmail,
   type CreateUserInput,
+  type UpdateUserProfileInput,
   type User,
   type UserWithCredentials,
 } from '../domain/user.entity.js';
@@ -33,6 +34,18 @@ export class PrismaUserRepository implements UserRepository {
     return row
       ? { ...this.toDomain(row), passwordHash: row.passwordHash }
       : null;
+  }
+
+  async updateProfile(
+    id: string,
+    input: UpdateUserProfileInput,
+  ): Promise<User> {
+    const row = await this.prisma.user.update({
+      where: { id },
+      data: { displayName: input.displayName },
+    });
+
+    return this.toDomain(row);
   }
 
   async create(input: CreateUserInput): Promise<User> {

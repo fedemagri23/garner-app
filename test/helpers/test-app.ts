@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import request from 'supertest';
 import { AppModule } from '../../src/app.module.js';
 import { configureApp } from '../../src/app-setup.js';
 import { CorePrismaService } from '../../src/common/database/core-prisma.service.js';
@@ -22,13 +23,61 @@ export async function createTestApp(): Promise<INestApplication> {
 }
 
 /**
- * Integration tests own their data. Deleting users cascades to their refresh
- * tokens, so this is enough to leave the database as it was found.
+ * Integration tests own their data. Deleted in dependency order: barcodes and
+ * opening hours cascade from their parents, but categories are referenced by
+ * products and must outlive them.
  */
 export async function resetDatabase(app: INestApplication): Promise<void> {
   const prisma = app.get(CorePrismaService);
+
+  await prisma.userPreferences.deleteMany();
   await prisma.refreshToken.deleteMany();
   await prisma.user.deleteMany();
+
+  await prisma.productBarcode.deleteMany();
+  await prisma.product.deleteMany();
+  await prisma.brand.deleteMany();
+  // Children before parents: the self-relation is `onDelete: Restrict`.
+  await prisma.category.deleteMany({ where: { parentId: { not: null } } });
+  await prisma.category.deleteMany();
+
+  await prisma.storeOpeningHours.deleteMany();
+  await prisma.storeLocation.deleteMany();
+  await prisma.supermarket.deleteMany();
+}
+
+/**
+ * Registers an account and promotes it, for the catalog routes that only
+ * moderators and administrators may call. The role is set straight in the
+ * database on purpose — there is no API for granting a role, and there should
+ * not be one.
+ */
+export async function registerWithRole(
+  app: INestApplication,
+  role: 'USER' | 'MODERATOR' | 'ADMIN',
+  email = uniqueEmail(role.toLowerCase()),
+): Promise<{ accessToken: string; email: string; id: string }> {
+  const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+  await request(server)
+    .post('/v1/auth/register')
+    .send({ email, password: 'correct-horse-battery', displayName: 'Curator' })
+    .expect(201);
+
+  const prisma = app.get(CorePrismaService);
+  const user = await prisma.user.update({ where: { email }, data: { role } });
+
+  // Log in again so the access token carries the new role.
+  const login = await request(server)
+    .post('/v1/auth/login')
+    .send({ email, password: 'correct-horse-battery' })
+    .expect(200);
+
+  return {
+    accessToken: (login.body as { accessToken: string }).accessToken,
+    email,
+    id: user.id,
+  };
 }
 
 let sequence = 0;

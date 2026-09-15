@@ -46,6 +46,7 @@ describe('RefreshTokensUseCase', () => {
     };
     users = {
       findById: jest.fn().mockResolvedValue(activeUser),
+      updateProfile: jest.fn(),
       findByEmailWithCredentials: jest.fn(),
       create: jest.fn(),
     };

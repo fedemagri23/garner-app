@@ -25,6 +25,15 @@ export interface CreateUserInput {
   displayName: string;
 }
 
+/**
+ * What an account holder may change about themselves. The email is absent on
+ * purpose: it identifies the account and doubles as the login, so changing it
+ * is a verification flow rather than a profile edit.
+ */
+export interface UpdateUserProfileInput {
+  displayName?: string;
+}
+
 /** Emails are matched case-insensitively; storing them normalized keeps the unique index honest. */
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();

@@ -26,6 +26,7 @@ model User {
   updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 
   refreshTokens RefreshToken[]
+  preferences   UserPreferences?
 
   @@map("users")
 }
@@ -45,4 +46,196 @@ model RefreshToken {
   @@index([userId])
   @@index([expiresAt])
   @@map("refresh_tokens")
+}
+
+/// Optional onboarding and personalization settings, one row per account.
+/// Created lazily: an account without a row reads as the documented defaults,
+/// so registration does not have to know this table exists.
+model UserPreferences {
+  userId         String   @id @db.Uuid
+  latitude       Float?
+  longitude      Float?
+  locationLabel  String?
+  searchRadiusKm Float    @default(5)
+  /// Category slugs the user is interested in. Deliberately not a foreign key
+  /// to `categories`: preferences belong to the users domain and categories to
+  /// products, so the link is validated through the products module's port
+  /// rather than welded together in the schema.
+  interests      String[] @default([])
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+/// The unit a package is measured in. Mass and volume units are stored as
+/// given and normalized to grams/millilitres by the domain, so price-per-unit
+/// comparisons in later phases compare like with like.
+enum UnitOfMeasure {
+  GRAM
+  KILOGRAM
+  MILLILITER
+  LITER
+  UNIT
+}
+
+/// A browsable catalog category, optionally nested one or more levels deep
+/// ("Dairy" → "Milk").
+model Category {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String   @unique
+  parentId  String?  @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children Category[] @relation("CategoryTree")
+  products Product[]
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+/// A manufacturer or house brand. Separate from the product so "La Serenísima"
+/// is one identity across every product it makes.
+model Brand {
+  id             String   @id @default(uuid()) @db.Uuid
+  name           String
+  /// Accent-stripped, lower-cased `name`. Product search matches against this
+  /// rather than the display name, so a shopper typing "serenisima" finds
+  /// "La Serenísima" — an ILIKE on the raw name would not.
+  normalizedName String
+  slug           String   @unique
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(3)
+
+  products Product[]
+
+  @@index([normalizedName])
+  @@map("products_brands")
+}
+
+/// A canonical purchasable item — the identity every price in `pricing_db` and
+/// `intelligence_db` points at.
+///
+/// Two rules shape this table:
+///
+/// 1. **Identity is stable.** A product carries no price and no store. Its id
+///    survives renames, re-categorization and brand corrections, so price
+///    history stays attached to the same thing it was recorded for. Products
+///    are deactivated, never deleted, for the same reason.
+/// 2. **A size is a product.** "Milk 1L" and "Milk 2L" are separate rows with
+///    their own barcodes rather than variants of one product, because they are
+///    separately purchasable and separately priced. That keeps every price
+///    observation a plain reference to a product id.
+model Product {
+  id             String        @id @default(uuid()) @db.Uuid
+  name           String
+  /// Lower-cased, accent-stripped, space-collapsed `name`. Written by the
+  /// domain, matched against by search, and the key product matching will use
+  /// when external sources are imported in phase 6.
+  normalizedName String
+  description    String?
+  brandId        String?       @db.Uuid
+  categoryId     String        @db.Uuid
+  /// Package size in `unit`, e.g. 1 with LITER, or 500 with GRAM.
+  packageSize    Decimal?      @db.Decimal(12, 3)
+  unit           UnitOfMeasure @default(UNIT)
+  imageUrl       String?
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+
+  brand    Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  category Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  barcodes ProductBarcode[]
+
+  @@index([normalizedName])
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([isActive])
+  @@map("products")
+}
+
+/// A scanned code pointing at a product. A product may carry several (an EAN-13
+/// plus a regional UPC-A); a code identifies exactly one product.
+model ProductBarcode {
+  id        String   @id @default(uuid()) @db.Uuid
+  /// Digits only — separators are stripped and the checksum validated by the
+  /// domain before a code reaches this table.
+  code      String   @unique
+  productId String   @db.Uuid
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_barcodes")
+}
+
+/// A chain or merchant — "Carrefour", not a particular branch of it.
+model Supermarket {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  slug       String   @unique
+  logoUrl    String?
+  websiteUrl String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(3)
+
+  stores StoreLocation[]
+
+  @@map("supermarkets")
+}
+
+/// A physical branch of a supermarket: where a price is actually paid, and the
+/// unit optimization routes a shopper between.
+model StoreLocation {
+  id            String   @id @default(uuid()) @db.Uuid
+  supermarketId String   @db.Uuid
+  name          String
+  addressLine   String
+  city          String
+  province      String?
+  postalCode    String?
+  country       String
+  latitude      Float
+  longitude     Float
+  phone         String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(3)
+
+  supermarket  Supermarket         @relation(fields: [supermarketId], references: [id], onDelete: Cascade)
+  openingHours StoreOpeningHours[]
+
+  @@index([supermarketId])
+  /// Proximity search filters on a latitude/longitude bounding box before
+  /// computing exact distances, so the composite index is the one that matters.
+  @@index([latitude, longitude])
+  @@index([city])
+  @@map("store_locations")
+}
+
+/// One opening interval on one weekday. A store closed for lunch has two rows
+/// for that day; a store closed all day has none.
+model StoreOpeningHours {
+  id              String @id @default(uuid()) @db.Uuid
+  storeLocationId String @db.Uuid
+  /// 0 = Sunday … 6 = Saturday, matching `Date#getDay`.
+  dayOfWeek       Int
+  /// Local wall-clock time as `HH:MM`.
+  opensAt         String
+  closesAt        String
+
+  storeLocation StoreLocation @relation(fields: [storeLocationId], references: [id], onDelete: Cascade)
+
+  @@unique([storeLocationId, dayOfWeek, opensAt])
+  @@index([storeLocationId])
+  @@map("store_opening_hours")
 }

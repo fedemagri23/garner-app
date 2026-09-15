@@ -1,5 +1,6 @@
 import type {
   CreateUserInput,
+  UpdateUserProfileInput,
   User,
   UserWithCredentials,
 } from './user.entity.js';
@@ -11,8 +12,11 @@ import type {
  */
 export interface UserRepository {
   findById(id: string): Promise<User | null>;
+  updateProfile(id: string, input: UpdateUserProfileInput): Promise<User>;
   /** The one place credentials leave the module, for the login path only. */
-  findByEmailWithCredentials(email: string): Promise<UserWithCredentials | null>;
+  findByEmailWithCredentials(
+    email: string,
+  ): Promise<UserWithCredentials | null>;
   create(input: CreateUserInput): Promise<User>;
 }
 

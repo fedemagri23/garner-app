@@ -29,6 +29,7 @@ describe('LoginUseCase', () => {
   beforeEach(() => {
     users = {
       findById: jest.fn(),
+      updateProfile: jest.fn(),
       findByEmailWithCredentials: jest.fn(),
       create: jest.fn(),
     };
