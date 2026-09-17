@@ -6,3 +6,82 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+/// Where a price came from. Source affects how much a price is trusted, never
+/// whether it enters the pipeline: every source goes through the same checks.
+enum PriceSourceType {
+  /// Typed in by a user who saw it on a shelf.
+  USER_REPORTED
+  /// Typed in with a photo the evidence store confirmed exists.
+  USER_WITH_EVIDENCE
+  /// Recorded as the actual price of a purchase in a completed shopping trip.
+  PURCHASE_CONFIRMED
+  /// Imported from a supermarket feed (phase 6).
+  EXTERNAL_API
+}
+
+/// The outcome of trust evaluation.
+enum PriceObservationStatus {
+  /// Eligible to shape derived prices.
+  ACCEPTED
+  /// Kept, but held out of derived prices until independently confirmed.
+  FLAGGED
+  /// Kept for abuse detection only; never used as a price.
+  REJECTED
+}
+
+/// A raw price seen at one store at one moment.
+///
+/// Operational data, not history: rows are pruned after the retention window.
+/// The long-lived record is the daily aggregate phase 5 derives from these.
+/// Product, store, user and session ids point into core_db and are plain
+/// uuids — there are no foreign keys across databases.
+model PriceObservation {
+  id                String                 @id @default(uuid()) @db.Uuid
+  productId         String                 @db.Uuid
+  storeId           String                 @db.Uuid
+  /// Price of one unit of the product as catalogued, in minor units.
+  priceCents        Int
+  currency          String                 @db.Char(3)
+  /// When the price was seen, which for an offline client may be well before
+  /// it was received.
+  observedAt        DateTime               @db.Timestamptz(3)
+  receivedAt        DateTime               @default(now()) @db.Timestamptz(3)
+  sourceType        PriceSourceType
+  status            PriceObservationStatus
+  /// Internal review reason codes. Never returned to the contributor: telling
+  /// an abuser which heuristic fired tells them how to avoid it.
+  reviewReasons     String[]               @default([])
+  userId            String?                @db.Uuid
+  shoppingSessionId String?                @db.Uuid
+  /// Unique per logical observation where the source has a natural identity,
+  /// e.g. one purchased line of a trip. A retried ingestion hits this key and
+  /// returns the existing row instead of inserting a second.
+  dedupeKey         String?                @unique
+  evidencePhotoKey  String?
+  evidenceNote      String?
+
+  /// Recent prices for a product at a store: the reference for deviation checks.
+  @@index([productId, storeId, status, observedAt])
+  @@index([productId, status, observedAt])
+  /// A contributor's own history and their recent volume.
+  @@index([userId, receivedAt])
+  /// Retention pruning walks this.
+  @@index([receivedAt])
+  @@map("price_observations")
+}
+
+/// Ledger of shopping trips whose purchases have been turned into observations.
+/// Lets the reconciliation sweep find completed trips that were missed without
+/// re-processing every trip it has already handled.
+model SessionContribution {
+  sessionId        String   @id @db.Uuid
+  userId           String   @db.Uuid
+  observationCount Int
+  /// Purchased lines with no actual price or no store, which cannot be observations.
+  skippedCount     Int
+  processedAt      DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([processedAt])
+  @@map("session_contributions")
+}

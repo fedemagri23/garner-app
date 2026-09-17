@@ -14,6 +14,8 @@ import type { DomainEvent } from './domain-event.js';
  * | ShoppingSessionStarted   | shopping-sessions (3) | —                 |
  * | ShoppingSessionCompleted | shopping-sessions (3) | pricing (4), analytics |
  * | PriceObservationCreated  | pricing (4)        | price-intelligence(5)|
+ * | PriceObservationAccepted | pricing (4)        | price-intelligence(5)|
+ * | PriceObservationRejected | pricing (4)        | abuse review         |
  * | OptimizationRequested    | optimization (7)   | optimization worker  |
  */
 export const DomainEventName = {
@@ -23,6 +25,8 @@ export const DomainEventName = {
   ShoppingSessionStarted: 'ShoppingSessionStarted',
   ShoppingSessionCompleted: 'ShoppingSessionCompleted',
   PriceObservationCreated: 'PriceObservationCreated',
+  PriceObservationAccepted: 'PriceObservationAccepted',
+  PriceObservationRejected: 'PriceObservationRejected',
   OptimizationRequested: 'OptimizationRequested',
 } as const;
 
@@ -90,7 +94,8 @@ export interface CompletedPurchase {
  *
  * Published once per trip: a retried completion is a replay and publishes
  * nothing. The bus is in-process, so a crash between commit and publish loses
- * the event; phase 4 must decide whether that warrants an outbox.
+ * the event. Contributions does not rely on it alone: a reconciliation sweep
+ * finds completed trips with no contribution recorded and processes them.
  */
 export interface ShoppingSessionCompletedPayload {
   sessionId: string;
@@ -104,4 +109,35 @@ export interface ShoppingSessionCompletedPayload {
 export type ShoppingSessionCompletedEvent = DomainEvent<
   'ShoppingSessionCompleted',
   ShoppingSessionCompletedPayload
+>;
+
+/** What every observation event carries. Review reasons stay internal to pricing. */
+export interface PriceObservationPayload {
+  observationId: string;
+  productId: string;
+  storeId: string;
+  priceCents: number;
+  currency: string;
+  observedAt: string;
+  sourceType: 'USER_REPORTED' | 'USER_WITH_EVIDENCE' | 'PURCHASE_CONFIRMED' | 'EXTERNAL_API';
+  status: 'ACCEPTED' | 'FLAGGED' | 'REJECTED';
+  userId: string | null;
+}
+
+/** An observation was stored, whatever trust evaluation decided about it. */
+export type PriceObservationCreatedEvent = DomainEvent<
+  'PriceObservationCreated',
+  PriceObservationPayload
+>;
+
+/** An observation may now shape derived prices. */
+export type PriceObservationAcceptedEvent = DomainEvent<
+  'PriceObservationAccepted',
+  PriceObservationPayload
+>;
+
+/** An observation was kept for abuse analysis but will never be used as a price. */
+export type PriceObservationRejectedEvent = DomainEvent<
+  'PriceObservationRejected',
+  PriceObservationPayload
 >;

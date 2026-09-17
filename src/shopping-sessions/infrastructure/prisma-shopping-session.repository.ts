@@ -38,6 +38,21 @@ export class PrismaShoppingSessionRepository implements ShoppingSessionRepositor
     return row ? this.toDomain(row) : null;
   }
 
+  async findCompletedIdsBetween(
+    from: Date,
+    to: Date,
+    limit: number,
+  ): Promise<string[]> {
+    const rows = await this.prisma.shoppingSession.findMany({
+      where: { status: 'COMPLETED', completedAt: { gte: from, lt: to } },
+      select: { id: true },
+      orderBy: { completedAt: 'asc' },
+      take: limit,
+    });
+
+    return rows.map((row) => row.id);
+  }
+
   async findByOwner(
     ownerId: string,
     filter: { status?: ShoppingSessionStatus; skip: number; take: number },

@@ -11,3 +11,6 @@ generated/
 .claude/
 .cursor/
 .devin/
+
+# Local runtime data (evidence uploads)
+var/

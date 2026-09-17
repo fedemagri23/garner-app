@@ -4,6 +4,8 @@ import request from 'supertest';
 import { AppModule } from '../../src/app.module.js';
 import { configureApp } from '../../src/app-setup.js';
 import { CorePrismaService } from '../../src/common/database/core-prisma.service.js';
+import { PricingPrismaService } from '../../src/common/database/pricing-prisma.service.js';
+import { RedisService } from '../../src/common/redis/redis.service.js';
 
 /**
  * Boots the real application graph against the test databases, through the
@@ -50,6 +52,32 @@ export async function resetDatabase(app: INestApplication): Promise<void> {
   await prisma.storeOpeningHours.deleteMany();
   await prisma.storeLocation.deleteMany();
   await prisma.supermarket.deleteMany();
+
+  const pricing = app.get(PricingPrismaService);
+  await pricing.priceObservation.deleteMany();
+  await pricing.sessionContribution.deleteMany();
+
+  // Submission windows last up to a day. Every test run reports from the same
+  // loopback address, so without this the per-IP limit would carry over and
+  // throttle the next run.
+  await deleteRedisKeys(app, 'price-submissions:*');
+  await deleteRedisKeys(app, 'evidence-uploads:*');
+}
+
+async function deleteRedisKeys(
+  app: INestApplication,
+  pattern: string,
+): Promise<void> {
+  const redis = app.get(RedisService).client;
+  let cursor = '0';
+
+  do {
+    const [next, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 500);
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+    cursor = next;
+  } while (cursor !== '0');
 }
 
 /**

@@ -42,6 +42,8 @@ raw spec at `/docs/openapi.json`.
 | `pnpm run test:e2e` | Integration tests (needs Docker services up) |
 | `pnpm run prisma:generate` | Regenerate all three Prisma clients |
 | `pnpm run prisma:migrate` | Create + apply a core_db migration |
+| `pnpm run prisma:migrate:pricing` | Create + apply a pricing_db migration |
+| `pnpm run prisma:migrate:deploy` | Apply committed migrations to core_db and pricing_db |
 
 ## Architecture
 
@@ -61,8 +63,8 @@ src/
 ├── supermarkets/            chains, store locations, opening hours, proximity search
 ├── shopping-lists/          lists, items, quantities, expected prices, sorting
 ├── shopping-sessions/       trips, purchases, actual prices, running totals
-├── pricing/                 (phase 4)
-├── contributions/           (phase 4)
+├── pricing/                 price observations, trust evaluation, retention
+├── contributions/           price reports, evidence, trip contributions
 ├── price-intelligence/      (phase 5)
 ├── external-price-sources/  (phase 6)
 ├── optimization/            (phase 7)
@@ -150,6 +152,68 @@ concurrent "finish" requests therefore complete the trip once and publish
 `ShoppingSessionCompleted` once, and no purchase can land after the event's
 snapshot.
 
+### Price observations
+
+Every price enters through one pipeline in `pricing`
+(`IngestPriceObservationService`), whatever its source:
+
+```
+plausibility → replay / duplicate → catalog → rate limits → trust → pricing_db → events
+```
+
+- **Refused, nothing stored:** anything that cannot be a price. That covers
+  non-positive or absurd amounts, a bad currency, a time in the future or
+  too old, an unknown product or store, a retired product (for reports), and
+  exceeding a hard rate limit (429).
+- **Stored with a status:** anything that is a price. `ACCEPTED`
+  observations may shape derived prices (phase 5). `FLAGGED` ones are held
+  back until independently confirmed. `REJECTED` ones are kept only as an
+  abuse trail. Contributors see `ACCEPTED`, `UNDER_REVIEW` or `REJECTED`,
+  never the internal reason codes, since those describe the heuristics.
+- **Source affects trust, not eligibility:** `PURCHASE_CONFIRMED` gets the
+  most benefit of the doubt, then `USER_WITH_EVIDENCE`, then `USER_REPORTED`.
+
+| Control | Scope | Effect |
+| --- | --- | --- |
+| Per IP, per account (60/h) | user reports | 429 |
+| Same account + product + store (5/day) | user reports | 429 |
+| Third report of the same product/store in a day | user reports | flag |
+| Account volume, product spike, store spike | user reports | flag |
+| Account younger than 24h | user reports | flag |
+| Moderate deviation from recent median | bare reports | flag |
+| Extreme deviation from recent median | reports / purchases | reject / flag |
+| Repeated deviations by one account (7 days) | user reports | flag |
+
+Volume spikes on a product or store flag rather than refuse. An attacker
+flooding one product must not be able to lock honest shoppers out of
+reporting it.
+
+Deviation is measured against the **median** of recent accepted prices, first
+at the same store, then across stores with looser thresholds. A median only
+moves when most recent prices move, so it can't be walked off course one
+submission at a time.
+
+Raw observations are operational data. A daily job prunes those older than
+`PRICE_OBSERVATION_RETENTION_DAYS` (default 90). The long-lived history is
+the daily aggregate phase 5 derives.
+
+### Contributions
+
+- **Explicit report:** `POST /v1/price-observations`. An optional photo is
+  uploaded first to `POST /v1/price-evidence` (JPEG, PNG or WebP, identified
+  by content rather than name, 5 MB, 30 uploads per hour). The returned key
+  names its owner, so a report can only cite its author's own photo. Evidence
+  storage is behind a port. The local-disk adapter suits a single instance,
+  and an object store replaces it in production.
+- **Shopping trips:** completing a trip turns each purchased line with an
+  actual price into a `PURCHASE_CONFIRMED` observation, with no extra step
+  for the shopper. The completion event only enqueues a job, and the worker
+  does the ingestion. Each line's observation is keyed by the line id, and a
+  ledger in `pricing_db` records finished trips, so re-running a trip is
+  harmless. Because the event bus is in-process, a sweep every 10 minutes
+  queues any completed trip from the last 48 hours with no ledger entry. A
+  lost event delays a contribution; it never drops it.
+
 ### Databases
 
 Three logical databases with no cross-database foreign keys and no distributed
@@ -192,6 +256,8 @@ npx prisma migrate dev --config prisma/core/prisma.config.ts
 | `POST\|GET /v1/shopping-sessions`, `GET /v1/shopping-sessions/:id` | the trip owner |
 | `PATCH /v1/shopping-sessions/:id/items/:itemId` | the trip owner |
 | `POST /v1/shopping-sessions/:id/pause\|resume\|complete\|abandon` | the trip owner |
+| `POST /v1/price-observations`, `POST /v1/price-evidence` | any authenticated user |
+| `GET /v1/price-observations/mine` | the contributor |
 | `GET /v1/health`, `GET /v1/health/live` | public |
 
 ### API conventions
@@ -249,5 +315,5 @@ instead. The catalog and its consumers are documented in
   production process uses. Run with `pnpm run test:e2e`.
 
 Integration tests use their own databases (`*_test`, created by `init.sql`);
-`test/global-setup.js` applies migrations before the suite runs, and
-`.env.test` points the app at them.
+`test/global-setup.js` applies the `core_db` and `pricing_db` migrations before
+the suite runs, and `.env.test` points the app at them.

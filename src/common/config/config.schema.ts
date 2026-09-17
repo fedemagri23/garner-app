@@ -27,6 +27,13 @@ export const configSchema = z.object({
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
 
+  // Raw price observations are operational data, not history: long enough for
+  // fraud review and recalculation, then pruned.
+  PRICE_OBSERVATION_RETENTION_DAYS: z.coerce.number().int().min(1).default(90),
+
+  // Where the local-disk evidence store keeps uploaded photos.
+  EVIDENCE_STORAGE_DIR: z.string().min(1).default('var/evidence'),
+
   SWAGGER_ENABLED: z
     .enum(['true', 'false'])
     .default('true')

@@ -13,12 +13,21 @@ import { config as loadEnv } from 'dotenv';
 export default function globalSetup() {
   const testEnv = loadEnv({ path: '.env.test' }).parsed ?? {};
 
-  execFileSync(
-    'npx',
-    ['prisma', 'migrate', 'deploy', '--config', 'prisma/core/prisma.config.ts'],
-    {
-      stdio: 'inherit',
-      env: { ...process.env, ...testEnv, NODE_ENV: 'test' },
-    },
-  );
+  // Every logical database that has migrations; intelligence_db joins in phase 5.
+  for (const database of ['core', 'pricing']) {
+    execFileSync(
+      'npx',
+      [
+        'prisma',
+        'migrate',
+        'deploy',
+        '--config',
+        `prisma/${database}/prisma.config.ts`,
+      ],
+      {
+        stdio: 'inherit',
+        env: { ...process.env, ...testEnv, NODE_ENV: 'test' },
+      },
+    );
+  }
 }

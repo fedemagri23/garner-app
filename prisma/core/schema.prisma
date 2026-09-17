@@ -336,6 +336,8 @@ model ShoppingSession {
 
   @@index([ownerId, status])
   @@index([listId, status])
+  /// Finds recently completed trips, for the contributions reconciliation sweep.
+  @@index([status, completedAt])
   @@map("shopping_sessions")
 }
 

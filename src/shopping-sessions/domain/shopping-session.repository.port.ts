@@ -37,6 +37,8 @@ export interface StatusChange {
 
 export interface ShoppingSessionRepository {
   findById(id: string): Promise<ShoppingSession | null>;
+  /** Ids of trips completed inside the window, oldest first. */
+  findCompletedIdsBetween(from: Date, to: Date, limit: number): Promise<string[]>;
   findByOwner(
     ownerId: string,
     filter: { status?: ShoppingSessionStatus; skip: number; take: number },

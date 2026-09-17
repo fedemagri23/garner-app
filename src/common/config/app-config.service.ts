@@ -67,6 +67,14 @@ export class AppConfigService {
     return this.get('RATE_LIMIT_MAX');
   }
 
+  get priceObservationRetentionDays(): number {
+    return this.get('PRICE_OBSERVATION_RETENTION_DAYS');
+  }
+
+  get evidenceStorageDir(): string {
+    return this.get('EVIDENCE_STORAGE_DIR');
+  }
+
   get swaggerEnabled(): boolean {
     return this.get('SWAGGER_ENABLED');
   }
