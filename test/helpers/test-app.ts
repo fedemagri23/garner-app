@@ -23,12 +23,18 @@ export async function createTestApp(): Promise<INestApplication> {
 }
 
 /**
- * Integration tests own their data. Deleted in dependency order: barcodes and
- * opening hours cascade from their parents, but categories are referenced by
- * products and must outlive them.
+ * Integration tests own their data. Deleted in dependency order: shopping rows
+ * reference products and stores, and categories are referenced by products,
+ * so each goes before what it points at.
  */
 export async function resetDatabase(app: INestApplication): Promise<void> {
   const prisma = app.get(CorePrismaService);
+
+  // Shopping first: its items restrict deleting the products they point at.
+  await prisma.shoppingSessionItem.deleteMany();
+  await prisma.shoppingSession.deleteMany();
+  await prisma.shoppingListItem.deleteMany();
+  await prisma.shoppingList.deleteMany();
 
   await prisma.userPreferences.deleteMany();
   await prisma.refreshToken.deleteMany();

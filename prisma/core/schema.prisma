@@ -25,8 +25,10 @@ model User {
   createdAt    DateTime @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 
-  refreshTokens RefreshToken[]
-  preferences   UserPreferences?
+  refreshTokens    RefreshToken[]
+  preferences      UserPreferences?
+  shoppingLists    ShoppingList[]
+  shoppingSessions ShoppingSession[]
 
   @@map("users")
 }
@@ -153,6 +155,9 @@ model Product {
   category Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   barcodes ProductBarcode[]
 
+  shoppingListItems    ShoppingListItem[]
+  shoppingSessionItems ShoppingSessionItem[]
+
   @@index([normalizedName])
   @@index([categoryId])
   @@index([brandId])
@@ -214,6 +219,10 @@ model StoreLocation {
   supermarket  Supermarket         @relation(fields: [supermarketId], references: [id], onDelete: Cascade)
   openingHours StoreOpeningHours[]
 
+  shoppingListItems    ShoppingListItem[]
+  shoppingSessions     ShoppingSession[]
+  shoppingSessionItems ShoppingSessionItem[]
+
   @@index([supermarketId])
   /// Proximity search filters on a latitude/longitude bounding box before
   /// computing exact distances, so the composite index is the one that matters.
@@ -238,4 +247,126 @@ model StoreOpeningHours {
   @@unique([storeLocationId, dayOfWeek, opensAt])
   @@index([storeLocationId])
   @@map("store_opening_hours")
+}
+
+/// How a list presents its items. MANUAL follows the order the user arranged.
+enum ShoppingListSortMode {
+  MANUAL
+  NAME
+  CATEGORY
+  STORE
+}
+
+/// A plan made at home: what to buy, how much, and what it is expected to cost.
+model ShoppingList {
+  id        String               @id @default(uuid()) @db.Uuid
+  ownerId   String               @db.Uuid
+  name      String
+  notes     String?
+  /// ISO 4217. Every price on the list is in this currency, so totals never
+  /// add amounts in different currencies. Fixed at creation.
+  currency  String               @db.Char(3)
+  sortMode  ShoppingListSortMode @default(MANUAL)
+  createdAt DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime             @updatedAt @db.Timestamptz(3)
+
+  owner    User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  items    ShoppingListItem[]
+  sessions ShoppingSession[]
+
+  @@index([ownerId, updatedAt])
+  @@map("shopping_lists")
+}
+
+model ShoppingListItem {
+  id                     String   @id @default(uuid()) @db.Uuid
+  listId                 String   @db.Uuid
+  productId              String   @db.Uuid
+  /// Decimal so "1.5 kg of tomatoes" is expressible, not just whole units.
+  quantity               Decimal  @db.Decimal(10, 3)
+  notes                  String?
+  /// Minor units (cents). What the user expects to pay per unit before the trip.
+  expectedUnitPriceCents Int?
+  selectedStoreId        String?  @db.Uuid
+  /// Manual order; gaps are fine, only relative order matters.
+  position               Int
+  createdAt              DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime @updatedAt @db.Timestamptz(3)
+
+  list          ShoppingList   @relation(fields: [listId], references: [id], onDelete: Cascade)
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  selectedStore StoreLocation? @relation(fields: [selectedStoreId], references: [id], onDelete: SetNull)
+
+  @@index([listId, position])
+  @@index([productId])
+  @@map("shopping_list_items")
+}
+
+enum ShoppingSessionStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ABANDONED
+}
+
+/// A real shopping trip started from a list.
+///
+/// The list's items are copied into the session when it starts. The trip is
+/// what actually happened, so editing or deleting the list afterwards must not
+/// rewrite it — which is also why `listId` survives as null when the list goes.
+model ShoppingSession {
+  id          String                @id @default(uuid()) @db.Uuid
+  ownerId     String                @db.Uuid
+  listId      String?               @db.Uuid
+  listName    String
+  currency    String                @db.Char(3)
+  storeId     String?               @db.Uuid
+  status      ShoppingSessionStatus @default(ACTIVE)
+  startedAt   DateTime              @default(now()) @db.Timestamptz(3)
+  pausedAt    DateTime?             @db.Timestamptz(3)
+  completedAt DateTime?             @db.Timestamptz(3)
+  abandonedAt DateTime?             @db.Timestamptz(3)
+  createdAt   DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime              @updatedAt @db.Timestamptz(3)
+
+  owner User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  list  ShoppingList?         @relation(fields: [listId], references: [id], onDelete: SetNull)
+  store StoreLocation?        @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  items ShoppingSessionItem[]
+
+  @@index([ownerId, status])
+  @@index([listId, status])
+  @@map("shopping_sessions")
+}
+
+/// One line of a trip: what was planned, and — once bought — what was paid.
+/// A purchased line is the Purchase the business model talks about.
+model ShoppingSessionItem {
+  id                     String    @id @default(uuid()) @db.Uuid
+  sessionId              String    @db.Uuid
+  /// The list item this line was copied from. Provenance only, not a foreign
+  /// key: the list item may be edited or deleted while the trip stands.
+  sourceListItemId       String?   @db.Uuid
+  productId              String    @db.Uuid
+  quantity               Decimal   @db.Decimal(10, 3)
+  notes                  String?
+  expectedUnitPriceCents Int?
+  /// What was actually paid per unit. Overrides the expected price in totals.
+  actualUnitPriceCents   Int?
+  storeId                String?   @db.Uuid
+  isPurchased            Boolean   @default(false)
+  /// When the shopper marked it, as reported by the client — an offline client
+  /// may sync long after the moment of purchase.
+  purchasedAt            DateTime? @db.Timestamptz(3)
+  position               Int
+  createdAt              DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime  @updatedAt @db.Timestamptz(3)
+
+  session ShoppingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+  store   StoreLocation?  @relation(fields: [storeId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId, position])
+  @@index([productId])
+  @@map("shopping_session_items")
 }

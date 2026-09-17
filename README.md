@@ -59,8 +59,8 @@ src/
 ├── users/                   accounts, profile, location and interest preferences
 ├── products/                canonical catalog: products, categories, brands, barcodes
 ├── supermarkets/            chains, store locations, opening hours, proximity search
-├── shopping-lists/          (phase 3)
-├── shopping-sessions/       (phase 3)
+├── shopping-lists/          lists, items, quantities, expected prices, sorting
+├── shopping-sessions/       trips, purchases, actual prices, running totals
 ├── pricing/                 (phase 4)
 ├── contributions/           (phase 4)
 ├── price-intelligence/      (phase 5)
@@ -110,6 +110,46 @@ domain over the handful of rows that box returns. The box over-selects at its
 corners, so the radius filter afterwards is what makes a radius a circle rather
 than a square.
 
+### Shopping rules
+
+- **Money is integer cents.** Every price is minor units in the list's
+  currency (ISO 4217, fixed at creation), and quantities have at most three
+  decimals. Line totals are computed as cents × thousandths of a unit and
+  rounded once per line, so a long list never drifts by a cent.
+- **Totals are the server's.** Lists return `expectedTotalCents`; trips return
+  expected, actual, remaining and projected totals. No endpoint accepts a
+  total. Items with no known price are counted in `unpricedItemCount` rather
+  than silently treated as free.
+- **Expected vs actual.** A list holds expected prices. A trip records what
+  was actually paid, which overrides the expected price for a purchased line.
+  A line confirmed as purchased without a new price counts at its expected
+  price.
+- **A trip is a snapshot.** Starting a session copies the list's items.
+  Editing or deleting the list afterwards leaves the trip untouched, and its
+  `listId` becomes null.
+- **Trip states.** `ACTIVE ⇄ PAUSED → COMPLETED | ABANDONED`. A paused trip
+  still accepts item updates, because edits made offline may sync late. A
+  finished trip refuses changes.
+
+### Retries and idempotency
+
+The mobile client retries after connectivity loss, so every mutation that is
+realistically retried is safe to repeat:
+
+| Operation | How a retry is absorbed |
+| --- | --- |
+| Create list, add item, duplicate, start trip | Optional client-generated `id`; a retry returns the existing resource |
+| Start trip without an id | A list with a trip in progress returns that trip (serialized by a row lock) |
+| Update item (list or trip) | Absolute values, not deltas; a replayed "purchased" keeps its original time |
+| Delete list or item | Deleting something already gone returns 204 |
+| Pause / resume / complete / abandon | Reaching the current state is a replay: 200, no write, no event |
+| Item update on a finished trip | Accepted if it changes nothing, 409 otherwise |
+
+Completion takes the session's row lock, and so does every item write. Two
+concurrent "finish" requests therefore complete the trip once and publish
+`ShoppingSessionCompleted` once, and no purchase can land after the event's
+snapshot.
+
 ### Databases
 
 Three logical databases with no cross-database foreign keys and no distributed
@@ -146,6 +186,12 @@ npx prisma migrate dev --config prisma/core/prisma.config.ts
 | `POST /v1/products`, `PATCH /v1/products/:id`, `POST /v1/products/:id/barcodes` | moderator, admin |
 | `POST /v1/categories`, `POST /v1/brands` | moderator, admin |
 | `POST /v1/supermarkets`, `POST /v1/stores` | moderator, admin |
+| `POST\|GET /v1/shopping-lists`, `GET\|PATCH\|DELETE /v1/shopping-lists/:id` | the list owner |
+| `POST /v1/shopping-lists/:id/duplicate` | the list owner |
+| `POST /v1/shopping-lists/:id/items`, `PATCH\|DELETE .../items/:itemId`, `PUT .../items/order` | the list owner |
+| `POST\|GET /v1/shopping-sessions`, `GET /v1/shopping-sessions/:id` | the trip owner |
+| `PATCH /v1/shopping-sessions/:id/items/:itemId` | the trip owner |
+| `POST /v1/shopping-sessions/:id/pause\|resume\|complete\|abandon` | the trip owner |
 | `GET /v1/health`, `GET /v1/health/live` | public |
 
 ### API conventions
