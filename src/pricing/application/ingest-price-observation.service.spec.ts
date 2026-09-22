@@ -65,6 +65,8 @@ describe('IngestPriceObservationService', () => {
       recentAcceptedPrices: jest.fn().mockResolvedValue([]),
       countByUserWithReasonSince: jest.fn().mockResolvedValue(0),
       findByUser: jest.fn(),
+      findInWindow: jest.fn(),
+      listAggregationTargets: jest.fn(),
       create: jest
         .fn()
         .mockImplementation(async (input: NewPriceObservation) => ({

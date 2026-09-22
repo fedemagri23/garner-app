@@ -10,6 +10,7 @@ import type {
   ReviewReason,
 } from '../domain/price-observation.entity.js';
 import type {
+  AggregationTarget,
   PriceObservationRepository,
   PriceSampleQuery,
 } from '../domain/price-observation.repository.port.js';
@@ -149,6 +150,53 @@ export class PrismaPriceObservationRepository
 
       return { observation: existing, created: false };
     }
+  }
+
+  async findInWindow(query: {
+    productId: string;
+    storeId: string;
+    from: Date;
+    to: Date;
+    limit: number;
+  }): Promise<PriceObservation[]> {
+    const rows = await this.prisma.priceObservation.findMany({
+      where: {
+        productId: query.productId,
+        storeId: query.storeId,
+        observedAt: { gte: query.from, lt: query.to },
+      },
+      orderBy: { observedAt: 'desc' },
+      take: query.limit,
+    });
+
+    return rows.map((row) => this.toDomain(row));
+  }
+
+  async listAggregationTargets(query: {
+    from: Date;
+    to: Date;
+    skip: number;
+    take: number;
+  }): Promise<AggregationTarget[]> {
+    // Grouped in the database: a day can hold far more observations than
+    // product/store pairs, and only the pairs need to travel.
+    const groups = await this.prisma.priceObservation.groupBy({
+      by: ['productId', 'storeId', 'currency'],
+      where: { observedAt: { gte: query.from, lt: query.to } },
+      orderBy: [
+        { productId: 'asc' },
+        { storeId: 'asc' },
+        { currency: 'asc' },
+      ],
+      skip: query.skip,
+      take: query.take,
+    });
+
+    return groups.map((group) => ({
+      productId: group.productId,
+      storeId: group.storeId,
+      currency: group.currency,
+    }));
   }
 
   /**

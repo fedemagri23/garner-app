@@ -24,7 +24,8 @@
     "prisma:generate": "prisma generate --config prisma/core/prisma.config.ts && prisma generate --config prisma/pricing/prisma.config.ts && prisma generate --config prisma/intelligence/prisma.config.ts",
     "prisma:migrate": "prisma migrate dev --config prisma/core/prisma.config.ts",
     "prisma:migrate:pricing": "prisma migrate dev --config prisma/pricing/prisma.config.ts",
-    "prisma:migrate:deploy": "prisma migrate deploy --config prisma/core/prisma.config.ts && prisma migrate deploy --config prisma/pricing/prisma.config.ts",
+    "prisma:migrate:intelligence": "prisma migrate dev --config prisma/intelligence/prisma.config.ts",
+    "prisma:migrate:deploy": "prisma migrate deploy --config prisma/core/prisma.config.ts && prisma migrate deploy --config prisma/pricing/prisma.config.ts && prisma migrate deploy --config prisma/intelligence/prisma.config.ts",
     "postinstall": "pnpm run prisma:generate"
   },
   "dependencies": {

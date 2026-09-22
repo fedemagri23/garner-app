@@ -6,3 +6,68 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+/// How much a shown price can be relied on, in the vocabulary the product
+/// speaks. The raw score behind it stays internal: a number without units
+/// means nothing to a shopper.
+enum PriceConfidenceLevel {
+  VERY_RECENT
+  RECENTLY_VERIFIED
+  LIKELY_CURRENT
+  POSSIBLY_OUTDATED
+}
+
+/// The current price of one product at one store, derived from recent
+/// observations rather than set by the last one to arrive.
+///
+/// Rebuildable: delete every row here and the recompute job reconstructs them
+/// from the observations still inside pricing's retention window. Product and
+/// store ids point into core_db and carry no foreign key.
+model DerivedPrice {
+  productId        String               @db.Uuid
+  storeId          String               @db.Uuid
+  currency         String               @db.Char(3)
+  /// Weighted by source, recency and corroboration. Minor units.
+  priceCents       Int
+  /// Cheapest and dearest contributing observation, for context on the spread.
+  minPriceCents    Int
+  maxPriceCents    Int
+  /// Internal 0..1 score; the level is what clients see.
+  confidence       Float
+  confidenceLevel  PriceConfidenceLevel
+  observationCount Int
+  /// Newest contributing observation — what makes a price "recent".
+  lastObservedAt   DateTime             @db.Timestamptz(3)
+  computedAt       DateTime             @default(now()) @db.Timestamptz(3)
+
+  @@id([productId, storeId])
+  /// Comparing one product across stores, cheapest first.
+  @@index([productId, priceCents])
+  @@index([computedAt])
+  @@map("derived_prices")
+}
+
+/// One row per product, store and day: the compact long-lived history.
+///
+/// Raw observations expire; these do not. A day with no observations has no
+/// row rather than a zero, so gaps stay visible as gaps.
+model DailyPriceHistory {
+  productId            String   @db.Uuid
+  storeId              String   @db.Uuid
+  /// UTC calendar day the observations were made on.
+  date                 DateTime @db.Date
+  currency             String   @db.Char(3)
+  weightedAverageCents Int
+  minPriceCents        Int
+  maxPriceCents        Int
+  observationCount     Int
+  confidence           Float
+  /// The day's average moved sharply against the day before it.
+  isAnomalous          Boolean  @default(false)
+  computedAt           DateTime @default(now()) @db.Timestamptz(3)
+
+  @@id([productId, storeId, date])
+  /// History for a product, over a range of days, across stores.
+  @@index([productId, date])
+  @@map("daily_price_history")
+}

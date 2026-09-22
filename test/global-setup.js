@@ -13,8 +13,7 @@ import { config as loadEnv } from 'dotenv';
 export default function globalSetup() {
   const testEnv = loadEnv({ path: '.env.test' }).parsed ?? {};
 
-  // Every logical database that has migrations; intelligence_db joins in phase 5.
-  for (const database of ['core', 'pricing']) {
+  for (const database of ['core', 'pricing', 'intelligence']) {
     execFileSync(
       'npx',
       [

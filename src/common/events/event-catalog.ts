@@ -16,6 +16,9 @@ import type { DomainEvent } from './domain-event.js';
  * | PriceObservationCreated  | pricing (4)        | price-intelligence(5)|
  * | PriceObservationAccepted | pricing (4)        | price-intelligence(5)|
  * | PriceObservationRejected | pricing (4)        | abuse review         |
+ * | DerivedPriceUpdated      | price-intelligence(5) | notifications (8) |
+ * | DailyPriceCalculated     | price-intelligence(5) | analytics         |
+ * | PriceAnomalyDetected     | price-intelligence(5) | abuse review      |
  * | OptimizationRequested    | optimization (7)   | optimization worker  |
  */
 export const DomainEventName = {
@@ -27,6 +30,9 @@ export const DomainEventName = {
   PriceObservationCreated: 'PriceObservationCreated',
   PriceObservationAccepted: 'PriceObservationAccepted',
   PriceObservationRejected: 'PriceObservationRejected',
+  DerivedPriceUpdated: 'DerivedPriceUpdated',
+  DailyPriceCalculated: 'DailyPriceCalculated',
+  PriceAnomalyDetected: 'PriceAnomalyDetected',
   OptimizationRequested: 'OptimizationRequested',
 } as const;
 
@@ -140,4 +146,57 @@ export type PriceObservationAcceptedEvent = DomainEvent<
 export type PriceObservationRejectedEvent = DomainEvent<
   'PriceObservationRejected',
   PriceObservationPayload
+>;
+
+/**
+ * A product's current price at a store was recomputed and changed. Phase 8
+ * turns a fall past a shopper's threshold into a price alert.
+ */
+export interface DerivedPriceUpdatedPayload {
+  productId: string;
+  storeId: string;
+  currency: string;
+  priceCents: number;
+  /** Null the first time a price is derived for this product and store. */
+  previousPriceCents: number | null;
+  confidenceLevel:
+    | 'VERY_RECENT'
+    | 'RECENTLY_VERIFIED'
+    | 'LIKELY_CURRENT'
+    | 'POSSIBLY_OUTDATED';
+}
+
+export type DerivedPriceUpdatedEvent = DomainEvent<
+  'DerivedPriceUpdated',
+  DerivedPriceUpdatedPayload
+>;
+
+/** A day of observations was aggregated into the long-lived history. */
+export interface DailyPriceCalculatedPayload {
+  productId: string;
+  storeId: string;
+  /** UTC calendar day, as `YYYY-MM-DD`. */
+  date: string;
+  weightedAverageCents: number;
+  observationCount: number;
+  confidence: number;
+}
+
+export type DailyPriceCalculatedEvent = DomainEvent<
+  'DailyPriceCalculated',
+  DailyPriceCalculatedPayload
+>;
+
+/** A day's average moved sharply against the day before it. */
+export interface PriceAnomalyDetectedPayload {
+  productId: string;
+  storeId: string;
+  date: string;
+  previousAverageCents: number;
+  currentAverageCents: number;
+}
+
+export type PriceAnomalyDetectedEvent = DomainEvent<
+  'PriceAnomalyDetected',
+  PriceAnomalyDetectedPayload
 >;

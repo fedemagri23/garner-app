@@ -13,9 +13,17 @@ export interface PriceSampleQuery {
   limit: number;
 }
 
+/** One product, store and currency that had observations in a period. */
+export interface AggregationTarget {
+  productId: string;
+  storeId: string;
+  currency: string;
+}
+
 /**
  * The pricing module's data contract over `pricing_db`. Price intelligence
- * (phase 5) reads observations through it; contributions reads a user's own.
+ * reads observations through it to derive prices; contributions reads a
+ * user's own.
  */
 export interface PriceObservationRepository {
   findById(id: string): Promise<PriceObservation | null>;
@@ -47,6 +55,24 @@ export interface PriceObservationRepository {
   create(
     observation: NewPriceObservation,
   ): Promise<{ observation: PriceObservation; created: boolean }>;
+  /**
+   * Observations made in a window, whatever their status: the caller decides
+   * which may shape a price, and needs to see the rejected ones to judge.
+   */
+  findInWindow(query: {
+    productId: string;
+    storeId: string;
+    from: Date;
+    to: Date;
+    limit: number;
+  }): Promise<PriceObservation[]>;
+  /** Product/store pairs observed in a window, one page at a time. */
+  listAggregationTargets(query: {
+    from: Date;
+    to: Date;
+    skip: number;
+    take: number;
+  }): Promise<AggregationTarget[]>;
   /** Deletes up to `limit` observations received before `cutoff`; returns how many. */
   deleteReceivedBefore(cutoff: Date, limit: number): Promise<number>;
 }

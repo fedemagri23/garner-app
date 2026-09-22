@@ -43,7 +43,8 @@ raw spec at `/docs/openapi.json`.
 | `pnpm run prisma:generate` | Regenerate all three Prisma clients |
 | `pnpm run prisma:migrate` | Create + apply a core_db migration |
 | `pnpm run prisma:migrate:pricing` | Create + apply a pricing_db migration |
-| `pnpm run prisma:migrate:deploy` | Apply committed migrations to core_db and pricing_db |
+| `pnpm run prisma:migrate:intelligence` | Create + apply an intelligence_db migration |
+| `pnpm run prisma:migrate:deploy` | Apply committed migrations to all three databases |
 
 ## Architecture
 
@@ -65,7 +66,7 @@ src/
 ├── shopping-sessions/       trips, purchases, actual prices, running totals
 ├── pricing/                 price observations, trust evaluation, retention
 ├── contributions/           price reports, evidence, trip contributions
-├── price-intelligence/      (phase 5)
+├── price-intelligence/      derived prices, daily history, confidence, trends
 ├── external-price-sources/  (phase 6)
 ├── optimization/            (phase 7)
 └── notifications/           (phase 8)
@@ -214,6 +215,47 @@ the daily aggregate phase 5 derives.
   queues any completed trip from the last 48 hours with no ledger entry. A
   lost event delays a contribution; it never drops it.
 
+### Price intelligence
+
+Observations are raw events; a price is a derived view. Nothing overwrites a
+current price — it is recomputed from every observation still in the 30-day
+window, weighted by:
+
+- **source** — a confirmed purchase or a supermarket feed counts double a
+  typed report, with evidence-backed reports in between;
+- **recency** — weight halves every 7 days, never reaching zero, because some
+  price beats no price;
+- **corroboration** — a flagged observation is left out until at least two
+  *other* contributors report much the same price, and even then counts for
+  less. Rejected ones never count.
+
+The formula lives behind one domain function, since it is a business judgement
+that will change.
+
+Confidence is scored 0..1 from freshness, weight of evidence and how much the
+observations agree. Clients see only the level it maps to — `VERY_RECENT`,
+`RECENTLY_VERIFIED`, `LIKELY_CURRENT`, `POSSIBLY_OUTDATED` — because a bare
+0.62 invites a reader to invent a meaning for it.
+
+**Daily aggregation** compresses each day into one row per product and store
+(weighted average, min, max, observation count, confidence). That is what
+makes history affordable: observations are pruned after 90 days, the daily
+rows are kept. A day whose average jumps 1.5× against the previous one is
+marked anomalous, publishes `PriceAnomalyDetected`, and is excluded from trend
+summaries while staying visible in the series.
+
+Both jobs are idempotent: a recompute rewrites one row from what is in the
+database, and re-aggregating a day reproduces that day exactly — the day's
+observations are weighed as of the day's end, so a day aggregated tonight and
+re-aggregated next month give the same numbers. Recomputes are debounced by
+5 seconds and collapse per product and store, so a finished shopping trip
+causes one recompute per store, not one per line.
+
+**Reads** are served from Redis where possible. Cache keys carry a per-product
+version that a recompute increments, so a new price is visible at once and
+invalidation costs one `INCR` rather than a keyspace scan. Every cache path
+fails soft: Redis being down costs latency, not availability.
+
 ### Databases
 
 Three logical databases with no cross-database foreign keys and no distributed
@@ -224,6 +266,10 @@ transactions. Effects that cross a boundary travel as domain events.
 | `core_db` | identity, catalog, lists, sessions | `prisma/core/` |
 | `pricing_db` | raw price observations, ingestion metadata | `prisma/pricing/` |
 | `intelligence_db` | derived prices, daily history, confidence | `prisma/intelligence/` |
+
+`intelligence_db` is rebuildable: dropping its rows and re-running the
+recompute and aggregation jobs reconstructs them from whatever observations
+are still inside pricing's retention window.
 
 Each has its own `prisma.config.ts` and generated client (in `generated/`,
 which is gitignored and rebuilt on install). Prisma commands take the config
@@ -258,6 +304,8 @@ npx prisma migrate dev --config prisma/core/prisma.config.ts
 | `POST /v1/shopping-sessions/:id/pause\|resume\|complete\|abandon` | the trip owner |
 | `POST /v1/price-observations`, `POST /v1/price-evidence` | any authenticated user |
 | `GET /v1/price-observations/mine` | the contributor |
+| `GET /v1/products/:id/prices` (optionally near a location) | any authenticated user |
+| `GET /v1/products/:id/prices/history` (30d, 90d, 6m, 1y) | any authenticated user |
 | `GET /v1/health`, `GET /v1/health/live` | public |
 
 ### API conventions
@@ -315,5 +363,5 @@ instead. The catalog and its consumers are documented in
   production process uses. Run with `pnpm run test:e2e`.
 
 Integration tests use their own databases (`*_test`, created by `init.sql`);
-`test/global-setup.js` applies the `core_db` and `pricing_db` migrations before
-the suite runs, and `.env.test` points the app at them.
+`test/global-setup.js` applies all three databases' migrations before the suite
+runs, and `.env.test` points the app at them.
