@@ -3,6 +3,10 @@
 Smart grocery price comparison. A NestJS modular monolith over three logical
 PostgreSQL databases, with Redis, BullMQ workers and internal domain events.
 
+Two running notebooks record how it got this way: [`journeys/bugs.md`](journeys/bugs.md)
+for defects found and repaired, and [`journeys/considerations.md`](journeys/considerations.md)
+for the deliberate limits and trade-offs behind the design.
+
 The product and architecture specifications live in
 [`garner-specs-bussines.md`](garner-specs-bussines.md) and
 [`garner-specs-backend.md`](garner-specs-backend.md); the phased delivery plan
