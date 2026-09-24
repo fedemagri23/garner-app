@@ -65,3 +65,18 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Symptom:** Two e2e tests expected a two-store split and got a single store.
 - **Cause:** The optimizer was right both times: the default preferences require €4 of savings per extra stop and allow 5 km of extra travel, and the fixture's cheap stores were 3–4 km apart and saved €3.
 - **Fix:** Made the limits explicit in the test helper so each constraint has its own test, and added a test asserting the defaults do apply when nothing is passed.
+
+## Phase 8 — notifications, hardening, production readiness
+
+### BUG-010 — An oversized request body was reported as a server error
+- **Phase:** 8 · **Area:** common/http · **Scope:** production code · **Found by:** e2e test · **Fixed in:** (phase 8)
+- **Symptom:** Posting a body past `MAX_REQUEST_BODY_KB` returned 500 rather than 413.
+- **Cause:** Body parsing runs as middleware outside Nest and throws a plain error carrying a status, not an `HttpException`, so the exception filter fell through to its 500 branch. It would also have counted the client's mistake as a server error in the metrics.
+- **Fix:** The filter now recognizes an error carrying a 4xx status and maps it, with a dedicated message for 413.
+
+### BUG-011 — Health test asserted an exact set of checks
+- **Phase:** 8 · **Area:** common/health · **Scope:** test · **Found by:** e2e test · **Fixed in:** (phase 8)
+- **Symptom:** Adding the queue check broke a passing test.
+- **Cause:** The test used `toEqual` on the whole `checks` object, so any new dependency was a failure rather than an addition.
+- **Fix:** Matched the checks it cares about with `toMatchObject`, and asserted the new queue reporting explicitly.
+

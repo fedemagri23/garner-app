@@ -1,6 +1,7 @@
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppConfigService } from './common/config/app-config.service.js';
 
@@ -17,6 +18,25 @@ export function configureApp(app: INestApplication): void {
   const config = app.get(AppConfigService);
 
   app.use(helmet());
+
+  // Behind a load balancer, `req.ip` is the proxy unless Express is told how
+  // many hops to look past — and per-IP rate limiting depends on that address
+  // being the client's. Configured rather than assumed: trusting a header
+  // nobody sets would let a caller spoof their own address.
+  if (config.trustProxyHops > 0) {
+    (app as NestExpressApplication).set('trust proxy', config.trustProxyHops);
+  }
+
+
+  // A bounded body, refused before it is parsed. The evidence upload route
+  // has its own, larger limit. Set through Nest rather than by reaching for
+  // Express's parsers directly, which are not a dependency of this package.
+  const httpApp = app as NestExpressApplication;
+  httpApp.useBodyParser('json', { limit: config.maxRequestBodyBytes });
+  httpApp.useBodyParser('urlencoded', {
+    extended: true,
+    limit: config.maxRequestBodyBytes,
+  });
 
   app.enableVersioning({
     type: VersioningType.URI,

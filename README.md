@@ -3,6 +3,9 @@
 Smart grocery price comparison. A NestJS modular monolith over three logical
 PostgreSQL databases, with Redis, BullMQ workers and internal domain events.
 
+Running it in anger is documented in [`docs/operations.md`](docs/operations.md):
+health, metrics, runbooks, backup and the rebuild procedure for derived data.
+
 Two running notebooks record how it got this way: [`journeys/bugs.md`](journeys/bugs.md)
 for defects found and repaired, and [`journeys/considerations.md`](journeys/considerations.md)
 for the deliberate limits and trade-offs behind the design.
@@ -377,6 +380,20 @@ to read from `GET /v1/notifications` — a real channel for an app with an inbox
 — and push or email would be a second implementation rather than a change to
 how alerts are evaluated. A sweep every 5 minutes delivers held and missed
 messages, and prunes delivered ones after `NOTIFICATION_RETENTION_DAYS`.
+
+### Observability
+
+- **Logs** — one JSON object per line outside development, carrying
+  `requestId`, `traceId`, `userId` where known, and `jobId`/`jobName` inside a
+  worker. A caller may supply `x-request-id` and `x-trace-id`; both are echoed
+  back. The trace follows a request into the jobs it queues, which is how a
+  submitted price is followed through to the alert it raises.
+- **Metrics** — `GET /v1/metrics` in Prometheus format, admin-only: request
+  counts and latencies by route pattern, job outcomes and durations by queue,
+  and queue depths. Queues register themselves, so a new worker is visible
+  without a list here going stale.
+- **Health** — `/v1/health` covers all three databases, Redis and the queues,
+  and answers 503 when any is down; `/v1/health/live` touches nothing.
 
 ### Databases
 

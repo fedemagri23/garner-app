@@ -1,3 +1,5 @@
+import { QueueMetricsService } from '../../common/observability/queue-metrics.service.js';
+import { JobObservability } from '../../common/observability/job-observability.service.js';
 import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import type { Job, Queue } from 'bullmq';
@@ -26,6 +28,8 @@ export class PricingMaintenanceProcessor
   constructor(
     private readonly prune: PrunePriceObservationsUseCase,
     @InjectQueue(PRICING_MAINTENANCE_QUEUE) private readonly queue: Queue,
+    private readonly observability: JobObservability,
+    private readonly queueMetrics: QueueMetricsService,
   ) {
     super();
   }
@@ -35,6 +39,10 @@ export class PricingMaintenanceProcessor
    * boot converges on one schedule instead of stacking duplicates.
    */
   async onApplicationBootstrap(): Promise<void> {
+    // Queues hand themselves in, so queue depth is observable without a list
+    // here that goes stale each time a phase adds a worker.
+    this.queueMetrics.register(PRICING_MAINTENANCE_QUEUE, this.queue);
+
     await this.queue.upsertJobScheduler(
       PricingMaintenanceJob.PruneObservations,
       { every: DAY_MS },
@@ -42,7 +50,14 @@ export class PricingMaintenanceProcessor
     );
   }
 
+  /** Every job runs inside its own log context, timed and counted. */
   async process(job: Job): Promise<{ deleted: number }> {
+    return this.observability.run(PRICING_MAINTENANCE_QUEUE, job, () =>
+      this.handle(job),
+    );
+  }
+
+  private async handle(job: Job): Promise<{ deleted: number }> {
     if (job.name !== PricingMaintenanceJob.PruneObservations) {
       throw new Error(`Unsupported job "${job.name}" on ${PRICING_MAINTENANCE_QUEUE}`);
     }

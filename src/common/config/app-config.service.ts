@@ -71,6 +71,25 @@ export class AppConfigService {
     return this.get('PRICE_OBSERVATION_RETENTION_DAYS');
   }
 
+  get optimizationRetentionDays(): number {
+    return this.get('OPTIMIZATION_RETENTION_DAYS');
+  }
+
+  /** JSON logs unless explicitly asked for pretty ones, except in development. */
+  get structuredLogs(): boolean {
+    const configured = this.config.get('LOG_FORMAT', { infer: true });
+
+    return configured ? configured === 'json' : this.nodeEnv !== 'development';
+  }
+
+  get trustProxyHops(): number {
+    return this.get('TRUST_PROXY_HOPS');
+  }
+
+  get maxRequestBodyBytes(): number {
+    return this.get('MAX_REQUEST_BODY_KB') * 1024;
+  }
+
   get notificationRetentionDays(): number {
     return this.get('NOTIFICATION_RETENTION_DAYS');
   }

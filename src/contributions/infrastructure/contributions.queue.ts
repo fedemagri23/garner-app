@@ -1,3 +1,5 @@
+import { QueueMetricsService } from '../../common/observability/queue-metrics.service.js';
+import { JobObservability } from '../../common/observability/job-observability.service.js';
 import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import type { Job, Queue } from 'bullmq';
@@ -55,11 +57,17 @@ export class ContributionsProcessor
     private readonly recordPurchases: RecordSessionPurchasesUseCase,
     private readonly reconcile: ReconcileSessionContributionsUseCase,
     @InjectQueue(CONTRIBUTIONS_QUEUE) private readonly queue: Queue,
+    private readonly observability: JobObservability,
+    private readonly queueMetrics: QueueMetricsService,
   ) {
     super();
   }
 
   async onApplicationBootstrap(): Promise<void> {
+    // Queues hand themselves in, so queue depth is observable without a list
+    // here that goes stale each time a phase adds a worker.
+    this.queueMetrics.register(CONTRIBUTIONS_QUEUE, this.queue);
+
     await this.queue.upsertJobScheduler(
       ContributionJob.ReconcileSessions,
       { every: RECONCILE_EVERY_MS },
@@ -67,7 +75,14 @@ export class ContributionsProcessor
     );
   }
 
+  /** Every job runs inside its own log context, timed and counted. */
   async process(job: Job): Promise<unknown> {
+    return this.observability.run(CONTRIBUTIONS_QUEUE, job, () =>
+      this.handle(job),
+    );
+  }
+
+  private async handle(job: Job): Promise<unknown> {
     switch (job.name) {
       case ContributionJob.RecordSessionPurchases: {
         const { sessionId } = job.data as RecordSessionPurchasesData;

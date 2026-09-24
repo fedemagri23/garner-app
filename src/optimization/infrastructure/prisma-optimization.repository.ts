@@ -218,6 +218,31 @@ export class PrismaOptimizationRequestRepository
     return (row?.status as OptimizationStatus) ?? null;
   }
 
+  /**
+   * An optimization is a snapshot of prices that have since moved; past a
+   * point it is neither actionable nor interesting.
+   */
+  async deleteFinishedBefore(cutoff: Date, limit: number): Promise<number> {
+    const batch = await this.prisma.optimizationRequest.findMany({
+      where: {
+        status: { in: ['COMPLETED', 'FAILED'] },
+        requestedAt: { lt: cutoff },
+      },
+      select: { id: true },
+      take: limit,
+    });
+
+    if (batch.length === 0) {
+      return 0;
+    }
+
+    const { count } = await this.prisma.optimizationRequest.deleteMany({
+      where: { id: { in: batch.map((row) => row.id) } },
+    });
+
+    return count;
+  }
+
   private toDomain(row: RequestRow): OptimizationRequest {
     return {
       id: row.id,

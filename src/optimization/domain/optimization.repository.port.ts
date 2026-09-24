@@ -52,6 +52,8 @@ export interface OptimizationRequestRepository {
   /** Puts a claimed request back, so a failed job can be retried. */
   release(id: string): Promise<void>;
   statusOf(id: string): Promise<OptimizationStatus | null>;
+  /** Retention: removes finished requests older than the cutoff. */
+  deleteFinishedBefore(cutoff: Date, limit: number): Promise<number>;
 }
 
 export const OPTIMIZATION_REQUEST_REPOSITORY = Symbol(

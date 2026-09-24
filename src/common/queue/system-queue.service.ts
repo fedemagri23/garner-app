@@ -2,6 +2,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { randomUUID } from 'node:crypto';
+import { QueueMetricsService } from '../observability/queue-metrics.service.js';
 import { RedisService } from '../redis/redis.service.js';
 import {
   QueueName,
@@ -16,7 +17,10 @@ export class SystemQueueService {
     @InjectQueue(QueueName.System)
     private readonly queue: Queue<SystemPingJobData>,
     private readonly redis: RedisService,
-  ) {}
+    queueMetrics: QueueMetricsService,
+  ) {
+    queueMetrics.register(QueueName.System, this.queue);
+  }
 
   async enqueuePing(token: string = randomUUID()): Promise<string> {
     await this.queue.add(

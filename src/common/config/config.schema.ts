@@ -35,6 +35,22 @@ export const configSchema = z.object({
   // a record anything depends on.
   NOTIFICATION_RETENTION_DAYS: z.coerce.number().int().min(1).default(30),
 
+  // Optimizations are snapshots of prices that have since moved; past this
+  // they are neither actionable nor interesting.
+  OPTIMIZATION_RETENTION_DAYS: z.coerce.number().int().min(1).default(30),
+
+  // Structured JSON logs. On by default outside development, where readable
+  // console output is worth more than machine-parseable lines.
+  LOG_FORMAT: z.enum(['json', 'pretty']).optional(),
+
+  // How many proxies sit in front of the API. Wrong here means `req.ip` is a
+  // load balancer's address, and per-IP rate limiting stops working.
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(0),
+
+  // Largest accepted request body. Evidence photos have their own upload
+  // route and limit; nothing else needs to be large.
+  MAX_REQUEST_BODY_KB: z.coerce.number().int().min(16).max(4_096).default(256),
+
   // Where the local-disk evidence store keeps uploaded photos.
   EVIDENCE_STORAGE_DIR: z.string().min(1).default('var/evidence'),
 

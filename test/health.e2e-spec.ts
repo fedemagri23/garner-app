@@ -19,15 +19,21 @@ describe('Health (e2e)', () => {
       .get('/v1/health')
       .expect(200);
 
-    expect(response.body).toEqual({
+    expect(response.body).toMatchObject({
       status: 'ok',
       checks: {
         core_db: { status: 'up' },
         pricing_db: { status: 'up' },
         intelligence_db: { status: 'up' },
         redis: { status: 'up' },
+        // Workers reachable is a different question from Redis answering a
+        // ping: a queue that cannot be read means jobs are not draining.
+        queues: { status: 'up' },
       },
     });
+
+    // Depths are reported for operators, and never a reason to fail a probe.
+    expect(response.body.queues).toBeDefined();
   });
 
   it('answers the liveness probe without touching dependencies', async () => {

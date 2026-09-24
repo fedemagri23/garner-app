@@ -29,6 +29,54 @@ interface PrismaKnownError {
   meta?: Record<string, unknown>;
 }
 
+/** A malformed or oversized request, as body parsing reports it. */
+interface ClientError {
+  status: number;
+  message: string;
+  type?: string;
+}
+
+/**
+ * Middleware outside Nest — body parsing, most of all — throws plain errors
+ * carrying an HTTP status rather than HttpExceptions. Reporting those as 500
+ * would blame the server for a body the client sent too large or malformed,
+ * and would count them as server errors in the metrics.
+ */
+function isClientError(error: unknown): error is ClientError {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+
+  const status = (error as { status?: unknown; statusCode?: unknown }).status ??
+    (error as { statusCode?: unknown }).statusCode;
+
+  return typeof status === 'number' && status >= 400 && status < 500;
+}
+
+function describeClientError(exception: ClientError): {
+  status: number;
+  error: string;
+  message: string;
+} {
+  const status =
+    exception.status ?? (exception as { statusCode?: number }).statusCode ?? 400;
+
+  if (status === HttpStatus.PAYLOAD_TOO_LARGE) {
+    return {
+      status,
+      error: 'Payload Too Large',
+      message: 'The request body is larger than this endpoint accepts',
+    };
+  }
+
+  return {
+    status,
+    error: 'Bad Request',
+    // The parser's own wording describes the request, not our internals.
+    message: exception.message || 'The request could not be read',
+  };
+}
+
 function isPrismaKnownError(error: unknown): error is PrismaKnownError {
   return (
     typeof error === 'object' &&
@@ -97,6 +145,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (isPrismaKnownError(exception)) {
       return this.describePrisma(exception);
+    }
+
+    if (isClientError(exception)) {
+      return describeClientError(exception);
     }
 
     return {

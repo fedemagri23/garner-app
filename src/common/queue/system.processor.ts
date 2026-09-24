@@ -1,3 +1,4 @@
+import { JobObservability } from '../observability/job-observability.service.js';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
@@ -19,11 +20,20 @@ import {
 export class SystemProcessor extends WorkerHost {
   private readonly logger = new Logger(SystemProcessor.name);
 
-  constructor(private readonly redis: RedisService) {
+  constructor(private readonly redis: RedisService,
+    private readonly observability: JobObservability,
+  ) {
     super();
   }
 
+  /** Every job runs inside its own log context, timed and counted. */
   async process(job: Job<SystemPingJobData>): Promise<{ handledAt: string }> {
+    return this.observability.run(QueueName.System, job, () =>
+      this.handle(job),
+    );
+  }
+
+  private async handle(job: Job<SystemPingJobData>): Promise<{ handledAt: string }> {
     if (job.name !== SystemJob.Ping) {
       throw new Error(`Unsupported job "${job.name}" on ${QueueName.System}`);
     }

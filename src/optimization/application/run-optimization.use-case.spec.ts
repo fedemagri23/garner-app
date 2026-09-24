@@ -98,6 +98,7 @@ describe('RunOptimizationUseCase', () => {
           error,
         })),
       release: jest.fn(),
+      deleteFinishedBefore: jest.fn(),
     };
     lists = { findById: jest.fn().mockResolvedValue(list) };
     stores = {

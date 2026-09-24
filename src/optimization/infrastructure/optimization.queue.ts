@@ -1,13 +1,22 @@
+import { QueueMetricsService } from '../../common/observability/queue-metrics.service.js';
+import { JobObservability } from '../../common/observability/job-observability.service.js';
 import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import type { Job, Queue } from 'bullmq';
+import { AppConfigService } from '../../common/config/app-config.service.js';
 import { RunOptimizationUseCase } from '../application/run-optimization.use-case.js';
+import {
+  OPTIMIZATION_REQUEST_REPOSITORY,
+  type OptimizationRequestRepository,
+} from '../domain/optimization.repository.port.js';
 import type { OptimizationJobs } from '../domain/optimization.repository.port.js';
 
 export const OPTIMIZATION_QUEUE = 'optimization';
 
 export const OptimizationJob = {
   Run: 'run-optimization',
+  /** Retention: drops answers nobody can act on any more. */
+  Prune: 'prune-optimizations',
 } as const;
 
 interface RunOptimizationData {
@@ -43,14 +52,56 @@ export class BullmqOptimizationJobs implements OptimizationJobs {
  * combinatorial search and a slow one cannot occupy an HTTP worker.
  */
 @Processor(OPTIMIZATION_QUEUE)
-export class OptimizationProcessor extends WorkerHost {
+export class OptimizationProcessor
+  extends WorkerHost
+  implements OnApplicationBootstrap
+{
   private readonly logger = new Logger(OptimizationProcessor.name);
 
-  constructor(private readonly runOptimization: RunOptimizationUseCase) {
+  constructor(
+    private readonly runOptimization: RunOptimizationUseCase,
+    private readonly observability: JobObservability,
+    @InjectQueue(OPTIMIZATION_QUEUE) private readonly queue: Queue,
+    @Inject(OPTIMIZATION_REQUEST_REPOSITORY)
+    private readonly requests: OptimizationRequestRepository,
+    private readonly config: AppConfigService,
+    queueMetrics: QueueMetricsService,
+  ) {
     super();
+    queueMetrics.register(OPTIMIZATION_QUEUE, this.queue);
   }
 
+  async onApplicationBootstrap(): Promise<void> {
+    await this.queue.upsertJobScheduler(
+      OptimizationJob.Prune,
+      { every: 24 * 60 * 60 * 1000 },
+      { name: OptimizationJob.Prune },
+    );
+  }
+
+  /** Every job runs inside its own log context, timed and counted. */
   async process(job: Job<RunOptimizationData>): Promise<unknown> {
+    return this.observability.run(OPTIMIZATION_QUEUE, job, () =>
+      this.handle(job),
+    );
+  }
+
+  private async handle(job: Job<RunOptimizationData>): Promise<unknown> {
+    if (job.name === OptimizationJob.Prune) {
+      const cutoff = new Date(
+        Date.now() -
+          this.config.optimizationRetentionDays * 24 * 60 * 60 * 1000,
+      );
+
+      const pruned = await this.requests.deleteFinishedBefore(cutoff, 5_000);
+
+      if (pruned > 0) {
+        this.logger.log(`Pruned ${pruned} finished optimizations`);
+      }
+
+      return { pruned };
+    }
+
     if (job.name !== OptimizationJob.Run) {
       throw new Error(`Unsupported job "${job.name}" on ${OPTIMIZATION_QUEUE}`);
     }

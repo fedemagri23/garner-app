@@ -1,3 +1,5 @@
+import { QueueMetricsService } from '../../common/observability/queue-metrics.service.js';
+import { JobObservability } from '../../common/observability/job-observability.service.js';
 import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import type { Job, Queue } from 'bullmq';
@@ -57,11 +59,17 @@ export class ExternalImportsProcessor
     private readonly runImport: RunSourceImportUseCase,
     private readonly schedule: ScheduleSourceImportsUseCase,
     @InjectQueue(EXTERNAL_IMPORTS_QUEUE) private readonly queue: Queue,
+    private readonly observability: JobObservability,
+    private readonly queueMetrics: QueueMetricsService,
   ) {
     super();
   }
 
   async onApplicationBootstrap(): Promise<void> {
+    // Queues hand themselves in, so queue depth is observable without a list
+    // here that goes stale each time a phase adds a worker.
+    this.queueMetrics.register(EXTERNAL_IMPORTS_QUEUE, this.queue);
+
     await this.queue.upsertJobScheduler(
       ExternalImportJob.ScheduleImports,
       { every: SCHEDULE_EVERY_MS },
@@ -69,7 +77,14 @@ export class ExternalImportsProcessor
     );
   }
 
+  /** Every job runs inside its own log context, timed and counted. */
   async process(job: Job): Promise<unknown> {
+    return this.observability.run(EXTERNAL_IMPORTS_QUEUE, job, () =>
+      this.handle(job),
+    );
+  }
+
+  private async handle(job: Job): Promise<unknown> {
     switch (job.name) {
       case ExternalImportJob.RunImport: {
         const { sourceId, runKey } = job.data as RunImportData;

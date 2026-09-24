@@ -160,3 +160,54 @@ Notation: [`README.md`](README.md).
 - **What:** At most 12 candidate stores, at most 4 stores in a plan whatever the shopper configures, and combinations only one past their own limit.
 - **Why:** Combinations grow quickly, and beyond a dozen stores the extra candidates are further away and rarely change the answer. No shopper visits five shops.
 - **Revisit when:** A dense city centre is shown to have more than 12 genuinely competitive stores for one list.
+
+## Notifications and operations
+
+### CON-025 — Tracing is hooks, not an exporter
+- **Phase:** 8 · **Area:** common/observability · **Status:** deferred
+- **What:** A trace id is accepted from the caller or minted, carried through `AsyncLocalStorage`, written on every log line, and passed into jobs. There is no OpenTelemetry dependency, no spans and no exporter.
+- **Why:** The correlation is what makes logs followable across the API and its workers today, and it is the part that would have to exist anyway. An exporter is a dependency and a collector to run, for a system that is one process.
+- **Revisit when:** The deployment splits into services, or a latency question needs per-span timings rather than per-request ones.
+
+### CON-026 — Metrics are in-process and reset on restart
+- **Phase:** 8 · **Area:** common/observability · **Status:** accepted
+- **What:** Counters, histograms and gauges live in memory and are exposed at `GET /v1/metrics`. A restart resets them.
+- **Why:** One deployable, and a scrape endpoint is all a monitoring stack needs. Prometheus treats a reset as a counter reset, which `rate()` already handles.
+- **Revisit when:** More than one instance runs — then each exposes its own numbers and they must be aggregated by the scraper, which is normal, or by a push gateway, which is not.
+
+### CON-027 — The metrics endpoint is admin-only
+- **Phase:** 8 · **Area:** common/observability · **Status:** accepted
+- **What:** `/v1/metrics` requires an administrator token, and scrapers authenticate like any other client.
+- **Why:** Route names, queue depths and error counts describe the system's shape and load. That is not something to hand to anyone who asks.
+- **Revisit when:** The endpoint is bound to an internal interface a scraper reaches directly, which would make the token redundant.
+
+### CON-028 — Notification delivery is an inbox, not a push
+- **Phase:** 8 · **Area:** notifications · **Status:** deferred
+- **What:** The only delivery channel stores the message for the client to read from `GET /v1/notifications`.
+- **Why:** A real channel for an app that polls, and the port is the point: push, email or SMS is another implementation rather than a change to how alerts are evaluated.
+- **Revisit when:** The product needs to reach someone who is not in the app — that is a provider, a device-token store and a consent trail, none of which this phase needs.
+
+### CON-029 — Quiet hours hold messages rather than dropping them
+- **Phase:** 8 · **Area:** notifications · **Status:** accepted
+- **What:** A message raised inside a shopper's quiet period is stored with a later `deliverAt` and released when the period ends.
+- **Why:** The news is still worth having at breakfast. Dropping it would make quiet hours a way to lose information rather than defer it.
+- **Revisit when:** Held messages pile up into a morning flood; the answer is a digest, not dropping them.
+
+### CON-030 — Alerts are evaluated per price change, over a bounded set
+- **Phase:** 8 · **Area:** notifications · **Status:** accepted
+- **What:** One price change examines at most 500 alerts watching that product, and reads every other derived price for it to judge "cheapest nearby".
+- **Why:** Simple, and correct at the scale this system is built for. The bound stops a popular product from producing unbounded work.
+- **Revisit when:** A product has more watchers than that — then alerts want their own index and evaluation in batches, not a bigger limit.
+
+### CON-031 — `TRUST_PROXY_HOPS` must match the deployment
+- **Phase:** 8 · **Area:** common/http · **Status:** accepted
+- **What:** Express trusts a configured number of proxy hops, defaulting to none, rather than trusting `X-Forwarded-For` blindly.
+- **Why:** Trusting an unset header lets any caller spoof their own address and walk past per-IP rate limiting. Getting it wrong the other way makes every request look like the load balancer, throttling all users as one client.
+- **Revisit when:** Deploying behind a proxy — this is a setting that must be checked, not assumed. It is in the operations doc for that reason.
+
+### CON-032 — No load testing has been done
+- **Phase:** 8 · **Area:** whole system · **Status:** deferred
+- **What:** The plan asks for performance verification of search, comparison, submission, import, aggregation and optimization under realistic workloads. Query paths have been indexed by inspection; none has been measured under load.
+- **Why:** There is no realistic workload to generate yet — no production traffic, no seeded catalog of representative size.
+- **Revisit when:** Before the first real users, with a seeded dataset. The metrics to watch are already exposed; what is missing is the load and a baseline to compare against.
+

@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module.js';
 import { AppConfigModule } from './common/config/config.module.js';
 import { DatabaseModule } from './common/database/database.module.js';
@@ -7,6 +7,9 @@ import { EventsModule } from './common/events/events.module.js';
 import { HealthModule } from './common/health/health.module.js';
 import { AllExceptionsFilter } from './common/http/all-exceptions.filter.js';
 import { RequestIdMiddleware } from './common/http/request-id.middleware.js';
+import { MetricsController } from './common/observability/metrics.controller.js';
+import { MetricsInterceptor } from './common/observability/metrics.interceptor.js';
+import { ObservabilityModule } from './common/observability/observability.module.js';
 import { QueueModule } from './common/queue/queue.module.js';
 import { RedisModule } from './common/redis/redis.module.js';
 import { ContributionsModule } from './contributions/contributions.module.js';
@@ -29,6 +32,7 @@ import { UsersModule } from './users/users.module.js';
     // Shared infrastructure. Each is @Global, so domain modules take what they
     // need without importing infrastructure from a sibling domain.
     AppConfigModule,
+    ObservabilityModule,
     DatabaseModule,
     RedisModule,
     QueueModule,
@@ -52,12 +56,14 @@ import { UsersModule } from './users/users.module.js';
     OptimizationModule,
     NotificationsModule,
   ],
+  controllers: [MetricsController],
   providers: [
     // Order matters: rate limiting runs before authentication so an
     // unauthenticated flood is rejected before it costs a token verification
     // or a password hash.
     { provide: APP_GUARD, useClass: RateLimitGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
 })
