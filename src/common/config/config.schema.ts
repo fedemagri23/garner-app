@@ -31,6 +31,10 @@ export const configSchema = z.object({
   // fraud review and recalculation, then pruned.
   PRICE_OBSERVATION_RETENTION_DAYS: z.coerce.number().int().min(1).default(90),
 
+  // Delivered notifications are kept this long; they are a read history, not
+  // a record anything depends on.
+  NOTIFICATION_RETENTION_DAYS: z.coerce.number().int().min(1).default(30),
+
   // Where the local-disk evidence store keeps uploaded photos.
   EVIDENCE_STORAGE_DIR: z.string().min(1).default('var/evidence'),
 

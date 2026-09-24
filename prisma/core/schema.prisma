@@ -31,6 +31,9 @@ model User {
   shoppingSessions        ShoppingSession[]
   optimizationPreferences OptimizationPreferences?
   optimizationRequests    OptimizationRequest[]
+  priceAlerts             PriceAlert[]
+  notificationPreferences NotificationPreferences?
+  notifications           Notification[]
 
   @@map("users")
 }
@@ -461,4 +464,113 @@ model OptimizationRequest {
   @@index([ownerId, requestedAt])
   @@index([listId, fingerprint, completedAt])
   @@map("optimization_requests")
+}
+
+/// What a shopper asked to be told about.
+enum PriceAlertType {
+  /// The price at a watched store falls to or below a figure they named.
+  BELOW_THRESHOLD
+  /// The price falls by a meaningful proportion, whatever it started at.
+  PRICE_DROP
+  /// Somewhere near them becomes the cheapest place to buy it.
+  CHEAPER_NEARBY
+}
+
+enum NotificationCategory {
+  PRICE_ALERT
+  SHOPPING_REMINDER
+}
+
+enum NotificationStatus {
+  /// Created, waiting for delivery — possibly until quiet hours end.
+  PENDING
+  SENT
+  FAILED
+}
+
+/// A standing request to be told when a product's price does something.
+///
+/// Opt-in by construction: no alert exists until a shopper creates one, and
+/// every alert names exactly what it watches.
+model PriceAlert {
+  id        String         @id @default(uuid()) @db.Uuid
+  ownerId   String         @db.Uuid
+  productId String         @db.Uuid
+  type      PriceAlertType
+  /// One store, or null to watch the product anywhere nearby.
+  storeId   String?        @db.Uuid
+
+  /// BELOW_THRESHOLD: the figure, in minor units.
+  thresholdCents Int?
+  /// PRICE_DROP: how much of a fall is worth a message, in percent.
+  dropPercent    Int?
+  /// CHEAPER_NEARBY: where "nearby" is measured from.
+  latitude       Float?
+  longitude      Float?
+  radiusKm       Float?
+
+  isEnabled              Boolean   @default(true)
+  /// When this alert last produced a notification, for throttling.
+  lastTriggeredAt        DateTime? @db.Timestamptz(3)
+  /// The price it last told them about, so the same news is not repeated.
+  lastNotifiedPriceCents Int?
+  createdAt              DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime  @updatedAt @db.Timestamptz(3)
+
+  owner         User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  /// Evaluating a price change walks this.
+  @@index([productId, isEnabled])
+  @@index([ownerId, createdAt])
+  @@map("price_alerts")
+}
+
+/// How a shopper wants to be reached, and when they would rather not be.
+model NotificationPreferences {
+  userId                  String   @id @db.Uuid
+  priceAlertsEnabled      Boolean  @default(true)
+  remindersEnabled        Boolean  @default(true)
+  /// Hours of the UTC day to stay silent in; a message raised then waits.
+  quietHoursStartUtc      Int?
+  quietHoursEndUtc        Int?
+  /// The least time between two messages from one alert.
+  minMinutesBetweenAlerts Int      @default(360)
+  createdAt               DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime @updatedAt @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+/// One message raised for one shopper, and what became of it.
+model Notification {
+  id        String               @id @default(uuid()) @db.Uuid
+  userId    String               @db.Uuid
+  category  NotificationCategory
+  title     String
+  body      String
+  /// What it is about, for the client to link to.
+  productId String?              @db.Uuid
+  storeId   String?              @db.Uuid
+  listId    String?              @db.Uuid
+  alertId   String?              @db.Uuid
+
+  status    NotificationStatus @default(PENDING)
+  /// Identifies the news, so the same message is never raised twice.
+  dedupeKey String             @unique
+  createdAt DateTime           @default(now()) @db.Timestamptz(3)
+  /// When it may be delivered; later than createdAt during quiet hours.
+  deliverAt DateTime           @default(now()) @db.Timestamptz(3)
+  sentAt    DateTime?          @db.Timestamptz(3)
+  readAt    DateTime?          @db.Timestamptz(3)
+  error     String?
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alert PriceAlert? @relation(fields: [alertId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([status, deliverAt])
+  @@map("notifications")
 }

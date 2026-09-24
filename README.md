@@ -73,7 +73,7 @@ src/
 ├── price-intelligence/      derived prices, daily history, confidence, trends
 ├── external-price-sources/  source registry, adapters, scheduled imports
 ├── optimization/            store combinations, constraints, routes, ranking
-└── notifications/           (phase 8)
+└── notifications/           price alerts, quiet hours, message delivery
 ```
 
 A module may depend on another module's **domain types and ports** — that is
@@ -353,6 +353,31 @@ the request for a retry. An identical question — same list contents, same
 limits, same rough location — reuses a completed answer for 15 minutes; prices
 are not part of that fingerprint, so freshness is bounded by time.
 
+### Notifications
+
+Alerts are opt-in and owned: a shopper creates their own, each naming exactly
+what it watches — a price below a figure, a drop of a given size, or a nearby
+store becoming the cheapest place to buy something.
+
+Evaluation runs in a worker off `DerivedPriceUpdated`, so whoever caused the
+price to change never waits on other people's alerts. The bar for speaking is
+deliberately high, because a notification that repeats what a shopper already
+knows teaches them to ignore the next one:
+
+- the same news is never sent twice — an alert remembers the price it last
+  reported, and only a new low counts;
+- an alert that has just spoken stays quiet for `minMinutesBetweenAlerts`;
+- messages raised during quiet hours are **held until the period ends**, not
+  dropped;
+- a message is identified by alert, store and price, so two workers
+  evaluating the same change raise one message between them.
+
+Delivery is one port. Today's implementation stores the message for the client
+to read from `GET /v1/notifications` — a real channel for an app with an inbox
+— and push or email would be a second implementation rather than a change to
+how alerts are evaluated. A sweep every 5 minutes delivers held and missed
+messages, and prunes delivered ones after `NOTIFICATION_RETENTION_DAYS`.
+
 ### Databases
 
 Three logical databases with no cross-database foreign keys and no distributed
@@ -406,6 +431,9 @@ npx prisma migrate dev --config prisma/core/prisma.config.ts
 | `POST /v1/shopping-lists/:id/optimize` | the list owner |
 | `GET /v1/optimizations`, `GET /v1/optimizations/:id` | the requester |
 | `GET\|PATCH /v1/optimization-preferences` | the account holder |
+| `POST\|GET /v1/price-alerts`, `PATCH\|DELETE /v1/price-alerts/:id` | the alert owner |
+| `GET /v1/notifications`, `POST /v1/notifications/:id/read` | the recipient |
+| `GET\|PATCH /v1/notification-preferences` | the account holder |
 | `GET\|POST /v1/price-sources`, `GET\|PATCH /v1/price-sources/:id` | admin |
 | `GET /v1/price-sources/adapters` | admin |
 | `POST\|GET /v1/price-sources/:id/imports` | admin |

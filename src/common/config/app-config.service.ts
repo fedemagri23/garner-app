@@ -71,6 +71,10 @@ export class AppConfigService {
     return this.get('PRICE_OBSERVATION_RETENTION_DAYS');
   }
 
+  get notificationRetentionDays(): number {
+    return this.get('NOTIFICATION_RETENTION_DAYS');
+  }
+
   get evidenceStorageDir(): string {
     return this.get('EVIDENCE_STORAGE_DIR');
   }

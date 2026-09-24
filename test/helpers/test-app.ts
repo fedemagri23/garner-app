@@ -39,6 +39,9 @@ export async function resetDatabase(app: INestApplication): Promise<void> {
   await prisma.shoppingListItem.deleteMany();
   await prisma.shoppingList.deleteMany();
 
+  await prisma.notification.deleteMany();
+  await prisma.priceAlert.deleteMany();
+  await prisma.notificationPreferences.deleteMany();
   await prisma.optimizationRequest.deleteMany();
   await prisma.optimizationPreferences.deleteMany();
   await prisma.userPreferences.deleteMany();

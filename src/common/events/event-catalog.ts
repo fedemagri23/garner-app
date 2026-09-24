@@ -23,6 +23,7 @@ import type { DomainEvent } from './domain-event.js';
  * | ExternalPriceImportCompleted | external-price-sources(6) | monitoring  |
  * | OptimizationRequested    | optimization (7)   | optimization worker  |
  * | OptimizationCompleted    | optimization (7)   | notifications (8)    |
+ * | PriceAlertTriggered      | notifications (8)  | delivery worker      |
  */
 export const DomainEventName = {
   UserCreated: 'UserCreated',
@@ -40,6 +41,7 @@ export const DomainEventName = {
   ExternalPriceImportCompleted: 'ExternalPriceImportCompleted',
   OptimizationRequested: 'OptimizationRequested',
   OptimizationCompleted: 'OptimizationCompleted',
+  PriceAlertTriggered: 'PriceAlertTriggered',
 } as const;
 
 export type DomainEventName =
@@ -266,4 +268,20 @@ export interface OptimizationCompletedPayload {
 export type OptimizationCompletedEvent = DomainEvent<
   'OptimizationCompleted',
   OptimizationCompletedPayload
+>;
+
+/** A shopper's standing alert matched a price change and raised a message. */
+export interface PriceAlertTriggeredPayload {
+  alertId: string;
+  ownerId: string;
+  notificationId: string;
+  productId: string;
+  storeId: string;
+  priceCents: number;
+  reason: 'BELOW_THRESHOLD' | 'PRICE_DROP' | 'CHEAPER_NEARBY';
+}
+
+export type PriceAlertTriggeredEvent = DomainEvent<
+  'PriceAlertTriggered',
+  PriceAlertTriggeredPayload
 >;
