@@ -34,6 +34,41 @@ export const configSchema = z.object({
   // Where the local-disk evidence store keeps uploaded photos.
   EVIDENCE_STORAGE_DIR: z.string().min(1).default('var/evidence'),
 
+  // Bearer tokens for external price sources, as {"source-slug":"token"}.
+  // Kept here rather than in the source registry row so a credential never
+  // lands in the database or in an API response.
+  EXTERNAL_SOURCE_TOKENS: z
+    .string()
+    .default('{}')
+    .transform((raw, ctx) => {
+      try {
+        const parsed: unknown = JSON.parse(raw);
+
+        if (
+          typeof parsed !== 'object' ||
+          parsed === null ||
+          Array.isArray(parsed) ||
+          Object.values(parsed).some((value) => typeof value !== 'string')
+        ) {
+          throw new Error('expected an object of string values');
+        }
+
+        return parsed as Record<string, string>;
+      } catch (error) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `must be a JSON object of source slug to token (${
+            error instanceof Error ? error.message : String(error)
+          })`,
+        });
+        return z.NEVER;
+      }
+    }),
+
+  // Where the sandbox adapter may read fixture files from. Confines it to one
+  // directory, so a source's configuration cannot name any file on the host.
+  EXTERNAL_SOURCE_SANDBOX_DIR: z.string().min(1).default('var/sandbox-sources'),
+
   SWAGGER_ENABLED: z
     .enum(['true', 'false'])
     .default('true')

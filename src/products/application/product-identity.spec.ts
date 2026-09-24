@@ -49,6 +49,7 @@ describe('product identity', () => {
       findById: jest.fn().mockResolvedValue(milk),
       findManyByIds: jest.fn(),
       findByBarcode: jest.fn().mockResolvedValue(null),
+      findByNormalizedName: jest.fn().mockResolvedValue([]),
       create: jest.fn().mockResolvedValue(milk),
       update: jest.fn().mockImplementation(async (id, input) => ({
         ...milk,

@@ -24,6 +24,7 @@ describe('SearchProductsUseCase', () => {
       findById: jest.fn(),
       findManyByIds: jest.fn(),
       findByBarcode: jest.fn(),
+      findByNormalizedName: jest.fn().mockResolvedValue([]),
       create: jest.fn(),
       update: jest.fn(),
       addBarcode: jest.fn(),

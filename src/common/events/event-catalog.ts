@@ -19,6 +19,8 @@ import type { DomainEvent } from './domain-event.js';
  * | DerivedPriceUpdated      | price-intelligence(5) | notifications (8) |
  * | DailyPriceCalculated     | price-intelligence(5) | analytics         |
  * | PriceAnomalyDetected     | price-intelligence(5) | abuse review      |
+ * | ExternalPriceImportStarted   | external-price-sources(6) | —           |
+ * | ExternalPriceImportCompleted | external-price-sources(6) | monitoring  |
  * | OptimizationRequested    | optimization (7)   | optimization worker  |
  */
 export const DomainEventName = {
@@ -33,6 +35,8 @@ export const DomainEventName = {
   DerivedPriceUpdated: 'DerivedPriceUpdated',
   DailyPriceCalculated: 'DailyPriceCalculated',
   PriceAnomalyDetected: 'PriceAnomalyDetected',
+  ExternalPriceImportStarted: 'ExternalPriceImportStarted',
+  ExternalPriceImportCompleted: 'ExternalPriceImportCompleted',
   OptimizationRequested: 'OptimizationRequested',
 } as const;
 
@@ -199,4 +203,38 @@ export interface PriceAnomalyDetectedPayload {
 export type PriceAnomalyDetectedEvent = DomainEvent<
   'PriceAnomalyDetected',
   PriceAnomalyDetectedPayload
+>;
+
+export interface ExternalPriceImportStartedPayload {
+  sourceId: string;
+  sourceSlug: string;
+  runId: string;
+  runKey: string;
+}
+
+export type ExternalPriceImportStartedEvent = DomainEvent<
+  'ExternalPriceImportStarted',
+  ExternalPriceImportStartedPayload
+>;
+
+/**
+ * One source's import finished. PARTIAL means the source answered but some of
+ * what it sent could not be used — unmatched products, prices for unmapped
+ * stores — which is expected and is the operator's queue, not an incident.
+ */
+export interface ExternalPriceImportCompletedPayload {
+  sourceId: string;
+  sourceSlug: string;
+  runId: string;
+  runKey: string;
+  status: 'COMPLETED' | 'PARTIAL' | 'FAILED';
+  observationsCreated: number;
+  unmatchedProducts: number;
+  skippedPrices: number;
+  error: string | null;
+}
+
+export type ExternalPriceImportCompletedEvent = DomainEvent<
+  'ExternalPriceImportCompleted',
+  ExternalPriceImportCompletedPayload
 >;

@@ -57,6 +57,8 @@ export async function resetDatabase(app: INestApplication): Promise<void> {
   const pricing = app.get(PricingPrismaService);
   await pricing.priceObservation.deleteMany();
   await pricing.sessionContribution.deleteMany();
+  // Runs and links cascade from their source.
+  await pricing.externalPriceSource.deleteMany();
 
   const intelligence = app.get(IntelligencePrismaService);
   await intelligence.derivedPrice.deleteMany();

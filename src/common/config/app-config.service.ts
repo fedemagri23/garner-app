@@ -75,6 +75,15 @@ export class AppConfigService {
     return this.get('EVIDENCE_STORAGE_DIR');
   }
 
+  /** Bearer token for one external source, when one is configured. */
+  externalSourceToken(slug: string): string | null {
+    return this.get('EXTERNAL_SOURCE_TOKENS')[slug] ?? null;
+  }
+
+  get externalSourceSandboxDir(): string {
+    return this.get('EXTERNAL_SOURCE_SANDBOX_DIR');
+  }
+
   get swaggerEnabled(): boolean {
     return this.get('SWAGGER_ENABLED');
   }

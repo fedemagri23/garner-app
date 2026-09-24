@@ -80,6 +80,18 @@ export class PrismaProductRepository implements ProductRepository {
     return barcode ? this.toDomain(barcode.product) : null;
   }
 
+  async findByNormalizedName(normalizedName: string): Promise<Product[]> {
+    const rows = await this.prisma.product.findMany({
+      where: { normalizedName, isActive: true },
+      include: PRODUCT_INCLUDE,
+      // Bounded: more than a handful of products sharing one name is a
+      // catalog problem, and the matcher refuses ambiguity anyway.
+      take: 10,
+    });
+
+    return rows.map((row) => this.toDomain(row));
+  }
+
   async create(input: CreateProductInput): Promise<Product> {
     const row = await this.prisma.product.create({
       data: {

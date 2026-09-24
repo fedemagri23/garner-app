@@ -67,7 +67,7 @@ src/
 ├── pricing/                 price observations, trust evaluation, retention
 ├── contributions/           price reports, evidence, trip contributions
 ├── price-intelligence/      derived prices, daily history, confidence, trends
-├── external-price-sources/  (phase 6)
+├── external-price-sources/  source registry, adapters, scheduled imports
 ├── optimization/            (phase 7)
 └── notifications/           (phase 8)
 ```
@@ -256,6 +256,50 @@ version that a recompute increments, so a new price is visible at once and
 invalidation costs one `INCR` rather than a keyspace scan. Every cache path
 fails soft: Redis being down costs latency, not availability.
 
+### External price sources
+
+A supermarket integration is an **adapter** behind one contract:
+
+```ts
+interface PriceSourceAdapter {
+  fetchProducts(context): Promise<ExternalProduct[]>;
+  fetchPrices(context): Promise<ExternalPrice[]>;
+}
+```
+
+Authentication, pagination, request shapes, field names and the provider's
+own idea of what a price is all stay inside the adapter. Two ship today:
+`json-http` (a configurable JSON feed) and `sandbox-file` (JSON fixtures on
+disk, confined to `EXTERNAL_SOURCE_SANDBOX_DIR`, for development and tests).
+Adding a supermarket means writing an adapter and registering a source —
+the pricing domain does not change.
+
+Imported prices are **not a separate path**: they become `EXTERNAL_API`
+observations through the same ingestion pipeline as a shopper's report, so the
+same plausibility checks, deviation rules and weighting apply to a feed.
+
+**Product matching** runs in order of certainty — an existing link, then a
+valid barcode, then an exact normalized name *and* package size. Anything
+ambiguous (two products of the same name and size) is left `UNMATCHED` for a
+person to decide through the API, and nothing here ever creates a canonical
+product: a wrong match splits a product's price history in two. Store mappings
+are always manual for the same reason.
+
+**Scheduling and isolation.** Each source has its own UTC hour. A sweep every
+10 minutes queues one job per due source, so a supermarket that is down,
+slow or misconfigured fails its own run and leaves the others alone — and a
+day missed during an outage is caught up later that day rather than skipped.
+Runs are keyed by source and day, so the scheduler and an operator pressing
+"import now" cannot import twice, and each observation is keyed by run,
+product and store, so a retry after a crash fills in only what is missing.
+
+Run status is `STARTED`, `COMPLETED`, `PARTIAL` or `FAILED`. `PARTIAL` means
+the source answered but some of it could not be used — unmatched products,
+prices for unmapped branches — which is the review queue, not an incident.
+
+Credentials never live in the registry row: they come from
+`EXTERNAL_SOURCE_TOKENS`, a JSON map of source slug to token.
+
 ### Databases
 
 Three logical databases with no cross-database foreign keys and no distributed
@@ -306,6 +350,11 @@ npx prisma migrate dev --config prisma/core/prisma.config.ts
 | `GET /v1/price-observations/mine` | the contributor |
 | `GET /v1/products/:id/prices` (optionally near a location) | any authenticated user |
 | `GET /v1/products/:id/prices/history` (30d, 90d, 6m, 1y) | any authenticated user |
+| `GET\|POST /v1/price-sources`, `GET\|PATCH /v1/price-sources/:id` | admin |
+| `GET /v1/price-sources/adapters` | admin |
+| `POST\|GET /v1/price-sources/:id/imports` | admin |
+| `GET /v1/price-sources/:id/products`, `POST .../products/:externalProductId` | admin |
+| `GET\|POST /v1/price-sources/:id/stores`, `DELETE .../stores/:externalStoreId` | admin |
 | `GET /v1/health`, `GET /v1/health/live` | public |
 
 ### API conventions

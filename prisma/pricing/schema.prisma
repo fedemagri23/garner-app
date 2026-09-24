@@ -85,3 +85,131 @@ model SessionContribution {
   @@index([processedAt])
   @@map("session_contributions")
 }
+
+/// How an import run ended. PARTIAL means the source answered but some of what
+/// it returned could not be used — an unmatched product, a price that failed
+/// validation — which is normal and not a reason to alarm anyone.
+enum ImportRunStatus {
+  STARTED
+  COMPLETED
+  PARTIAL
+  FAILED
+}
+
+/// How an external product was tied to a canonical one.
+enum ProductMatchMethod {
+  BARCODE
+  EXTERNAL_ID
+  NORMALIZED_IDENTITY
+  MANUAL
+}
+
+enum ExternalProductLinkStatus {
+  MATCHED
+  /// Seen but not confidently matched; waits for a person to decide.
+  UNMATCHED
+  /// A person decided this external product has no canonical counterpart.
+  IGNORED
+}
+
+/// A supermarket integration, as configured by a developer or administrator.
+///
+/// Registry only: how to talk to the source lives in its adapter, and its
+/// credentials come from the environment, never from this row.
+model ExternalPriceSource {
+  id                  String           @id @default(uuid()) @db.Uuid
+  name                String
+  slug                String           @unique
+  /// The core_db supermarket whose stores this source prices.
+  supermarketId       String           @db.Uuid
+  /// Which adapter implementation runs it, e.g. `json-http`.
+  adapterKey          String
+  isEnabled           Boolean          @default(true)
+  /// Hour of the UTC day the daily import is due. Sources differ in when
+  /// their data is fresh, so this is per source rather than global.
+  scheduleHourUtc     Int              @default(8)
+  /// Non-secret adapter configuration: endpoints, page size, field names.
+  config              Json             @default("{}")
+  lastRunAt           DateTime?        @db.Timestamptz(3)
+  lastSuccessfulRunAt DateTime?        @db.Timestamptz(3)
+  lastStatus          ImportRunStatus?
+  /// Reset by any run that completes; a rising count means a source needs a look.
+  consecutiveFailures Int              @default(0)
+  createdAt           DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime         @updatedAt @db.Timestamptz(3)
+
+  runs       ImportRun[]
+  links      ExternalProductLink[]
+  storeLinks ExternalStoreLink[]
+
+  @@index([isEnabled, scheduleHourUtc])
+  @@map("external_price_sources")
+}
+
+/// One execution of one source's import.
+model ImportRun {
+  id       String @id @default(uuid()) @db.Uuid
+  sourceId String @db.Uuid
+  /// The scheduled slot this run belongs to, e.g. `2026-09-24`. Unique per
+  /// source, so a retried or duplicated trigger resumes the same run instead
+  /// of starting a second one.
+  runKey   String
+
+  status              ImportRunStatus @default(STARTED)
+  startedAt           DateTime        @default(now()) @db.Timestamptz(3)
+  finishedAt          DateTime?       @db.Timestamptz(3)
+  productsSeen        Int             @default(0)
+  pricesSeen          Int             @default(0)
+  observationsCreated Int             @default(0)
+  matchedProducts     Int             @default(0)
+  unmatchedProducts   Int             @default(0)
+  skippedPrices       Int             @default(0)
+  /// Why the run failed, or what went wrong in a partial run. Operator-facing.
+  error               String?
+
+  source ExternalPriceSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, runKey])
+  @@index([sourceId, startedAt])
+  @@map("import_runs")
+}
+
+/// What a source calls a product, and which canonical product that is.
+///
+/// An unmatched row is deliberately kept: it is the queue a person works
+/// through. Nothing here ever creates a canonical product, because a wrong
+/// automatic match splits a product's price history in two.
+model ExternalProductLink {
+  id                String                    @id @default(uuid()) @db.Uuid
+  sourceId          String                    @db.Uuid
+  externalProductId String
+  productId         String?                   @db.Uuid
+  externalName      String
+  externalBarcode   String?
+  matchMethod       ProductMatchMethod?
+  status            ExternalProductLinkStatus @default(UNMATCHED)
+  lastSeenAt        DateTime                  @default(now()) @db.Timestamptz(3)
+  createdAt         DateTime                  @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime                  @updatedAt @db.Timestamptz(3)
+
+  source ExternalPriceSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, externalProductId])
+  @@index([sourceId, status])
+  @@map("external_product_links")
+}
+
+/// What a source calls a store, and which core_db store that is. Set by a
+/// person: a mis-mapped store would file real prices against the wrong place.
+model ExternalStoreLink {
+  id              String   @id @default(uuid()) @db.Uuid
+  sourceId        String   @db.Uuid
+  externalStoreId String
+  storeId         String   @db.Uuid
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+
+  source ExternalPriceSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, externalStoreId])
+  @@map("external_store_links")
+}

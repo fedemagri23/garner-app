@@ -34,6 +34,11 @@ export interface ProductRepository {
   findById(id: string): Promise<Product | null>;
   findManyByIds(ids: string[]): Promise<Product[]>;
   findByBarcode(code: string): Promise<Product | null>;
+  /**
+   * Exact matches on the stored matching key. Used by external imports to tie
+   * a supermarket's product to ours when there is no barcode to go on.
+   */
+  findByNormalizedName(normalizedName: string): Promise<Product[]>;
   create(input: CreateProductInput): Promise<Product>;
   update(id: string, input: UpdateProductInput): Promise<Product>;
   /** Returns null when the code already belongs to another product. */
