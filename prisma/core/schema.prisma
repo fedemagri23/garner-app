@@ -25,10 +25,12 @@ model User {
   createdAt    DateTime @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 
-  refreshTokens    RefreshToken[]
-  preferences      UserPreferences?
-  shoppingLists    ShoppingList[]
-  shoppingSessions ShoppingSession[]
+  refreshTokens           RefreshToken[]
+  preferences             UserPreferences?
+  shoppingLists           ShoppingList[]
+  shoppingSessions        ShoppingSession[]
+  optimizationPreferences OptimizationPreferences?
+  optimizationRequests    OptimizationRequest[]
 
   @@map("users")
 }
@@ -270,9 +272,10 @@ model ShoppingList {
   createdAt DateTime             @default(now()) @db.Timestamptz(3)
   updatedAt DateTime             @updatedAt @db.Timestamptz(3)
 
-  owner    User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  items    ShoppingListItem[]
-  sessions ShoppingSession[]
+  owner         User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  items         ShoppingListItem[]
+  sessions      ShoppingSession[]
+  optimizations OptimizationRequest[]
 
   @@index([ownerId, updatedAt])
   @@map("shopping_lists")
@@ -371,4 +374,91 @@ model ShoppingSessionItem {
   @@index([sessionId, position])
   @@index([productId])
   @@map("shopping_session_items")
+}
+
+/// Which recommendation a shopper wants to act on. Every optimization returns
+/// all three; this says which one is theirs by default.
+enum OptimizationMode {
+  CHEAPEST
+  BEST_BALANCE
+  SIMPLEST
+}
+
+enum OptimizationStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+/// A shopper's standing answer to "how far would you go to save money?".
+/// Reusable: every optimization starts from these and may override them.
+model OptimizationPreferences {
+  userId                       String           @id @db.Uuid
+  /// How many shops they are willing to visit in one trip.
+  maxStores                    Int              @default(2)
+  /// Extra kilometres they will accept over shopping at one store.
+  maxAdditionalDistanceKm      Float            @default(5)
+  maxAdditionalMinutes         Int              @default(20)
+  /// What each extra stop has to save to be worth making, in minor units.
+  minSavingsCentsPerExtraStore Int              @default(400)
+  mode                         OptimizationMode @default(BEST_BALANCE)
+  /// Chains to favour and chains to keep out of every recommendation.
+  preferredSupermarketIds      String[]         @default([])
+  excludedSupermarketIds       String[]         @default([])
+  createdAt                    DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt                    DateTime         @updatedAt @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("optimization_preferences")
+}
+
+/// One "where should I buy all this?" question, and its answer.
+///
+/// The constraints are copied onto the request rather than read from
+/// preferences at render time, so a result always explains itself: it says
+/// which limits produced it, even after the shopper changes their mind.
+model OptimizationRequest {
+  id      String  @id @default(uuid()) @db.Uuid
+  ownerId String  @db.Uuid
+  /// Null once the list is deleted; the answer still stands on its own.
+  listId  String? @db.Uuid
+
+  latitude  Float
+  longitude Float
+  /// How far from the shopper stores may be considered at all.
+  radiusKm  Float
+
+  maxStores                    Int
+  maxAdditionalDistanceKm      Float
+  maxAdditionalMinutes         Int
+  minSavingsCentsPerExtraStore Int
+  mode                         OptimizationMode
+  preferredSupermarketIds      String[]         @default([])
+  excludedSupermarketIds       String[]         @default([])
+
+  status      OptimizationStatus @default(PENDING)
+  requestedAt DateTime           @default(now()) @db.Timestamptz(3)
+  startedAt   DateTime?          @db.Timestamptz(3)
+  completedAt DateTime?          @db.Timestamptz(3)
+  error       String?
+
+  /// The list contents plus the constraints, hashed. A repeated question with
+  /// the same fingerprint reuses a recent answer instead of recomputing it.
+  fingerprint String
+
+  /// The plans, their store assignments and their totals. Held as one
+  /// document because a result is a snapshot that is rendered whole and never
+  /// queried field by field; the columns below are what listings need.
+  result                Json?
+  recommendedTotalCents Int?
+  recommendedStoreCount Int?
+
+  owner User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  list  ShoppingList? @relation(fields: [listId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId, requestedAt])
+  @@index([listId, fingerprint, completedAt])
+  @@map("optimization_requests")
 }

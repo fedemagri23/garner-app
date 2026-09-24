@@ -14,6 +14,14 @@ export interface DerivedPriceRepository {
     productId: string,
     storeIds: string[],
   ): Promise<DerivedPrice[]>;
+  /**
+   * Prices for a whole shopping list across a set of stores, in one query —
+   * optimization needs every product at every candidate store at once.
+   */
+  findForProductsAtStores(
+    productIds: string[],
+    storeIds: string[],
+  ): Promise<DerivedPrice[]>;
   /** Idempotent: recomputing a price rewrites the same row. */
   upsert(price: DerivedPrice): Promise<void>;
   /** Removes a price whose observations have all aged out. */

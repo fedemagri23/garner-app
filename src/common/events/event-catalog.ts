@@ -22,6 +22,7 @@ import type { DomainEvent } from './domain-event.js';
  * | ExternalPriceImportStarted   | external-price-sources(6) | —           |
  * | ExternalPriceImportCompleted | external-price-sources(6) | monitoring  |
  * | OptimizationRequested    | optimization (7)   | optimization worker  |
+ * | OptimizationCompleted    | optimization (7)   | notifications (8)    |
  */
 export const DomainEventName = {
   UserCreated: 'UserCreated',
@@ -38,6 +39,7 @@ export const DomainEventName = {
   ExternalPriceImportStarted: 'ExternalPriceImportStarted',
   ExternalPriceImportCompleted: 'ExternalPriceImportCompleted',
   OptimizationRequested: 'OptimizationRequested',
+  OptimizationCompleted: 'OptimizationCompleted',
 } as const;
 
 export type DomainEventName =
@@ -237,4 +239,31 @@ export interface ExternalPriceImportCompletedPayload {
 export type ExternalPriceImportCompletedEvent = DomainEvent<
   'ExternalPriceImportCompleted',
   ExternalPriceImportCompletedPayload
+>;
+
+export interface OptimizationRequestedPayload {
+  requestId: string;
+  ownerId: string;
+  listId: string;
+  mode: 'CHEAPEST' | 'BEST_BALANCE' | 'SIMPLEST';
+}
+
+export type OptimizationRequestedEvent = DomainEvent<
+  'OptimizationRequested',
+  OptimizationRequestedPayload
+>;
+
+/** An optimization produced an answer. Null totals mean nothing was buyable. */
+export interface OptimizationCompletedPayload {
+  requestId: string;
+  ownerId: string;
+  listId: string | null;
+  mode: 'CHEAPEST' | 'BEST_BALANCE' | 'SIMPLEST';
+  recommendedTotalCents: number | null;
+  storeCount: number | null;
+}
+
+export type OptimizationCompletedEvent = DomainEvent<
+  'OptimizationCompleted',
+  OptimizationCompletedPayload
 >;

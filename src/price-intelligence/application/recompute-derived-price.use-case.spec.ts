@@ -44,6 +44,7 @@ describe('RecomputeDerivedPriceUseCase', () => {
       find: jest.fn().mockResolvedValue(null),
       findForProduct: jest.fn(),
       findForProductAtStores: jest.fn(),
+      findForProductsAtStores: jest.fn(),
       upsert: jest.fn(),
       remove: jest.fn(),
     };

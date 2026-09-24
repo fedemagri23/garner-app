@@ -68,7 +68,7 @@ src/
 ├── contributions/           price reports, evidence, trip contributions
 ├── price-intelligence/      derived prices, daily history, confidence, trends
 ├── external-price-sources/  source registry, adapters, scheduled imports
-├── optimization/            (phase 7)
+├── optimization/            store combinations, constraints, routes, ranking
 └── notifications/           (phase 8)
 ```
 
@@ -300,6 +300,55 @@ prices for unmapped branches — which is the review queue, not an incident.
 Credentials never live in the registry row: they come from
 `EXTERNAL_SOURCE_TOKENS`, a JSON map of source slug to token.
 
+### Optimization
+
+Given a list and a location, the optimizer answers "where should I buy all
+this?" with three alternatives — **cheapest**, **best balance** and
+**simplest** — plus the route, the assignment of each product to a store, and
+what each stop will cost.
+
+It reads **derived prices** from `intelligence_db`, never raw observations, so
+a recommendation rests on what a product costs across contributors rather than
+on whoever reported last.
+
+The search is pure and deterministic: the same list, stores and prices always
+produce the same plans, which is what makes it testable and cacheable. Each
+product goes to the cheapest store in a combination, stores that end up
+carrying nothing are dropped, and every tie breaks on a stable key.
+
+**Constraints are the shopper's decision.** A plan breaking any of them is
+never recommended, however cheap:
+
+| Limit | Meaning |
+| --- | --- |
+| `maxStores` | How many shops in one trip (hard cap of 4) |
+| `maxAdditionalDistanceKm` | Extra kilometres over shopping at one store |
+| `maxAdditionalMinutes` | Extra time, driving plus a fixed cost per stop |
+| `minSavingsCentsPerExtraStore` | What each extra stop must save to be worth making |
+| `excludedSupermarketIds` | Chains that may not appear at all |
+
+Cheaper plans that break a limit are returned separately as
+`rejectedCheaperAlternatives`, each with the limits it breaks — transparency
+without overriding what the shopper asked for.
+
+Savings and extra travel are quoted against the **simplest** single-store
+trip, not the cheapest one. Measuring against the cheapest would make a
+bargain shop an hour away look like no detour at all and would empty every
+distance limit of meaning.
+
+Ranking lives in one place (`scoring.ts`), since "best balance" is a product
+judgement that will be tuned: it monetizes travel (per km, per minute, per
+extra stop) so cost and effort can be weighed on one scale. Coverage always
+comes first — a plan that leaves products unbought is not a cheaper shop, it
+is a smaller one.
+
+Optimizations run in a worker: the API accepts the question (202) and the
+client polls until it is `COMPLETED`. Requests are claimed out of `PENDING`
+before any work, so duplicated jobs do nothing and a failed attempt releases
+the request for a retry. An identical question — same list contents, same
+limits, same rough location — reuses a completed answer for 15 minutes; prices
+are not part of that fingerprint, so freshness is bounded by time.
+
 ### Databases
 
 Three logical databases with no cross-database foreign keys and no distributed
@@ -350,6 +399,9 @@ npx prisma migrate dev --config prisma/core/prisma.config.ts
 | `GET /v1/price-observations/mine` | the contributor |
 | `GET /v1/products/:id/prices` (optionally near a location) | any authenticated user |
 | `GET /v1/products/:id/prices/history` (30d, 90d, 6m, 1y) | any authenticated user |
+| `POST /v1/shopping-lists/:id/optimize` | the list owner |
+| `GET /v1/optimizations`, `GET /v1/optimizations/:id` | the requester |
+| `GET\|PATCH /v1/optimization-preferences` | the account holder |
 | `GET\|POST /v1/price-sources`, `GET\|PATCH /v1/price-sources/:id` | admin |
 | `GET /v1/price-sources/adapters` | admin |
 | `POST\|GET /v1/price-sources/:id/imports` | admin |

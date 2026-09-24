@@ -42,6 +42,21 @@ export class PrismaDerivedPriceRepository implements DerivedPriceRepository {
     return rows.map((row) => this.toDomain(row));
   }
 
+  async findForProductsAtStores(
+    productIds: string[],
+    storeIds: string[],
+  ): Promise<DerivedPrice[]> {
+    if (productIds.length === 0 || storeIds.length === 0) {
+      return [];
+    }
+
+    const rows = await this.prisma.derivedPrice.findMany({
+      where: { productId: { in: productIds }, storeId: { in: storeIds } },
+    });
+
+    return rows.map((row) => this.toDomain(row));
+  }
+
   async upsert(price: DerivedPrice): Promise<void> {
     const data = {
       currency: price.currency,
