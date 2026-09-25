@@ -44,10 +44,10 @@ Notation: [`README.md`](README.md).
 - **Revisit when:** Searches span regions, or polygon queries (delivery zones) are needed.
 
 ### CON-007 — The catalog has no seed data
-- **Phase:** 2 · **Area:** products, supermarkets · **Status:** deferred
-- **What:** A fresh database has no categories, products or stores; they must be created through the moderator endpoints.
-- **Why:** No phase has required a populated development environment.
-- **Revisit when:** Onboarding a developer or demoing the app takes more than a moment; a seed script is the fix.
+- **Phase:** 2 · **Area:** products, supermarkets · **Status:** resolved
+- **What:** A fresh database had no categories, products or stores; they had to be created through the moderator endpoints.
+- **Why:** No phase had required a populated development environment.
+- **Resolved:** `pnpm run seed` (2026-09-25) writes two accounts, a catalog, three chains with branches, current prices and a fortnight of history. Idempotent, and development-only: it writes to the databases directly and sets a role no API exposes.
 
 ## Shopping
 

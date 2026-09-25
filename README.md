@@ -28,8 +28,15 @@ pnpm install                 # also generates the Prisma clients
 cp .env.example .env
 docker compose up -d         # PostgreSQL (port 5433) + Redis (6379)
 pnpm run prisma:migrate:deploy
+pnpm run seed                # development data to click around in
 pnpm run start:dev
 ```
+
+`pnpm run seed` is idempotent and development-only: it writes to the databases
+directly and grants a role no API exposes. It creates
+`admin@garner.test` and `shopper@garner.test` (password
+`correct-horse-battery`), a small catalog, three chains with branches around
+Buenos Aires, current prices and a fortnight of history.
 
 The API listens on `http://localhost:3000`. Swagger UI is at `/docs` and the
 raw spec at `/docs/openapi.json`.
