@@ -82,6 +82,18 @@ export class AppConfigService {
     return configured ? configured === 'json' : this.nodeEnv !== 'development';
   }
 
+  get tracing(): {
+    serviceName: string;
+    otlpEndpoint: string | null;
+    sampleRatio: number;
+  } {
+    return {
+      serviceName: this.get('OTEL_SERVICE_NAME'),
+      otlpEndpoint: this.get('OTEL_EXPORTER_OTLP_ENDPOINT') ?? null,
+      sampleRatio: this.get('OTEL_TRACES_SAMPLE_RATIO'),
+    };
+  }
+
   get trustProxyHops(): number {
     return this.get('TRUST_PROXY_HOPS');
   }

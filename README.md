@@ -420,9 +420,14 @@ catches every email at http://localhost:8025.
 
 - **Logs** — one JSON object per line outside development, carrying
   `requestId`, `traceId`, `userId` where known, and `jobId`/`jobName` inside a
-  worker. A caller may supply `x-request-id` and `x-trace-id`; both are echoed
-  back. The trace follows a request into the jobs it queues, which is how a
-  submitted price is followed through to the alert it raises.
+  worker. A caller may supply `x-request-id`, and joins its own trace with W3C
+  `traceparent`; the request id and the trace id are echoed back.
+- **Traces** — OpenTelemetry. Every request has a server span named after its
+  route; the jobs it queues continue the same trace through BullMQ's
+  telemetry, and Prisma queries are child spans. Trace ids always exist and
+  propagate; spans are exported over OTLP/HTTP only when
+  `OTEL_EXPORTER_OTLP_ENDPOINT` is set. This is how a submitted price is
+  followed through to the derived price and the alert it raises.
 - **Metrics** — `GET /v1/metrics` in Prometheus format, admin-only: request
   counts and latencies by route pattern, job outcomes and durations by queue,
   and queue depths. Queues register themselves, so a new worker is visible

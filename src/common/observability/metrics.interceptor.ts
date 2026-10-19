@@ -4,6 +4,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
+import { trace } from '@opentelemetry/api';
 import type { Request, Response } from 'express';
 import { Observable, tap } from 'rxjs';
 import { requestContext } from '../http/request-context.js';
@@ -17,7 +18,8 @@ import type { RequestWithUser } from '../../security/presentation/current-user.d
  * with it.
  *
  * Also puts the authenticated account on the logging context, so every log
- * line written while serving a request says who it was for.
+ * line written while serving a request says who it was for, and names the
+ * request's span after its route.
  */
 @Injectable()
 export class MetricsInterceptor implements NestInterceptor {
@@ -41,6 +43,11 @@ export class MetricsInterceptor implements NestInterceptor {
       method: request.method,
       route: routeOf(request),
     };
+
+    // Only the router knows the pattern; the span opened before routing.
+    const span = trace.getActiveSpan();
+    span?.updateName(`${labels.method} ${labels.route}`);
+    span?.setAttribute('http.route', labels.route);
 
     const record = () => {
       const elapsed = Date.now() - startedAt;

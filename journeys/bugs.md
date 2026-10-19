@@ -90,7 +90,13 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Fix:** The delivery tests pause the notifications queue while they run, so the use case under test is the only thing delivering, then drain and resume it.
 
 ### BUG-013 — A notification deleted mid-delivery failed its job instead of ending it
-- **Phase:** post-plan · **Area:** notifications · **Scope:** production code · **Found by:** e2e test · **Fixed in:** (email channel commit)
+- **Phase:** post-plan · **Area:** notifications · **Scope:** production code · **Found by:** e2e test · **Fixed in:** 1981c39
 - **Symptom:** Foreign-key errors from `notification_channel_deliveries` in the worker log while the notifications suite cleaned up between tests.
 - **Cause:** Recording a channel's outcome references the notification. When the notification is deleted while it is being delivered — with its account, or by retention — the write fails, and the delivery was reported as a failure to be retried.
 - **Fix:** The ledger reports a vanished notification as such, and delivery stops there: nothing left to send and nothing to retry.
+
+### BUG-014 — Trace ids never reached the jobs a request queued
+- **Phase:** post-plan · **Area:** common/observability · **Scope:** production code · **Found by:** review · **Fixed in:** (tracing commit)
+- **Symptom:** A job's log lines carried a fresh random trace id, unrelated to the request that queued it — the opposite of what the README, `docs/operations.md` and CON-025 described.
+- **Cause:** The worker side read `traceId` from the job's data, but no producer ever put it there. The consumer half of the propagation was built; the producer half was not, and no test followed a trace across a queue.
+- **Fix:** Propagation moved to OpenTelemetry: BullMQ's telemetry injects the context on every `add` and the worker runs inside a consumer span of the same trace. `test/tracing.e2e-spec.ts` follows one request through to its job.

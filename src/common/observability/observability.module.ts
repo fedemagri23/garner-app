@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { JobObservability } from './job-observability.service.js';
 import { MetricsService } from './metrics.service.js';
 import { QueueMetricsService } from './queue-metrics.service.js';
+import { TracingService } from './tracing.service.js';
 
 /**
  * Global so any module can record a metric without importing infrastructure
@@ -10,7 +11,7 @@ import { QueueMetricsService } from './queue-metrics.service.js';
  */
 @Global()
 @Module({
-  providers: [MetricsService, QueueMetricsService, JobObservability],
+  providers: [TracingService, MetricsService, QueueMetricsService, JobObservability],
   exports: [MetricsService, QueueMetricsService, JobObservability],
 })
 export class ObservabilityModule {}

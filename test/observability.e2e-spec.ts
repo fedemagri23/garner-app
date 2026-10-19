@@ -98,19 +98,29 @@ describe('Observability and hardening (e2e)', () => {
         .expect(200);
 
       expect(response.headers['x-request-id']).toEqual(expect.any(String));
-      expect(response.headers['x-trace-id']).toEqual(expect.any(String));
+      // A W3C trace id, the same one an exported span would carry.
+      expect(response.headers['x-trace-id']).toMatch(/^[0-9a-f]{32}$/);
     });
 
-    it('keeps the caller’s own ids so a trace spans client and API', async () => {
+    it('joins the caller’s trace, and keeps its request id', async () => {
+      const traceId = '4bf92f3577b34da6a3ce929d0e0e4736';
+
       const response = await http()
         .get('/v1/users/me')
         .set(auth(shopper))
         .set('x-request-id', 'request-from-the-app')
-        .set('x-trace-id', 'trace-from-the-app')
+        .set('traceparent', `00-${traceId}-00f067aa0ba902b7-01`)
         .expect(200);
 
       expect(response.headers['x-request-id']).toBe('request-from-the-app');
-      expect(response.headers['x-trace-id']).toBe('trace-from-the-app');
+      expect(response.headers['x-trace-id']).toBe(traceId);
+    });
+
+    it('starts a new trace for each untraced request', async () => {
+      const first = await http().get('/v1/health/live').expect(200);
+      const second = await http().get('/v1/health/live').expect(200);
+
+      expect(first.headers['x-trace-id']).not.toBe(second.headers['x-trace-id']);
     });
 
     it('puts the request id in every error body', async () => {

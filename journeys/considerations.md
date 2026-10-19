@@ -165,10 +165,11 @@ Notation: [`README.md`](README.md).
 ## Notifications and operations
 
 ### CON-025 — Tracing is hooks, not an exporter
-- **Phase:** 8 · **Area:** common/observability · **Status:** deferred
+- **Phase:** 8 · **Area:** common/observability · **Status:** resolved
 - **What:** A trace id is accepted from the caller or minted, carried through `AsyncLocalStorage`, written on every log line, and passed into jobs. There is no OpenTelemetry dependency, no spans and no exporter.
 - **Why:** The correlation is what makes logs followable across the API and its workers today, and it is the part that would have to exist anyway. An exporter is a dependency and a collector to run, for a system that is one process.
 - **Revisit when:** The deployment splits into services, or a latency question needs per-span timings rather than per-request ones.
+- **Resolved:** OpenTelemetry now provides the trace ids, a span per request, Prisma query spans and job spans, exported over OTLP when an endpoint is configured. The claim above that trace ids were passed into jobs was not true at the time — see BUG-014. Limits of the current tracing are in CON-038.
 
 ### CON-026 — Metrics are in-process and reset on restart
 - **Phase:** 8 · **Area:** common/observability · **Status:** accepted
@@ -243,3 +244,9 @@ Notation: [`README.md`](README.md).
 - **What:** The token in an unsubscribe link is an HMAC of the user id under `JWT_SECRET`, with no expiry. It can only turn email off, and the endpoint answers identically for genuine, forged and stale tokens.
 - **Why:** An email can sit in an inbox for months and its unsubscribe link must still work; an expiring link would be the one that fails when someone finally wants out. A leaked link lets a third party do only what the recipient would want anyway.
 - **Revisit when:** The token is ever given a second power, or `JWT_SECRET` rotation becomes routine — rotating it currently breaks every link already sent.
+
+### CON-038 — Spans are opened by hand where ESM rules out auto-instrumentation
+- **Phase:** post-plan · **Area:** common/observability · **Status:** accepted
+- **What:** The HTTP server span is opened in the request middleware, not by `@opentelemetry/instrumentation-http`/`-express`. Prisma (through its global hook) and BullMQ (through its telemetry option) are traced by their own integrations. Redis commands and outgoing calls to supermarket feeds are not traced, and outgoing requests do not carry `traceparent`. An incoming `x-trace-id` is no longer honoured: a caller joins a trace with W3C `traceparent`.
+- **Why:** The application is an ES module, and the HTTP and Express instrumentations patch modules at load time, which under ESM needs a loader hook passed to `node --import` before the app starts — a deployment-level change for spans the middleware gives anyway. An arbitrary `x-trace-id` string cannot be an OpenTelemetry trace id, and keeping two notions of "trace" would put ids in the logs that match nothing in the tracing backend.
+- **Revisit when:** Redis latency or a supermarket feed's latency needs explaining span by span — add a span around the adapter call and inject `traceparent` there — or the process is started with the OpenTelemetry loader anyway, at which point auto-instrumentation replaces the middleware span.

@@ -1,5 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Global, Module } from '@nestjs/common';
+import { BullMQOtel } from 'bullmq-otel';
 import { AppConfigService } from '../config/app-config.service.js';
 import { QueueName } from './queue.constants.js';
 import { SystemQueueService } from './system-queue.service.js';
@@ -25,6 +26,9 @@ import { SystemProcessor } from './system.processor.js';
             password: url.password || undefined,
             maxRetriesPerRequest: null,
           },
+          // Carries the trace context from whoever added a job into the
+          // worker that runs it, for every queue and worker alike.
+          telemetry: new BullMQOtel({ tracerName: 'garner-queues' }),
           defaultJobOptions: {
             removeOnComplete: 100,
             removeOnFail: 500,

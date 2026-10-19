@@ -52,6 +52,15 @@ export const configSchema = z.object({
   // console output is worth more than machine-parseable lines.
   LOG_FORMAT: z.enum(['json', 'pretty']).optional(),
 
+  // OpenTelemetry. Trace ids exist and propagate (requests, jobs, logs)
+  // either way; spans are exported over OTLP/HTTP only when an endpoint is
+  // set, e.g. http://otel-collector:4318.
+  OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
+  OTEL_SERVICE_NAME: z.string().min(1).default('garner-api'),
+  // Share of new traces exported. A trace continued from a caller follows
+  // the caller's decision, so one trace is never half-exported.
+  OTEL_TRACES_SAMPLE_RATIO: z.coerce.number().min(0).max(1).default(1),
+
   // How many proxies sit in front of the API. Wrong here means `req.ip` is a
   // load balancer's address, and per-IP rate limiting stops working.
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(0),

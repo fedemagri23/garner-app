@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { trace } from '@opentelemetry/api';
 import { randomUUID } from 'node:crypto';
 import type { Job } from 'bullmq';
 import { requestContext } from '../http/request-context.js';
@@ -8,9 +9,10 @@ import { MetricsService } from './metrics.service.js';
  * Wraps a job so it is as observable as a request: its logs carry the job's
  * id and name, and its outcome and duration are counted.
  *
- * The trace id travels in the job's own data when the producer put one there,
- * so the work a request set off can be followed from that request. Without one
- * the job starts its own trace rather than appearing in nobody's.
+ * The trace continues the producer's: BullMQ's telemetry carries the context
+ * in the job and runs the processor inside a consumer span of the same trace,
+ * so the work a request set off can be followed from that request. A job
+ * nobody traced — a scheduled one — starts its own.
  */
 @Injectable()
 export class JobObservability {
@@ -70,8 +72,8 @@ export class JobObservability {
   }
 }
 
-function traceOf(job: Job): string {
-  const data = job.data as { traceId?: unknown } | undefined;
+function traceOf(_job: Job): string {
+  const span = trace.getActiveSpan()?.spanContext();
 
-  return typeof data?.traceId === 'string' ? data.traceId : randomUUID();
+  return span && trace.isSpanContextValid(span) ? span.traceId : randomUUID();
 }
