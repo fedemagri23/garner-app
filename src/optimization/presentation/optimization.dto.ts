@@ -152,13 +152,13 @@ export class OptimizationResultResponse {
 
 export class OptimizationResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
-  @ApiProperty({ format: 'uuid', nullable: true }) listId!: string | null;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true }) listId!: string | null;
   @ApiProperty({ enum: STATUSES }) status!: OptimizationStatus;
   @ApiProperty({ enum: MODES }) mode!: OptimizationMode;
   @ApiProperty({ format: 'date-time' }) requestedAt!: string;
-  @ApiProperty({ format: 'date-time', nullable: true })
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   completedAt!: string | null;
-  @ApiProperty({ nullable: true }) error!: string | null;
+  @ApiProperty({ type: String, nullable: true }) error!: string | null;
   @ApiProperty({ type: OptimizationResultResponse, nullable: true })
   result!: OptimizationResultResponse | null;
 
@@ -202,12 +202,12 @@ export class OptimizationResponse {
 /** Summary shape for listings, without the plans. */
 export class OptimizationSummaryResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
-  @ApiProperty({ format: 'uuid', nullable: true }) listId!: string | null;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true }) listId!: string | null;
   @ApiProperty({ enum: STATUSES }) status!: OptimizationStatus;
   @ApiProperty({ enum: MODES }) mode!: OptimizationMode;
   @ApiProperty({ format: 'date-time' }) requestedAt!: string;
-  @ApiProperty({ nullable: true }) recommendedTotalCents!: number | null;
-  @ApiProperty({ nullable: true }) recommendedStoreCount!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) recommendedTotalCents!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) recommendedStoreCount!: number | null;
 
   static from(request: OptimizationRequest): OptimizationSummaryResponse {
     const recommended =

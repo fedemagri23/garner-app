@@ -57,7 +57,7 @@ export class ContributionResponse {
   })
   status!: ContributionStatus;
   @ApiProperty() hasPhotoEvidence!: boolean;
-  @ApiProperty({ nullable: true }) note!: string | null;
+  @ApiProperty({ type: String, nullable: true }) note!: string | null;
 
   static from(observation: PriceObservation): ContributionResponse {
     return {

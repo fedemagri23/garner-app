@@ -34,13 +34,13 @@ export class PriceAlertResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) productId!: string;
   @ApiProperty({ enum: ALERT_TYPES }) type!: PriceAlertType;
-  @ApiProperty({ format: 'uuid', nullable: true, description: 'Null watches anywhere nearby' })
+  @ApiProperty({ type: String, format: 'uuid', nullable: true, description: 'Null watches anywhere nearby' })
   storeId!: string | null;
-  @ApiProperty({ nullable: true }) thresholdCents!: number | null;
-  @ApiProperty({ nullable: true }) dropPercent!: number | null;
-  @ApiProperty({ nullable: true }) radiusKm!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) thresholdCents!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) dropPercent!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) radiusKm!: number | null;
   @ApiProperty() isEnabled!: boolean;
-  @ApiProperty({ format: 'date-time', nullable: true })
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   lastTriggeredAt!: string | null;
   @ApiProperty({ format: 'date-time' }) createdAt!: string;
 
@@ -70,12 +70,12 @@ export class NotificationResponse {
   @ApiProperty({ enum: CATEGORIES }) category!: NotificationCategory;
   @ApiProperty() title!: string;
   @ApiProperty() body!: string;
-  @ApiProperty({ format: 'uuid', nullable: true }) productId!: string | null;
-  @ApiProperty({ format: 'uuid', nullable: true }) storeId!: string | null;
-  @ApiProperty({ format: 'uuid', nullable: true }) listId!: string | null;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true }) productId!: string | null;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true }) storeId!: string | null;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true }) listId!: string | null;
   @ApiProperty({ enum: STATUSES }) status!: NotificationStatus;
   @ApiProperty({ format: 'date-time' }) createdAt!: string;
-  @ApiProperty({ format: 'date-time', nullable: true }) readAt!: string | null;
+  @ApiProperty({ type: String, format: 'date-time', nullable: true }) readAt!: string | null;
 
   static from(notification: Notification): NotificationResponse {
     return {
@@ -176,9 +176,9 @@ export class UpdatePriceAlertRequest {
 export class NotificationPreferencesResponse {
   @ApiProperty() priceAlertsEnabled!: boolean;
   @ApiProperty() remindersEnabled!: boolean;
-  @ApiProperty({ nullable: true, minimum: 0, maximum: 23 })
+  @ApiProperty({ type: Number, nullable: true, minimum: 0, maximum: 23 })
   quietHoursStartUtc!: number | null;
-  @ApiProperty({ nullable: true, minimum: 0, maximum: 23 })
+  @ApiProperty({ type: Number, nullable: true, minimum: 0, maximum: 23 })
   quietHoursEndUtc!: number | null;
   @ApiProperty({ description: 'The least time between two messages from one alert' })
   minMinutesBetweenAlerts!: number;
@@ -186,9 +186,9 @@ export class NotificationPreferencesResponse {
   emailEnabled!: boolean;
   @ApiProperty({ description: 'Whether this server can send email at all' })
   emailAvailable!: boolean;
-  @ApiProperty({ format: 'date-time', nullable: true })
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   emailOptedInAt!: string | null;
-  @ApiProperty({ format: 'date-time', nullable: true })
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   emailOptedOutAt!: string | null;
 
   static from(
@@ -226,6 +226,7 @@ export class UpdateNotificationPreferencesRequest {
   remindersEnabled?: boolean;
 
   @ApiPropertyOptional({
+    type: Number,
     nullable: true,
     minimum: 0,
     maximum: 23,
@@ -238,7 +239,7 @@ export class UpdateNotificationPreferencesRequest {
   @Max(23)
   quietHoursStartUtc?: number | null;
 
-  @ApiPropertyOptional({ nullable: true, minimum: 0, maximum: 23 })
+  @ApiPropertyOptional({ type: Number, nullable: true, minimum: 0, maximum: 23 })
   @IsOptional()
   @ValidateIf((_object, value) => value !== null)
   @IsInt()

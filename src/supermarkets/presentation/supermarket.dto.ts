@@ -33,8 +33,8 @@ export class SupermarketResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() name!: string;
   @ApiProperty() slug!: string;
-  @ApiProperty({ nullable: true }) logoUrl!: string | null;
-  @ApiProperty({ nullable: true }) websiteUrl!: string | null;
+  @ApiProperty({ type: String, nullable: true }) logoUrl!: string | null;
+  @ApiProperty({ type: String, nullable: true }) websiteUrl!: string | null;
   @ApiProperty() isActive!: boolean;
 
   static from(supermarket: Supermarket): SupermarketResponse {
@@ -63,12 +63,12 @@ export class StoreResponse {
   @ApiProperty() name!: string;
   @ApiProperty() addressLine!: string;
   @ApiProperty() city!: string;
-  @ApiProperty({ nullable: true }) province!: string | null;
-  @ApiProperty({ nullable: true }) postalCode!: string | null;
+  @ApiProperty({ type: String, nullable: true }) province!: string | null;
+  @ApiProperty({ type: String, nullable: true }) postalCode!: string | null;
   @ApiProperty() country!: string;
   @ApiProperty() latitude!: number;
   @ApiProperty() longitude!: number;
-  @ApiProperty({ nullable: true }) phone!: string | null;
+  @ApiProperty({ type: String, nullable: true }) phone!: string | null;
   @ApiProperty() isActive!: boolean;
   @ApiProperty({ type: [OpeningHoursResponse] })
   openingHours!: OpeningHoursResponse[];

@@ -38,9 +38,9 @@ export class PriceSourceResponse {
     description: 'Adapter configuration; credentials are never stored here',
   })
   config!: Record<string, unknown>;
-  @ApiProperty({ format: 'date-time', nullable: true })
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   lastRunAt!: string | null;
-  @ApiProperty({ format: 'date-time', nullable: true })
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   lastSuccessfulRunAt!: string | null;
   @ApiProperty({ enum: RUN_STATUSES, nullable: true })
   lastStatus!: ImportRunStatus | null;
@@ -71,7 +71,7 @@ export class ImportRunResponse {
   runKey!: string;
   @ApiProperty({ enum: RUN_STATUSES }) status!: ImportRunStatus;
   @ApiProperty({ format: 'date-time' }) startedAt!: string;
-  @ApiProperty({ format: 'date-time', nullable: true }) finishedAt!: string | null;
+  @ApiProperty({ type: String, format: 'date-time', nullable: true }) finishedAt!: string | null;
   @ApiProperty() productsSeen!: number;
   @ApiProperty() pricesSeen!: number;
   @ApiProperty() observationsCreated!: number;
@@ -84,7 +84,7 @@ export class ImportRunResponse {
   unmatchedProducts!: number;
   @ApiProperty({ description: 'Prices that could not be placed or failed validation' })
   skippedPrices!: number;
-  @ApiProperty({ nullable: true }) error!: string | null;
+  @ApiProperty({ type: String, nullable: true }) error!: string | null;
 
   static from(run: ImportRun): ImportRunResponse {
     return {
@@ -108,8 +108,8 @@ export class ImportRunResponse {
 export class ExternalProductLinkResponse {
   @ApiProperty() externalProductId!: string;
   @ApiProperty() externalName!: string;
-  @ApiProperty({ nullable: true }) externalBarcode!: string | null;
-  @ApiProperty({ format: 'uuid', nullable: true }) productId!: string | null;
+  @ApiProperty({ type: String, nullable: true }) externalBarcode!: string | null;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true }) productId!: string | null;
   @ApiProperty({ enum: MATCH_METHODS, nullable: true })
   matchMethod!: ProductMatchMethod | null;
   @ApiProperty({ enum: LINK_STATUSES }) status!: ExternalProductLinkStatus;

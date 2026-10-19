@@ -57,17 +57,17 @@ export class ShoppingSessionItemResponse {
   @ApiProperty({ type: ProductSummaryResponse })
   product!: ProductSummaryResponse;
   @ApiProperty() quantity!: number;
-  @ApiProperty({ nullable: true }) notes!: string | null;
-  @ApiProperty({ nullable: true }) expectedUnitPriceCents!: number | null;
-  @ApiProperty({ nullable: true }) actualUnitPriceCents!: number | null;
-  @ApiProperty({ nullable: true }) expectedLineTotalCents!: number | null;
-  @ApiProperty({ nullable: true }) actualLineTotalCents!: number | null;
+  @ApiProperty({ type: String, nullable: true }) notes!: string | null;
+  @ApiProperty({ type: Number, nullable: true }) expectedUnitPriceCents!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) actualUnitPriceCents!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) expectedLineTotalCents!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) actualLineTotalCents!: number | null;
   @ApiProperty({ type: StoreSummaryResponse, nullable: true })
   store!: StoreSummaryResponse | null;
   @ApiProperty() isPurchased!: boolean;
-  @ApiProperty({ format: 'date-time', nullable: true })
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   purchasedAt!: string | null;
-  @ApiProperty({ format: 'uuid', nullable: true })
+  @ApiProperty({ type: String, format: 'uuid', nullable: true })
   sourceListItemId!: string | null;
 
   static from(view: ShoppingSessionItemView): ShoppingSessionItemResponse {
@@ -92,7 +92,7 @@ export class ShoppingSessionItemResponse {
 
 export class ShoppingSessionSummaryResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
-  @ApiProperty({ format: 'uuid', nullable: true, description: 'Null once the list is deleted' })
+  @ApiProperty({ type: String, format: 'uuid', nullable: true, description: 'Null once the list is deleted' })
   listId!: string | null;
   @ApiProperty() listName!: string;
   @ApiProperty() currency!: string;
@@ -101,10 +101,10 @@ export class ShoppingSessionSummaryResponse {
   store!: StoreSummaryResponse | null;
   @ApiProperty({ type: SessionTotalsResponse }) totals!: SessionTotalsResponse;
   @ApiProperty({ format: 'date-time' }) startedAt!: string;
-  @ApiProperty({ format: 'date-time', nullable: true }) pausedAt!: string | null;
-  @ApiProperty({ format: 'date-time', nullable: true })
+  @ApiProperty({ type: String, format: 'date-time', nullable: true }) pausedAt!: string | null;
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   completedAt!: string | null;
-  @ApiProperty({ format: 'date-time', nullable: true })
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   abandonedAt!: string | null;
 
   static from(view: ShoppingSessionView): ShoppingSessionSummaryResponse {
@@ -185,6 +185,7 @@ export class RecordItemProgressRequest {
   quantity?: number;
 
   @ApiPropertyOptional({
+    type: Number,
     nullable: true,
     description: 'What was paid per unit, in cents. Null clears it.',
   })

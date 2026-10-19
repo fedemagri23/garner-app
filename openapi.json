@@ -3323,15 +3323,15 @@
         "type": "object",
         "properties": {
           "latitude": {
-            "type": "object",
+            "type": "number",
             "nullable": true
           },
           "longitude": {
-            "type": "object",
+            "type": "number",
             "nullable": true
           },
           "locationLabel": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "searchRadiusKm": {
@@ -3357,17 +3357,17 @@
         "type": "object",
         "properties": {
           "latitude": {
-            "type": "object",
+            "type": "number",
             "nullable": true,
             "example": -34.6037
           },
           "longitude": {
-            "type": "object",
+            "type": "number",
             "nullable": true,
             "example": -58.3816
           },
           "locationLabel": {
-            "type": "object",
+            "type": "string",
             "nullable": true,
             "maxLength": 120
           },
@@ -3419,7 +3419,7 @@
             "type": "string"
           },
           "parentId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true
           }
@@ -3457,7 +3457,7 @@
             "type": "string"
           },
           "description": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "brand": {
@@ -3473,7 +3473,7 @@
             "$ref": "#/components/schemas/CategoryResponse"
           },
           "packageSize": {
-            "type": "object",
+            "type": "number",
             "nullable": true
           },
           "unit": {
@@ -3487,12 +3487,12 @@
             ]
           },
           "packageLabel": {
-            "type": "object",
+            "type": "string",
             "nullable": true,
             "example": "1 L"
           },
           "imageUrl": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "isActive": {
@@ -3793,11 +3793,11 @@
             "type": "string"
           },
           "logoUrl": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "websiteUrl": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "isActive": {
@@ -3882,11 +3882,11 @@
             "type": "string"
           },
           "province": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "postalCode": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "country": {
@@ -3899,7 +3899,7 @@
             "type": "number"
           },
           "phone": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "isActive": {
@@ -3971,11 +3971,11 @@
             "type": "string"
           },
           "province": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "postalCode": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "country": {
@@ -3988,7 +3988,7 @@
             "type": "number"
           },
           "phone": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "isActive": {
@@ -4186,19 +4186,19 @@
             "type": "string"
           },
           "brandName": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "categoryName": {
             "type": "string"
           },
           "packageLabel": {
-            "type": "object",
+            "type": "string",
             "nullable": true,
             "example": "1 L"
           },
           "imageUrl": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           }
         },
@@ -4246,16 +4246,16 @@
             "example": 1.5
           },
           "notes": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "expectedUnitPriceCents": {
-            "type": "object",
+            "type": "number",
             "nullable": true,
             "description": "Minor units (cents)"
           },
           "expectedLineTotalCents": {
-            "type": "object",
+            "type": "number",
             "nullable": true,
             "description": "quantity × unit price, rounded"
           },
@@ -4294,7 +4294,7 @@
             "type": "string"
           },
           "notes": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "currency": {
@@ -4352,7 +4352,7 @@
             "type": "string"
           },
           "notes": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "currency": {
@@ -4418,7 +4418,7 @@
             "maxLength": 120
           },
           "notes": {
-            "type": "object",
+            "type": "string",
             "nullable": true,
             "maxLength": 1000
           },
@@ -4509,17 +4509,17 @@
             "maximum": 9999
           },
           "notes": {
-            "type": "object",
+            "type": "string",
             "nullable": true,
             "maxLength": 500
           },
           "expectedUnitPriceCents": {
-            "type": "object",
+            "type": "number",
             "nullable": true,
             "description": "Minor units (cents)"
           },
           "selectedStoreId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true
           }
@@ -4601,23 +4601,23 @@
             "type": "number"
           },
           "notes": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "expectedUnitPriceCents": {
-            "type": "object",
+            "type": "number",
             "nullable": true
           },
           "actualUnitPriceCents": {
-            "type": "object",
+            "type": "number",
             "nullable": true
           },
           "expectedLineTotalCents": {
-            "type": "object",
+            "type": "number",
             "nullable": true
           },
           "actualLineTotalCents": {
-            "type": "object",
+            "type": "number",
             "nullable": true
           },
           "store": {
@@ -4633,12 +4633,12 @@
             "type": "boolean"
           },
           "purchasedAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           },
           "sourceListItemId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true
           }
@@ -4666,7 +4666,7 @@
             "format": "uuid"
           },
           "listId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true,
             "description": "Null once the list is deleted"
@@ -4703,17 +4703,17 @@
             "format": "date-time"
           },
           "pausedAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           },
           "completedAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           },
           "abandonedAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           },
@@ -4747,7 +4747,7 @@
             "format": "uuid"
           },
           "listId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true,
             "description": "Null once the list is deleted"
@@ -4784,17 +4784,17 @@
             "format": "date-time"
           },
           "pausedAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           },
           "completedAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           },
           "abandonedAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           }
@@ -4839,7 +4839,7 @@
             "maximum": 9999
           },
           "actualUnitPriceCents": {
-            "type": "object",
+            "type": "number",
             "nullable": true,
             "description": "What was paid per unit, in cents. Null clears it."
           },
@@ -4960,7 +4960,7 @@
             "type": "boolean"
           },
           "note": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           }
         },
@@ -5048,7 +5048,7 @@
             "format": "date-time"
           },
           "distanceKm": {
-            "type": "object",
+            "type": "number",
             "nullable": true,
             "description": "Null when no location was given"
           },
@@ -5087,7 +5087,7 @@
             }
           },
           "lowestPriceCents": {
-            "type": "object",
+            "type": "number",
             "nullable": true,
             "description": "Cheapest price found, in cents"
           }
@@ -5173,7 +5173,7 @@
             "format": "uuid"
           },
           "storeId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true
           },
@@ -5203,7 +5203,7 @@
             ]
           },
           "currentPriceCents": {
-            "type": "object",
+            "type": "number",
             "nullable": true,
             "description": "Current derived price; only when a store was named"
           }
@@ -5228,11 +5228,11 @@
             "type": "string"
           },
           "brandName": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "imageUrl": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "storeId": {
@@ -5322,12 +5322,12 @@
             "description": "Adapter configuration; credentials are never stored here"
           },
           "lastRunAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           },
           "lastSuccessfulRunAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           },
@@ -5458,7 +5458,7 @@
             "format": "date-time"
           },
           "finishedAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           },
@@ -5487,7 +5487,7 @@
             "description": "Prices that could not be placed or failed validation"
           },
           "error": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           }
         },
@@ -5517,11 +5517,11 @@
             "type": "string"
           },
           "externalBarcode": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "productId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true
           },
@@ -5885,7 +5885,7 @@
             "format": "uuid"
           },
           "listId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true
           },
@@ -5911,12 +5911,12 @@
             "format": "date-time"
           },
           "completedAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           },
           "error": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "result": {
@@ -5948,7 +5948,7 @@
             "format": "uuid"
           },
           "listId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true
           },
@@ -5974,11 +5974,11 @@
             "format": "date-time"
           },
           "recommendedTotalCents": {
-            "type": "object",
+            "type": "number",
             "nullable": true
           },
           "recommendedStoreCount": {
-            "type": "object",
+            "type": "number",
             "nullable": true
           }
         },
@@ -6166,28 +6166,28 @@
             ]
           },
           "storeId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true,
             "description": "Null watches anywhere nearby"
           },
           "thresholdCents": {
-            "type": "object",
+            "type": "number",
             "nullable": true
           },
           "dropPercent": {
-            "type": "object",
+            "type": "number",
             "nullable": true
           },
           "radiusKm": {
-            "type": "object",
+            "type": "number",
             "nullable": true
           },
           "isEnabled": {
             "type": "boolean"
           },
           "lastTriggeredAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           },
@@ -6262,17 +6262,17 @@
             "type": "string"
           },
           "productId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true
           },
           "storeId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true
           },
           "listId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true
           },
@@ -6289,7 +6289,7 @@
             "format": "date-time"
           },
           "readAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           }
@@ -6340,13 +6340,13 @@
             "type": "boolean"
           },
           "quietHoursStartUtc": {
-            "type": "object",
+            "type": "number",
             "nullable": true,
             "minimum": 0,
             "maximum": 23
           },
           "quietHoursEndUtc": {
-            "type": "object",
+            "type": "number",
             "nullable": true,
             "minimum": 0,
             "maximum": 23
@@ -6364,12 +6364,12 @@
             "description": "Whether this server can send email at all"
           },
           "emailOptedInAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           },
           "emailOptedOutAt": {
-            "type": "object",
+            "type": "string",
             "format": "date-time",
             "nullable": true
           }
@@ -6400,14 +6400,14 @@
             "type": "boolean"
           },
           "quietHoursStartUtc": {
-            "type": "object",
+            "type": "number",
             "nullable": true,
             "minimum": 0,
             "maximum": 23,
             "description": "Set with quietHoursEndUtc, or null to be reachable always"
           },
           "quietHoursEndUtc": {
-            "type": "object",
+            "type": "number",
             "nullable": true,
             "minimum": 0,
             "maximum": 23

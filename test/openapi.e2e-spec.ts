@@ -27,6 +27,28 @@ describe('OpenAPI contract (e2e)', () => {
     expect(served).toEqual(committed);
   });
 
+  it('gives every nullable field its real type', () => {
+    // A `string | null` property loses its type to reflection and is
+    // described as a bare object, which a generated client cannot read.
+    const schemas = buildOpenApiDocument(app).components?.schemas ?? {};
+    const untyped = Object.entries(schemas).flatMap(([name, schema]) =>
+      Object.entries(
+        ('properties' in schema ? schema.properties : undefined) ?? {},
+      )
+        .filter(
+          ([, property]) =>
+            'type' in property &&
+            property.type === 'object' &&
+            !property.properties &&
+            !property.allOf,
+        )
+        .map(([field]) => `${name}.${field}`),
+    );
+
+    // Adapter configuration is a free-form object on purpose.
+    expect(untyped.filter((field) => !field.endsWith('.config'))).toEqual([]);
+  });
+
   it('puts every route under /v1', () => {
     const paths = Object.keys(buildOpenApiDocument(app).paths);
 

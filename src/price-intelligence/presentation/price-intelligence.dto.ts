@@ -43,7 +43,7 @@ export class StorePriceResponse {
   @ApiProperty({ description: 'Observations behind the price' })
   observationCount!: number;
   @ApiProperty({ format: 'date-time' }) lastObservedAt!: string;
-  @ApiProperty({ nullable: true, description: 'Null when no location was given' })
+  @ApiProperty({ type: Number, nullable: true, description: 'Null when no location was given' })
   distanceKm!: number | null;
   @ApiProperty() isOpenNow!: boolean;
 
@@ -71,7 +71,7 @@ export class PriceComparisonResponse {
     description: 'Cheapest first',
   })
   prices!: StorePriceResponse[];
-  @ApiProperty({ nullable: true, description: 'Cheapest price found, in cents' })
+  @ApiProperty({ type: Number, nullable: true, description: 'Cheapest price found, in cents' })
   lowestPriceCents!: number | null;
 
   static from(comparison: PriceComparison): PriceComparisonResponse {
@@ -123,13 +123,14 @@ export class PriceTrendResponse {
 
 export class PriceHistoryResponse {
   @ApiProperty({ format: 'uuid' }) productId!: string;
-  @ApiProperty({ format: 'uuid', nullable: true }) storeId!: string | null;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true }) storeId!: string | null;
   @ApiProperty({ enum: HISTORY_RANGES }) range!: HistoryRange;
   @ApiProperty({ type: [DailyPricePointResponse], description: 'Oldest first' })
   points!: DailyPricePointResponse[];
   @ApiProperty({ type: PriceTrendResponse, nullable: true })
   trend!: PriceTrendResponse | null;
   @ApiProperty({
+    type: Number,
     nullable: true,
     description: 'Current derived price; only when a store was named',
   })
@@ -195,8 +196,8 @@ export class PriceHistoryQueryDto {
 export class PriceDropResponse {
   @ApiProperty({ format: 'uuid' }) productId!: string;
   @ApiProperty() productName!: string;
-  @ApiProperty({ nullable: true }) brandName!: string | null;
-  @ApiProperty({ nullable: true }) imageUrl!: string | null;
+  @ApiProperty({ type: String, nullable: true }) brandName!: string | null;
+  @ApiProperty({ type: String, nullable: true }) imageUrl!: string | null;
   @ApiProperty({ format: 'uuid' }) storeId!: string;
   @ApiProperty() storeName!: string;
   @ApiProperty() supermarketName!: string;

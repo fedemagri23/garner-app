@@ -173,6 +173,14 @@ async function main() {
     upsertUser('shopper@garner.test', 'Fede', 'USER'),
   ]);
 
+  // A saved location, for when the app is not allowed to use the phone's.
+  const savedLocation = { ...HOME, locationLabel: 'Centro' };
+  await core.userPreferences.upsert({
+    where: { userId: shopper.id },
+    create: { userId: shopper.id, ...savedLocation },
+    update: savedLocation,
+  });
+
   const almacen = await upsertCategory('Almacén', 'almacen');
   const lacteos = await upsertCategory('Lácteos', 'lacteos');
   const leche = await upsertCategory('Leche', 'leche', lacteos.id);
@@ -348,7 +356,7 @@ Seeded:
   prices       current price + 14 days of history per product/store
   price drops  ${drops.length} near the home point
   list         "Compra semanal" (4 items) owned by the shopper
-  home point   ${HOME.latitude}, ${HOME.longitude}
+  home point   ${HOME.latitude}, ${HOME.longitude} (the shopper's saved location, "Centro")
 `);
 }
 

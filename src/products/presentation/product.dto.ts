@@ -34,7 +34,7 @@ export class CategoryResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() name!: string;
   @ApiProperty() slug!: string;
-  @ApiProperty({ format: 'uuid', nullable: true }) parentId!: string | null;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true }) parentId!: string | null;
 
   static from(category: Category): CategoryResponse {
     return {
@@ -54,16 +54,16 @@ export class ProductBarcodeResponse {
 export class ProductResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() name!: string;
-  @ApiProperty({ nullable: true }) description!: string | null;
+  @ApiProperty({ type: String, nullable: true }) description!: string | null;
   @ApiProperty({ type: BrandResponse, nullable: true })
   brand!: BrandResponse | null;
   @ApiProperty({ type: CategoryResponse }) category!: CategoryResponse;
-  @ApiProperty({ nullable: true }) packageSize!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) packageSize!: number | null;
   @ApiProperty({ enum: UNITS }) unit!: UnitOfMeasure;
   /** Pre-rendered so every client shows a package the same way. */
-  @ApiProperty({ nullable: true, example: '1 L' })
+  @ApiProperty({ type: String, nullable: true, example: '1 L' })
   packageLabel!: string | null;
-  @ApiProperty({ nullable: true }) imageUrl!: string | null;
+  @ApiProperty({ type: String, nullable: true }) imageUrl!: string | null;
   @ApiProperty() isActive!: boolean;
   @ApiProperty({ type: [ProductBarcodeResponse] })
   barcodes!: ProductBarcodeResponse[];

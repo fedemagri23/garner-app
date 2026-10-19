@@ -42,10 +42,10 @@ const MAX_PRICE_CENTS = 100_000_000;
 export class ProductSummaryResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() name!: string;
-  @ApiProperty({ nullable: true }) brandName!: string | null;
+  @ApiProperty({ type: String, nullable: true }) brandName!: string | null;
   @ApiProperty() categoryName!: string;
-  @ApiProperty({ nullable: true, example: '1 L' }) packageLabel!: string | null;
-  @ApiProperty({ nullable: true }) imageUrl!: string | null;
+  @ApiProperty({ type: String, nullable: true, example: '1 L' }) packageLabel!: string | null;
+  @ApiProperty({ type: String, nullable: true }) imageUrl!: string | null;
 
   static from(product: Product): ProductSummaryResponse {
     return {
@@ -93,10 +93,10 @@ export class ShoppingListItemResponse {
   @ApiProperty({ type: ProductSummaryResponse })
   product!: ProductSummaryResponse;
   @ApiProperty({ example: 1.5 }) quantity!: number;
-  @ApiProperty({ nullable: true }) notes!: string | null;
-  @ApiProperty({ nullable: true, description: 'Minor units (cents)' })
+  @ApiProperty({ type: String, nullable: true }) notes!: string | null;
+  @ApiProperty({ type: Number, nullable: true, description: 'Minor units (cents)' })
   expectedUnitPriceCents!: number | null;
-  @ApiProperty({ nullable: true, description: 'quantity × unit price, rounded' })
+  @ApiProperty({ type: Number, nullable: true, description: 'quantity × unit price, rounded' })
   expectedLineTotalCents!: number | null;
   @ApiProperty({ type: StoreSummaryResponse, nullable: true })
   selectedStore!: StoreSummaryResponse | null;
@@ -119,7 +119,7 @@ export class ShoppingListItemResponse {
 export class ShoppingListSummaryResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() name!: string;
-  @ApiProperty({ nullable: true }) notes!: string | null;
+  @ApiProperty({ type: String, nullable: true }) notes!: string | null;
   @ApiProperty({ example: 'ARS' }) currency!: string;
   @ApiProperty({ enum: SORT_MODES }) sortMode!: ShoppingListSortMode;
   @ApiProperty({ type: ShoppingListTotalsResponse })
@@ -206,7 +206,7 @@ export class UpdateShoppingListRequest {
   @MaxLength(120)
   name?: string;
 
-  @ApiPropertyOptional({ nullable: true, maxLength: 1000 })
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: 1000 })
   @IsOptional()
   @ValidateIf((_object, value) => value !== null)
   @IsString()
@@ -282,14 +282,14 @@ export class UpdateShoppingListItemRequest {
   @Max(MAX_QUANTITY)
   quantity?: number;
 
-  @ApiPropertyOptional({ nullable: true, maxLength: 500 })
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: 500 })
   @IsOptional()
   @ValidateIf((_object, value) => value !== null)
   @IsString()
   @MaxLength(500)
   notes?: string | null;
 
-  @ApiPropertyOptional({ nullable: true, description: 'Minor units (cents)' })
+  @ApiPropertyOptional({ type: Number, nullable: true, description: 'Minor units (cents)' })
   @IsOptional()
   @ValidateIf((_object, value) => value !== null)
   @IsInt()
@@ -297,7 +297,7 @@ export class UpdateShoppingListItemRequest {
   @Max(MAX_PRICE_CENTS)
   expectedUnitPriceCents?: number | null;
 
-  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  @ApiPropertyOptional({ type: String, format: 'uuid', nullable: true })
   @IsOptional()
   @ValidateIf((_object, value) => value !== null)
   @IsUUID()

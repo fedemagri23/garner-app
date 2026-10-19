@@ -64,9 +64,9 @@ export class UpdateUserProfileRequest {
 }
 
 export class UserPreferencesResponse {
-  @ApiProperty({ nullable: true }) latitude!: number | null;
-  @ApiProperty({ nullable: true }) longitude!: number | null;
-  @ApiProperty({ nullable: true }) locationLabel!: string | null;
+  @ApiProperty({ type: Number, nullable: true }) latitude!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) longitude!: number | null;
+  @ApiProperty({ type: String, nullable: true }) locationLabel!: string | null;
   @ApiProperty() searchRadiusKm!: number;
   @ApiProperty({ type: [String], description: 'Category slugs' })
   interests!: string[];
@@ -87,21 +87,21 @@ export class UserPreferencesResponse {
  * to be able to set a location later and clear it again.
  */
 export class UpdateUserPreferencesRequest {
-  @ApiPropertyOptional({ nullable: true, example: -34.6037 })
+  @ApiPropertyOptional({ type: Number, nullable: true, example: -34.6037 })
   @IsOptional()
   @ValidateIf((_object, value) => value !== null)
   @Type(() => Number)
   @IsLatitude()
   latitude?: number | null;
 
-  @ApiPropertyOptional({ nullable: true, example: -58.3816 })
+  @ApiPropertyOptional({ type: Number, nullable: true, example: -58.3816 })
   @IsOptional()
   @ValidateIf((_object, value) => value !== null)
   @Type(() => Number)
   @IsLongitude()
   longitude?: number | null;
 
-  @ApiPropertyOptional({ nullable: true, maxLength: 120 })
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: 120 })
   @IsOptional()
   @ValidateIf((_object, value) => value !== null)
   @IsString()
