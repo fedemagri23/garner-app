@@ -6,6 +6,7 @@ import { IntelligencePrismaService } from '../src/common/database/intelligence-p
 import { PricingPrismaService } from '../src/common/database/pricing-prisma.service.js';
 import { AggregateDailyPricesUseCase } from '../src/price-intelligence/application/aggregate-daily-prices.use-case.js';
 import { RecomputeDerivedPriceUseCase } from '../src/price-intelligence/application/recompute-derived-price.use-case.js';
+import { PrunePriceObservationsUseCase } from '../src/pricing/application/prune-price-observations.use-case.js';
 import {
   createTestApp,
   registerWithRole,
@@ -39,11 +40,13 @@ describe('Price intelligence (e2e)', () => {
     daysAgo?: number;
     sourceType?: 'USER_REPORTED' | 'USER_WITH_EVIDENCE' | 'PURCHASE_CONFIRMED' | 'EXTERNAL_API';
     status?: 'ACCEPTED' | 'FLAGGED' | 'REJECTED';
-    userId?: string;
+    userId?: string | null;
+    /** Days ago a source last saw the same price again. */
+    confirmedDaysAgo?: number;
   }) => {
     const observedAt = new Date(Date.now() - (input.daysAgo ?? 0) * DAY);
 
-    await pricing.priceObservation.create({
+    return pricing.priceObservation.create({
       data: {
         productId: input.productId,
         storeId: input.storeId,
@@ -53,7 +56,11 @@ describe('Price intelligence (e2e)', () => {
         receivedAt: observedAt,
         sourceType: input.sourceType ?? 'USER_REPORTED',
         status: input.status ?? 'ACCEPTED',
-        userId: input.userId ?? randomUUID(),
+        userId: input.userId === undefined ? randomUUID() : input.userId,
+        lastConfirmedAt:
+          input.confirmedDaysAgo === undefined
+            ? null
+            : new Date(Date.now() - input.confirmedDaysAgo * DAY),
       },
     });
   };
@@ -374,6 +381,55 @@ describe('Price intelligence (e2e)', () => {
         .get(`/v1/products/${productId}/prices/history?range=7d`)
         .set(auth(shopper))
         .expect(400);
+    });
+  });
+
+  describe('a price its source keeps confirming', () => {
+    const feedPrice = (productId: string, daysAgo: number, confirmedDaysAgo: number) =>
+      observe({
+        productId,
+        storeId: nearStoreId,
+        priceCents: 1500,
+        daysAgo,
+        confirmedDaysAgo,
+        sourceType: 'EXTERNAL_API',
+        userId: null,
+      });
+
+    it('stays current long after the row was written', async () => {
+      const productId = await newProduct('Yerba 1kg');
+      await feedPrice(productId, 40, 0);
+
+      const outcome = await recompute.execute(productId, nearStoreId);
+
+      expect(outcome).toMatchObject({
+        kind: 'updated',
+        price: { priceCents: 1500, confidenceLevel: 'VERY_RECENT' },
+      });
+    });
+
+    it('is counted on every day it held, and not before', async () => {
+      const productId = await newProduct('Aceite 900ml');
+      await feedPrice(productId, 10, 1);
+
+      await aggregate.execute(new Date(Date.now() - 5 * DAY));
+      await aggregate.execute(new Date(Date.now() - 12 * DAY));
+
+      const rows = await intelligence.dailyPriceHistory.findMany({ where: { productId } });
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({ weightedAverageCents: 1500, observationCount: 1 });
+    });
+
+    it('survives retention pruning while it is still being confirmed', async () => {
+      const productId = await newProduct('Harina 1kg');
+      const stillConfirmed = await feedPrice(productId, 120, 1);
+      const abandoned = await feedPrice(productId, 120, 100);
+
+      await app.get(PrunePriceObservationsUseCase).execute();
+
+      const remaining = await pricing.priceObservation.findMany({ where: { productId } });
+      expect(remaining.map((row) => row.id)).toEqual([stillConfirmed.id]);
+      expect(remaining.map((row) => row.id)).not.toContain(abandoned.id);
     });
   });
 

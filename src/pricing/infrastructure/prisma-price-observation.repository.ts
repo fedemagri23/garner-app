@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import type { PriceObservation as PriceObservationRow } from '../../../generated/prisma/pricing/index.js';
+import type {
+  Prisma,
+  PriceObservation as PriceObservationRow,
+} from '../../../generated/prisma/pricing/index.js';
 import { isUniqueViolation } from '../../common/database/prisma-errors.js';
 import { PricingPrismaService } from '../../common/database/pricing-prisma.service.js';
 import type {
@@ -14,6 +17,17 @@ import type {
   PriceObservationRepository,
   PriceSampleQuery,
 } from '../domain/price-observation.repository.port.js';
+
+/**
+ * Made in `[from, to)`, or made before it and confirmed into it: a confirmed
+ * observation stands for every moment from `observedAt` to `lastConfirmedAt`.
+ */
+function heldDuring(from: Date, to: Date): Prisma.PriceObservationWhereInput {
+  return {
+    observedAt: { lt: to },
+    OR: [{ observedAt: { gte: from } }, { lastConfirmedAt: { gte: from } }],
+  };
+}
 
 /** The only code that touches `price_observations`. */
 @Injectable()
@@ -64,7 +78,10 @@ export class PrismaPriceObservationRepository
         ...(query.storeId ? { storeId: query.storeId } : {}),
         currency: query.currency,
         status: 'ACCEPTED',
-        observedAt: { gte: query.since },
+        OR: [
+          { observedAt: { gte: query.since } },
+          { lastConfirmedAt: { gte: query.since } },
+        ],
       },
       select: { priceCents: true },
       orderBy: { observedAt: 'desc' },
@@ -152,6 +169,37 @@ export class PrismaPriceObservationRepository
     }
   }
 
+  async findLatestByDedupePrefix(query: {
+    productId: string;
+    storeId: string;
+    dedupeKeyPrefix: string;
+  }): Promise<PriceObservation | null> {
+    const row = await this.prisma.priceObservation.findFirst({
+      where: {
+        productId: query.productId,
+        storeId: query.storeId,
+        dedupeKey: { startsWith: query.dedupeKeyPrefix },
+      },
+      orderBy: [{ observedAt: 'desc' }, { receivedAt: 'desc' }],
+    });
+
+    return row ? this.toDomain(row) : null;
+  }
+
+  async confirm(id: string, at: Date): Promise<PriceObservation | null> {
+    // Conditional, so two overlapping confirmations cannot move the end back.
+    await this.prisma.priceObservation.updateMany({
+      where: {
+        id,
+        observedAt: { lt: at },
+        OR: [{ lastConfirmedAt: null }, { lastConfirmedAt: { lt: at } }],
+      },
+      data: { lastConfirmedAt: at },
+    });
+
+    return this.findById(id);
+  }
+
   async findInWindow(query: {
     productId: string;
     storeId: string;
@@ -163,7 +211,7 @@ export class PrismaPriceObservationRepository
       where: {
         productId: query.productId,
         storeId: query.storeId,
-        observedAt: { gte: query.from, lt: query.to },
+        ...heldDuring(query.from, query.to),
       },
       orderBy: { observedAt: 'desc' },
       take: query.limit,
@@ -182,7 +230,7 @@ export class PrismaPriceObservationRepository
     // product/store pairs, and only the pairs need to travel.
     const groups = await this.prisma.priceObservation.groupBy({
       by: ['productId', 'storeId', 'currency'],
-      where: { observedAt: { gte: query.from, lt: query.to } },
+      where: heldDuring(query.from, query.to),
       orderBy: [
         { productId: 'asc' },
         { storeId: 'asc' },
@@ -205,7 +253,11 @@ export class PrismaPriceObservationRepository
    */
   async deleteReceivedBefore(cutoff: Date, limit: number): Promise<number> {
     const batch = await this.prisma.priceObservation.findMany({
-      where: { receivedAt: { lt: cutoff } },
+      // A price still being confirmed is still current, however old its row.
+      where: {
+        receivedAt: { lt: cutoff },
+        OR: [{ lastConfirmedAt: null }, { lastConfirmedAt: { lt: cutoff } }],
+      },
       select: { id: true },
       orderBy: { receivedAt: 'asc' },
       take: limit,
@@ -239,6 +291,7 @@ export class PrismaPriceObservationRepository
       dedupeKey: row.dedupeKey,
       evidencePhotoKey: row.evidencePhotoKey,
       evidenceNote: row.evidenceNote,
+      lastConfirmedAt: row.lastConfirmedAt,
     };
   }
 }

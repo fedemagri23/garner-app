@@ -1,4 +1,5 @@
 import {
+  lastSeenAt,
   MIN_RECENCY_WEIGHT,
   RECENCY_HALF_LIFE_DAYS,
   recencyWeight,
@@ -121,5 +122,50 @@ describe('weightedPrice', () => {
       observationCount: 2,
       lastObservedAt: ago(1),
     });
+  });
+});
+
+describe('lastSeenAt', () => {
+  it('is when the price was observed, for an observation never confirmed', () => {
+    expect(lastSeenAt(observation({ observedAt: ago(5) }), now)).toEqual(ago(5));
+  });
+
+  it('is the last confirmation, for a price a source kept seeing', () => {
+    expect(
+      lastSeenAt(observation({ observedAt: ago(20), lastConfirmedAt: ago(1) }), now),
+    ).toEqual(ago(1));
+  });
+
+  it('ignores confirmations after the moment being judged', () => {
+    // A day aggregated in hindsight must not borrow later confirmations.
+    const asOf = ago(10);
+
+    expect(
+      lastSeenAt(observation({ observedAt: ago(20), lastConfirmedAt: ago(1) }), asOf),
+    ).toEqual(asOf);
+  });
+
+  it('never reports a moment before the observation itself', () => {
+    expect(
+      lastSeenAt(observation({ observedAt: ago(3), lastConfirmedAt: ago(5) }), now),
+    ).toEqual(ago(3));
+  });
+});
+
+describe('a confirmed observation', () => {
+  it('weighs as much as one made at its last confirmation', () => {
+    const confirmed = observation({ observedAt: ago(25), lastConfirmedAt: ago(1) });
+    const fresh = observation({ observedAt: ago(1) });
+
+    expect(weightOf(confirmed, now)).toBeCloseTo(weightOf(fresh, now), 10);
+  });
+
+  it('makes the price as recent as the confirmation', () => {
+    const price = weightedPrice(
+      [observation({ observedAt: ago(25), lastConfirmedAt: ago(1) })],
+      now,
+    );
+
+    expect(price!.lastObservedAt).toEqual(ago(1));
   });
 });

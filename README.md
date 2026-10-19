@@ -292,6 +292,17 @@ Imported prices are **not a separate path**: they become `EXTERNAL_API`
 observations through the same ingestion pipeline as a shopper's report, so the
 same plausibility checks, deviation rules and weighting apply to a feed.
 
+**Delta detection.** A feed resends its whole catalog every day, and most
+prices do not move. When a source reports the same price it reported last
+time, and that observation was accepted, the earlier row is *confirmed* —
+its `lastConfirmedAt` moves forward — instead of a new row being written. A
+confirmed observation stands for every moment from `observedAt` to
+`lastConfirmedAt`: weighting treats it as seen at its last confirmation, daily
+aggregation counts it on every day it held, and retention keeps it while it is
+still being confirmed. Storage grows with price changes, not with
+products × stores × days. Each run reports `observationsCreated` and
+`observationsConfirmed` separately.
+
 **Product matching** runs in order of certainty — an existing link, then a
 valid barcode, then an exact normalized name *and* package size. Anything
 ambiguous (two products of the same name and size) is left `UNMATCHED` for a

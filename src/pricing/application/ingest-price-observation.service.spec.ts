@@ -32,6 +32,7 @@ const stored = (input: NewPriceObservation): PriceObservation => ({
   ...input,
   id: input.id ?? 'obs-1',
   receivedAt: new Date(),
+  lastConfirmedAt: null,
 });
 
 describe('IngestPriceObservationService', () => {
@@ -65,6 +66,8 @@ describe('IngestPriceObservationService', () => {
       recentAcceptedPrices: jest.fn().mockResolvedValue([]),
       countByUserWithReasonSince: jest.fn().mockResolvedValue(0),
       findByUser: jest.fn(),
+      findLatestByDedupePrefix: jest.fn().mockResolvedValue(null),
+      confirm: jest.fn(),
       findInWindow: jest.fn(),
       listAggregationTargets: jest.fn(),
       create: jest
@@ -287,6 +290,96 @@ describe('IngestPriceObservationService', () => {
       for (const [query] of observations.recentAcceptedPrices.mock.calls) {
         expect(query.currency).toBe('EUR');
       }
+    });
+  });
+
+  describe('confirming an unchanged feed price', () => {
+    const feed = (overrides: Partial<IngestPriceObservationCommand> = {}) =>
+      report({
+        sourceType: 'EXTERNAL_API',
+        userId: null,
+        clientIp: null,
+        dedupeKey: 'external:source-1:2026-10-19:p1:s1',
+        confirmUnchangedFrom: 'external:source-1:',
+        ...overrides,
+      });
+
+    const previous = (overrides: Partial<PriceObservation> = {}): PriceObservation => ({
+      ...stored({
+        ...feed(),
+        observedAt: new Date(Date.now() - DAY),
+        status: 'ACCEPTED',
+        reviewReasons: [],
+        shoppingSessionId: null,
+        dedupeKey: 'external:source-1:2026-10-18:p1:s1',
+        evidencePhotoKey: null,
+        evidenceNote: null,
+      }),
+      id: 'previous',
+      ...overrides,
+    });
+
+    it('moves the previous observation forward instead of writing a row', async () => {
+      const command = feed();
+      observations.findLatestByDedupePrefix.mockResolvedValue(previous());
+      observations.confirm.mockResolvedValue(
+        previous({ lastConfirmedAt: command.observedAt }),
+      );
+
+      const result = await service.ingest(command);
+
+      expect(result).toMatchObject({ created: false, confirmed: true });
+      expect(observations.confirm).toHaveBeenCalledWith('previous', command.observedAt);
+      expect(observations.create).not.toHaveBeenCalled();
+      expect(publishedNames()).toEqual(['PriceObservationConfirmed']);
+    });
+
+    it('looks only at what the same source said before', async () => {
+      await service.ingest(feed());
+
+      expect(observations.findLatestByDedupePrefix).toHaveBeenCalledWith({
+        productId: 'product-1',
+        storeId: 'store-1',
+        dedupeKeyPrefix: 'external:source-1:',
+      });
+    });
+
+    it.each([
+      ['the price moved', { priceCents: 126 }],
+      ['the currency differs', { currency: 'EUR' }],
+      ['the previous one is still in doubt', { status: 'FLAGGED' as const }],
+    ])('writes a new observation when %s', async (_case, overrides) => {
+      observations.findLatestByDedupePrefix.mockResolvedValue(previous(overrides));
+
+      const result = await service.ingest(feed());
+
+      expect(result.created).toBe(true);
+      expect(observations.confirm).not.toHaveBeenCalled();
+    });
+
+    it('does not confirm with a sighting older than the observation', async () => {
+      observations.findLatestByDedupePrefix.mockResolvedValue(
+        previous({ observedAt: new Date(Date.now() + 60_000) }),
+      );
+
+      const result = await service.ingest(feed());
+
+      expect(result.created).toBe(true);
+    });
+
+    it('writes a fresh row if the previous one vanished before it was confirmed', async () => {
+      observations.findLatestByDedupePrefix.mockResolvedValue(previous());
+      observations.confirm.mockResolvedValue(null);
+
+      const result = await service.ingest(feed());
+
+      expect(result.created).toBe(true);
+    });
+
+    it('is never attempted for a source that did not ask for it', async () => {
+      await service.ingest(report());
+
+      expect(observations.findLatestByDedupePrefix).not.toHaveBeenCalled();
     });
   });
 });

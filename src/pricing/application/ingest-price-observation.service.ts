@@ -13,6 +13,7 @@ import { createDomainEvent } from '../../common/events/domain-event.js';
 import {
   DomainEventName,
   type PriceObservationAcceptedEvent,
+  type PriceObservationConfirmedEvent,
   type PriceObservationCreatedEvent,
   type PriceObservationPayload,
   type PriceObservationRejectedEvent,
@@ -72,12 +73,21 @@ export interface IngestPriceObservationCommand {
   /** Natural identity of the observation, e.g. one purchased line of a trip. */
   dedupeKey?: string | null;
   evidence?: { photoKey: string | null; note: string | null };
+  /**
+   * Delta detection for sources that resend their whole catalog: the dedupe
+   * key prefix identifying this source. When the source's newest observation
+   * for the product and store is accepted and has the same price, it is
+   * confirmed instead of a new row being written.
+   */
+  confirmUnchangedFrom?: string;
 }
 
 export interface IngestResult {
   observation: PriceObservation;
   /** False when this was a retry or a duplicate of something already stored. */
   created: boolean;
+  /** True when an earlier observation was confirmed instead of a row written. */
+  confirmed?: boolean;
 }
 
 /** How far back recent prices are sampled for the deviation check. */
@@ -123,6 +133,17 @@ export class IngestPriceObservationService {
     }
 
     await this.assertCatalogTargets(command);
+
+    if (command.confirmUnchangedFrom) {
+      const confirmed = await this.confirmUnchanged(
+        command,
+        command.confirmUnchangedFrom,
+      );
+
+      if (confirmed) {
+        return { observation: confirmed, created: false, confirmed: true };
+      }
+    }
 
     const userSubmitted = isUserSubmitted(command.sourceType);
 
@@ -178,6 +199,55 @@ export class IngestPriceObservationService {
     await this.publish(observation);
 
     return { observation, created };
+  }
+
+  /**
+   * Only an ACCEPTED observation is confirmed. A flagged one stays in doubt,
+   * so the source repeating it is new evidence and gets its own row; a price
+   * that moved, however slightly, is a new observation by definition.
+   */
+  private async confirmUnchanged(
+    command: IngestPriceObservationCommand,
+    dedupeKeyPrefix: string,
+  ): Promise<PriceObservation | null> {
+    const latest = await this.observations.findLatestByDedupePrefix({
+      productId: command.productId,
+      storeId: command.storeId,
+      dedupeKeyPrefix,
+    });
+
+    if (
+      !latest ||
+      latest.status !== 'ACCEPTED' ||
+      latest.priceCents !== command.priceCents ||
+      latest.currency !== command.currency ||
+      latest.observedAt >= command.observedAt
+    ) {
+      return null;
+    }
+
+    const confirmed = await this.observations.confirm(
+      latest.id,
+      command.observedAt,
+    );
+
+    if (!confirmed) {
+      // Pruned between the read and the update; write a fresh row instead.
+      return null;
+    }
+
+    const event: PriceObservationConfirmedEvent = createDomainEvent(
+      DomainEventName.PriceObservationConfirmed,
+      {
+        ...this.payloadOf(confirmed),
+        lastConfirmedAt: (
+          confirmed.lastConfirmedAt ?? command.observedAt
+        ).toISOString(),
+      },
+    );
+    await this.events.publish(event);
+
+    return confirmed;
   }
 
   private async findReplay(
@@ -338,8 +408,8 @@ export class IngestPriceObservationService {
     return { account, accountTarget, product, store };
   }
 
-  private async publish(observation: PriceObservation): Promise<void> {
-    const payload: PriceObservationPayload = {
+  private payloadOf(observation: PriceObservation): PriceObservationPayload {
+    return {
       observationId: observation.id,
       productId: observation.productId,
       storeId: observation.storeId,
@@ -350,6 +420,10 @@ export class IngestPriceObservationService {
       status: observation.status,
       userId: observation.userId,
     };
+  }
+
+  private async publish(observation: PriceObservation): Promise<void> {
+    const payload = this.payloadOf(observation);
 
     const created: PriceObservationCreatedEvent = createDomainEvent(
       DomainEventName.PriceObservationCreated,

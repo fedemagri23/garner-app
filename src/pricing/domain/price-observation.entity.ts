@@ -54,9 +54,17 @@ export interface PriceObservation {
   dedupeKey: string | null;
   evidencePhotoKey: string | null;
   evidenceNote: string | null;
+  /**
+   * When the same source last saw this same price again, or null if it never
+   * has. Set only by confirmation, never on creation.
+   */
+  lastConfirmedAt: Date | null;
 }
 
-export type NewPriceObservation = Omit<PriceObservation, 'id' | 'receivedAt'> & {
+export type NewPriceObservation = Omit<
+  PriceObservation,
+  'id' | 'receivedAt' | 'lastConfirmedAt'
+> & {
   id?: string;
 };
 

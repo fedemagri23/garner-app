@@ -75,6 +75,10 @@ export class ImportRunResponse {
   @ApiProperty() productsSeen!: number;
   @ApiProperty() pricesSeen!: number;
   @ApiProperty() observationsCreated!: number;
+  @ApiProperty({
+    description: 'Unchanged prices that confirmed an earlier observation instead of adding one',
+  })
+  observationsConfirmed!: number;
   @ApiProperty() matchedProducts!: number;
   @ApiProperty({ description: 'Products awaiting a person’s decision' })
   unmatchedProducts!: number;
@@ -92,6 +96,7 @@ export class ImportRunResponse {
       productsSeen: run.productsSeen,
       pricesSeen: run.pricesSeen,
       observationsCreated: run.observationsCreated,
+      observationsConfirmed: run.observationsConfirmed,
       matchedProducts: run.matchedProducts,
       unmatchedProducts: run.unmatchedProducts,
       skippedPrices: run.skippedPrices,

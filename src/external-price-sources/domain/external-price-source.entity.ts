@@ -52,6 +52,7 @@ export interface ImportRun {
   productsSeen: number;
   pricesSeen: number;
   observationsCreated: number;
+  observationsConfirmed: number;
   matchedProducts: number;
   unmatchedProducts: number;
   skippedPrices: number;

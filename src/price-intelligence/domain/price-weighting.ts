@@ -17,6 +17,25 @@ export interface WeightedObservation {
   sourceType: PriceSourceType;
   status: PriceObservationStatus;
   userId: string | null;
+  /** The source saw the same price again up to here; see `lastSeenAt`. */
+  lastConfirmedAt?: Date | null;
+}
+
+/**
+ * The latest moment, no later than `asOf`, at which the observation's price
+ * was known to hold. A feed confirming an unchanged price keeps one row and
+ * moves its end forward, so the price is as fresh as its last confirmation —
+ * but a day aggregated in hindsight must not see confirmations from after it.
+ */
+export function lastSeenAt(observation: WeightedObservation, asOf: Date): Date {
+  const confirmed = observation.lastConfirmedAt;
+
+  if (!confirmed || confirmed <= observation.observedAt) {
+    return observation.observedAt;
+  }
+
+  const latest = confirmed < asOf ? confirmed : asOf;
+  return latest > observation.observedAt ? latest : observation.observedAt;
 }
 
 /**
@@ -56,7 +75,7 @@ export function weightOf(observation: WeightedObservation, now: Date): number {
   const penalty = observation.status === 'FLAGGED' ? FLAGGED_PENALTY : 1;
   return (
     SOURCE_WEIGHT[observation.sourceType] *
-    recencyWeight(observation.observedAt, now) *
+    recencyWeight(lastSeenAt(observation, now), now) *
     penalty
   );
 }
@@ -98,8 +117,10 @@ export function weightedPrice(
     minPriceCents = Math.min(minPriceCents, observation.priceCents);
     maxPriceCents = Math.max(maxPriceCents, observation.priceCents);
 
-    if (observation.observedAt > lastObservedAt) {
-      lastObservedAt = observation.observedAt;
+    const seenAt = lastSeenAt(observation, now);
+
+    if (seenAt > lastObservedAt) {
+      lastObservedAt = seenAt;
     }
   }
 

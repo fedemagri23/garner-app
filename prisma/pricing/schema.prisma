@@ -60,6 +60,11 @@ model PriceObservation {
   dedupeKey         String?                @unique
   evidencePhotoKey  String?
   evidenceNote      String?
+  /// The last time the same source saw the same price again. A feed that
+  /// reports an unchanged price confirms its previous observation instead of
+  /// writing a new one, so a stable price is one row with a moving end rather
+  /// than a row per day. The observation stands for [observedAt, lastConfirmedAt].
+  lastConfirmedAt   DateTime?              @db.Timestamptz(3)
 
   /// Recent prices for a product at a store: the reference for deviation checks.
   @@index([productId, storeId, status, observedAt])
@@ -68,6 +73,8 @@ model PriceObservation {
   @@index([userId, receivedAt])
   /// Retention pruning walks this.
   @@index([receivedAt])
+  /// Daily aggregation finds confirmed observations still current on a day.
+  @@index([lastConfirmedAt])
   @@map("price_observations")
 }
 
@@ -155,17 +162,20 @@ model ImportRun {
   /// of starting a second one.
   runKey   String
 
-  status              ImportRunStatus @default(STARTED)
-  startedAt           DateTime        @default(now()) @db.Timestamptz(3)
-  finishedAt          DateTime?       @db.Timestamptz(3)
-  productsSeen        Int             @default(0)
-  pricesSeen          Int             @default(0)
-  observationsCreated Int             @default(0)
-  matchedProducts     Int             @default(0)
-  unmatchedProducts   Int             @default(0)
-  skippedPrices       Int             @default(0)
+  status                ImportRunStatus @default(STARTED)
+  startedAt             DateTime        @default(now()) @db.Timestamptz(3)
+  finishedAt            DateTime?       @db.Timestamptz(3)
+  productsSeen          Int             @default(0)
+  pricesSeen            Int             @default(0)
+  observationsCreated   Int             @default(0)
+  /// Prices unchanged since this source's last observation, recorded as a
+  /// confirmation of it rather than as a new row.
+  observationsConfirmed Int             @default(0)
+  matchedProducts       Int             @default(0)
+  unmatchedProducts     Int             @default(0)
+  skippedPrices         Int             @default(0)
   /// Why the run failed, or what went wrong in a partial run. Operator-facing.
-  error               String?
+  error                 String?
 
   source ExternalPriceSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
 

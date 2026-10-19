@@ -165,6 +165,46 @@ describe('RunSourceImportUseCase', () => {
     );
   });
 
+  it('asks for an unchanged price to confirm this source’s last observation', async () => {
+    adapter.fetchProducts.mockResolvedValue([externalProduct]);
+    adapter.fetchPrices.mockResolvedValue([externalPrice]);
+    products.findByNormalizedName.mockResolvedValue([product('product-1')]);
+
+    await useCase.execute('source-1', '2026-09-24');
+
+    expect(ingestion.ingest).toHaveBeenCalledWith(
+      expect.objectContaining({ confirmUnchangedFrom: 'external:source-1:' }),
+    );
+  });
+
+  it('counts confirmations apart from new observations', async () => {
+    adapter.fetchProducts.mockResolvedValue([
+      externalProduct,
+      { ...externalProduct, externalId: 'SKU-2' },
+    ]);
+    adapter.fetchPrices.mockResolvedValue([
+      externalPrice,
+      { ...externalPrice, externalProductId: 'SKU-2' },
+    ]);
+    products.findByNormalizedName.mockResolvedValue([product('product-1')]);
+    ingestion.ingest
+      .mockResolvedValueOnce({ created: false, confirmed: true })
+      .mockResolvedValueOnce({ created: true });
+
+    const { status } = await useCase.execute('source-1', '2026-09-24');
+
+    expect(status).toBe('COMPLETED');
+    expect(runs.finish).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        totals: expect.objectContaining({
+          observationsCreated: 1,
+          observationsConfirmed: 1,
+        }),
+      }),
+    );
+  });
+
   it('records what the source calls each product, matched or not', async () => {
     adapter.fetchProducts.mockResolvedValue([externalProduct]);
 

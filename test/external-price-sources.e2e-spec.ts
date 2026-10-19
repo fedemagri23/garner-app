@@ -274,21 +274,44 @@ describe('External price sources (e2e)', () => {
       ).toBe(before);
     });
 
-    it('creates no duplicate observations when a run is repeated', async () => {
+    it('confirms unchanged prices on a later run instead of writing them again', async () => {
       const before = await pricing.priceObservation.count({
         where: { sourceType: 'EXTERNAL_API' },
       });
 
-      // Same slot key, as a retried job would use.
-      await runImport.execute(sourceId, 'retry-slot');
-      await runImport.execute(sourceId, 'retry-slot');
+      // A later slot, as tomorrow's import would be, run twice as a retry would.
+      const first = await runImport.execute(sourceId, 'next-day');
+      await runImport.execute(sourceId, 'next-day');
 
-      const after = await pricing.priceObservation.count({
+      expect(first.run).toMatchObject({ observationsCreated: 0, observationsConfirmed: 2 });
+      expect(
+        await pricing.priceObservation.count({ where: { sourceType: 'EXTERNAL_API' } }),
+      ).toBe(before);
+
+      const confirmed = await pricing.priceObservation.findMany({
         where: { sourceType: 'EXTERNAL_API' },
       });
+      for (const row of confirmed) {
+        expect(row.lastConfirmedAt).not.toBeNull();
+        expect(row.lastConfirmedAt!.getTime()).toBeGreaterThan(row.observedAt.getTime());
+      }
+    });
 
-      // One extra slot's worth, however many times it ran.
-      expect(after).toBe(before + 2);
+    it('records a price that moved as a new observation', async () => {
+      await writeFixture('carrefour-prices.json', [
+        { externalProductId: 'SKU-MILK', externalStoreId: 'branch-7', priceCents: 455, currency: 'ARS' },
+        { externalProductId: 'SKU-BREAD', externalStoreId: 'branch-7', priceCents: 890, currency: 'ARS' },
+      ]);
+
+      const { run } = await runImport.execute(sourceId, 'price-moved');
+
+      expect(run).toMatchObject({ observationsCreated: 1, observationsConfirmed: 1 });
+
+      const milk = await pricing.priceObservation.findMany({
+        where: { sourceType: 'EXTERNAL_API', productId: milkId },
+        orderBy: { observedAt: 'asc' },
+      });
+      expect(milk.map((row) => row.priceCents)).toEqual([430, 455]);
     });
 
     it('shows the import history and the source status', async () => {

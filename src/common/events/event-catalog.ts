@@ -16,6 +16,7 @@ import type { DomainEvent } from './domain-event.js';
  * | PriceObservationCreated  | pricing (4)        | price-intelligence(5)|
  * | PriceObservationAccepted | pricing (4)        | price-intelligence(5)|
  * | PriceObservationRejected | pricing (4)        | abuse review         |
+ * | PriceObservationConfirmed| pricing (post-plan)| price-intelligence   |
  * | DerivedPriceUpdated      | price-intelligence(5) | notifications (8) |
  * | DailyPriceCalculated     | price-intelligence(5) | analytics         |
  * | PriceAnomalyDetected     | price-intelligence(5) | abuse review      |
@@ -34,6 +35,7 @@ export const DomainEventName = {
   PriceObservationCreated: 'PriceObservationCreated',
   PriceObservationAccepted: 'PriceObservationAccepted',
   PriceObservationRejected: 'PriceObservationRejected',
+  PriceObservationConfirmed: 'PriceObservationConfirmed',
   DerivedPriceUpdated: 'DerivedPriceUpdated',
   DailyPriceCalculated: 'DailyPriceCalculated',
   PriceAnomalyDetected: 'PriceAnomalyDetected',
@@ -157,6 +159,15 @@ export type PriceObservationRejectedEvent = DomainEvent<
 >;
 
 /**
+ * A source saw an accepted observation's price again, unchanged. The row's
+ * `lastConfirmedAt` moved forward; no new observation was written.
+ */
+export type PriceObservationConfirmedEvent = DomainEvent<
+  'PriceObservationConfirmed',
+  PriceObservationPayload & { lastConfirmedAt: string }
+>;
+
+/**
  * A product's current price at a store was recomputed and changed. Phase 8
  * turns a fall past a shopper's threshold into a price alert.
  */
@@ -233,6 +244,7 @@ export interface ExternalPriceImportCompletedPayload {
   runKey: string;
   status: 'COMPLETED' | 'PARTIAL' | 'FAILED';
   observationsCreated: number;
+  observationsConfirmed: number;
   unmatchedProducts: number;
   skippedPrices: number;
   error: string | null;

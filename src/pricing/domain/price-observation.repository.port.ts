@@ -56,7 +56,22 @@ export interface PriceObservationRepository {
     observation: NewPriceObservation,
   ): Promise<{ observation: PriceObservation; created: boolean }>;
   /**
-   * Observations made in a window, whatever their status: the caller decides
+   * The newest observation for a product and store whose dedupe key starts
+   * with `dedupeKeyPrefix` — that is, the last thing one source said.
+   */
+  findLatestByDedupePrefix(query: {
+    productId: string;
+    storeId: string;
+    dedupeKeyPrefix: string;
+  }): Promise<PriceObservation | null>;
+  /**
+   * Records that the observation's price was seen again at `at`. Never moves
+   * the confirmation backwards, so an out-of-order retry is harmless.
+   */
+  confirm(id: string, at: Date): Promise<PriceObservation | null>;
+  /**
+   * Observations whose price held at some point in a window — made in it, or
+   * made before it and confirmed into it — whatever their status: the caller decides
    * which may shape a price, and needs to see the rejected ones to judge.
    */
   findInWindow(query: {
@@ -66,14 +81,17 @@ export interface PriceObservationRepository {
     to: Date;
     limit: number;
   }): Promise<PriceObservation[]>;
-  /** Product/store pairs observed in a window, one page at a time. */
+  /** Product/store pairs with a price held in a window, one page at a time. */
   listAggregationTargets(query: {
     from: Date;
     to: Date;
     skip: number;
     take: number;
   }): Promise<AggregationTarget[]>;
-  /** Deletes up to `limit` observations received before `cutoff`; returns how many. */
+  /**
+   * Deletes up to `limit` observations received before `cutoff` and not
+   * confirmed since; returns how many.
+   */
   deleteReceivedBefore(cutoff: Date, limit: number): Promise<number>;
 }
 

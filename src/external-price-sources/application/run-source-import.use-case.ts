@@ -60,6 +60,10 @@ export interface ImportOutcome {
  * Safe to run twice for the same day: the run is keyed by its slot, and each
  * observation is keyed by run, product and store, so a retry after a crash
  * fills in what is missing and rewrites nothing.
+ *
+ * A price unchanged since the source's last observation of it is a
+ * confirmation, not a new row: storage grows with price changes rather than
+ * with catalog size × stores × days.
  */
 @Injectable()
 export class RunSourceImportUseCase {
@@ -109,6 +113,7 @@ export class RunSourceImportUseCase {
       productsSeen: 0,
       pricesSeen: 0,
       observationsCreated: 0,
+      observationsConfirmed: 0,
       matchedProducts: 0,
       unmatchedProducts: 0,
       skippedPrices: 0,
@@ -152,6 +157,7 @@ export class RunSourceImportUseCase {
         runKey: key,
         status,
         observationsCreated: totals.observationsCreated,
+        observationsConfirmed: totals.observationsConfirmed,
         unmatchedProducts: totals.unmatchedProducts,
         skippedPrices: totals.skippedPrices,
         error,
@@ -190,6 +196,7 @@ export class RunSourceImportUseCase {
     totals.pricesSeen = prices.length;
 
     const storeIdByExternalId = await this.storeLinks.mapForSource(source.id);
+    const dedupePrefix = `external:${source.id}:`;
 
     for (const price of prices) {
       const productId = productIdByExternalId.get(price.externalProductId);
@@ -203,7 +210,7 @@ export class RunSourceImportUseCase {
       }
 
       try {
-        await this.ingestion.ingest({
+        const result = await this.ingestion.ingest({
           productId,
           storeId,
           priceCents: price.priceCents,
@@ -213,10 +220,18 @@ export class RunSourceImportUseCase {
           userId: null,
           // One observation per product, store and run: a retried run rewrites
           // nothing and adds only what the first attempt missed.
-          dedupeKey: `external:${source.id}:${runKey}:${price.externalProductId}:${price.externalStoreId}`,
+          dedupeKey: `${dedupePrefix}${runKey}:${price.externalProductId}:${price.externalStoreId}`,
+          // Feeds resend their whole catalog daily and most prices do not
+          // move: an unchanged price confirms the last observation rather
+          // than adding a row per product, store and day.
+          confirmUnchangedFrom: dedupePrefix,
         });
 
-        totals.observationsCreated += 1;
+        if (result.confirmed) {
+          totals.observationsConfirmed += 1;
+        } else {
+          totals.observationsCreated += 1;
+        }
       } catch (failure) {
         // A price the pipeline refuses (implausible, a deleted store) is this
         // row's problem, not the import's.

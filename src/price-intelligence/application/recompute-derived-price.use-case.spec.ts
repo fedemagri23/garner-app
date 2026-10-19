@@ -28,6 +28,7 @@ const observation = (
   dedupeKey: null,
   evidencePhotoKey: null,
   evidenceNote: null,
+  lastConfirmedAt: null,
   ...overrides,
 });
 

@@ -84,7 +84,7 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 ## Post-plan — CI and production follow-ups
 
 ### BUG-012 — Delivery tests raced the app's own notification worker
-- **Phase:** post-plan · **Area:** notifications · **Scope:** test · **Found by:** CI · **Fixed in:** (this commit)
+- **Phase:** post-plan · **Area:** notifications · **Scope:** test · **Found by:** CI · **Fixed in:** 98d40c2
 - **Symptom:** `sweeps up a message whose delivery was missed` passed locally and failed on the first CI run: `deliverDue()` found nothing to send.
 - **Cause:** Integration tests boot the real application, workers included. Evaluating an alert enqueues a delivery job with no delay, and on a fast runner the worker sent the message before the test's sweep looked for it. Every delivery test had the same race; this one lost it first.
 - **Fix:** The delivery tests pause the notifications queue while they run, so the use case under test is the only thing delivering, then drain and resume it.

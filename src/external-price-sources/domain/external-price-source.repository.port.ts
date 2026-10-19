@@ -27,6 +27,8 @@ export interface ImportRunTotals {
   productsSeen: number;
   pricesSeen: number;
   observationsCreated: number;
+  /** Unchanged prices recorded as a confirmation of the previous observation. */
+  observationsConfirmed: number;
   matchedProducts: number;
   unmatchedProducts: number;
   skippedPrices: number;

@@ -2,6 +2,7 @@ import { Injectable, type OnModuleInit } from '@nestjs/common';
 import {
   DomainEventName,
   type PriceObservationAcceptedEvent,
+  type PriceObservationConfirmedEvent,
   type PriceObservationCreatedEvent,
 } from '../../common/events/event-catalog.js';
 import { EventBus } from '../../common/events/event-bus.js';
@@ -13,7 +14,8 @@ import { PriceIntelligenceJobs } from '../infrastructure/price-intelligence.queu
  * Both accepted and flagged observations trigger a recompute: a flagged one
  * may be released by corroboration, and the recompute is what notices. The
  * listener only enqueues, so a slow recalculation never delays the contributor
- * who submitted the price.
+ * who submitted the price. A confirmation recomputes too: the price is the
+ * same, but it is now fresher, and confidence follows freshness.
  */
 @Injectable()
 export class ObservationAcceptedListener implements OnModuleInit {
@@ -25,6 +27,16 @@ export class ObservationAcceptedListener implements OnModuleInit {
   onModuleInit(): void {
     this.events.subscribe<PriceObservationAcceptedEvent>(
       DomainEventName.PriceObservationAccepted,
+      async (event) => {
+        await this.jobs.enqueueRecompute(
+          event.payload.productId,
+          event.payload.storeId,
+        );
+      },
+    );
+
+    this.events.subscribe<PriceObservationConfirmedEvent>(
+      DomainEventName.PriceObservationConfirmed,
       async (event) => {
         await this.jobs.enqueueRecompute(
           event.payload.productId,

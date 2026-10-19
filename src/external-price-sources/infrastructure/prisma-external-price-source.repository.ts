@@ -220,6 +220,7 @@ export class PrismaImportRunRepository implements ImportRunRepository {
       productsSeen: row.productsSeen,
       pricesSeen: row.pricesSeen,
       observationsCreated: row.observationsCreated,
+      observationsConfirmed: row.observationsConfirmed,
       matchedProducts: row.matchedProducts,
       unmatchedProducts: row.unmatchedProducts,
       skippedPrices: row.skippedPrices,
