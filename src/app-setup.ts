@@ -51,10 +51,7 @@ export function configureApp(app: INestApplication): void {
     limit: config.maxRequestBodyBytes,
   });
 
-  app.enableVersioning({
-    type: VersioningType.URI,
-    defaultVersion: '1',
-  });
+  applyVersioning(app);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -109,4 +106,15 @@ export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
 
 function camelCase(name: string): string {
   return name.charAt(0).toLowerCase() + name.slice(1);
+}
+
+/**
+ * URI versioning, `/v1/...`. Shared with the OpenAPI export so the committed
+ * contract carries the same paths the running API serves.
+ */
+export function applyVersioning(app: INestApplication): void {
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
 }

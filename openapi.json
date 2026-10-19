@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/metrics": {
+    "/v1/metrics": {
       "get": {
         "operationId": "metricsScrape",
         "parameters": [],
@@ -21,7 +21,7 @@
         ]
       }
     },
-    "/health": {
+    "/v1/health": {
       "get": {
         "operationId": "healthReadiness",
         "parameters": [],
@@ -36,7 +36,7 @@
         ]
       }
     },
-    "/health/live": {
+    "/v1/health/live": {
       "get": {
         "operationId": "healthLiveness",
         "parameters": [],
@@ -51,7 +51,7 @@
         ]
       }
     },
-    "/users/me": {
+    "/v1/users/me": {
       "get": {
         "operationId": "usersMe",
         "parameters": [],
@@ -113,7 +113,7 @@
         ]
       }
     },
-    "/users/me/preferences": {
+    "/v1/users/me/preferences": {
       "get": {
         "operationId": "usersMyPreferences",
         "parameters": [],
@@ -178,7 +178,7 @@
         ]
       }
     },
-    "/products": {
+    "/v1/products": {
       "get": {
         "operationId": "productsSearch",
         "parameters": [
@@ -293,7 +293,7 @@
         ]
       }
     },
-    "/products/barcode/{code}": {
+    "/v1/products/barcode/{code}": {
       "get": {
         "operationId": "productsByBarcode",
         "parameters": [
@@ -335,7 +335,7 @@
         ]
       }
     },
-    "/products/{id}": {
+    "/v1/products/{id}": {
       "get": {
         "operationId": "productsDetail",
         "parameters": [
@@ -418,7 +418,7 @@
         ]
       }
     },
-    "/products/{id}/barcodes": {
+    "/v1/products/{id}/barcodes": {
       "post": {
         "operationId": "productsAttachBarcode",
         "parameters": [
@@ -467,7 +467,7 @@
         ]
       }
     },
-    "/categories": {
+    "/v1/categories": {
       "get": {
         "operationId": "catalogCategories",
         "parameters": [],
@@ -535,7 +535,7 @@
         ]
       }
     },
-    "/brands": {
+    "/v1/brands": {
       "get": {
         "operationId": "catalogBrands",
         "parameters": [],
@@ -603,7 +603,7 @@
         ]
       }
     },
-    "/auth/register": {
+    "/v1/auth/register": {
       "post": {
         "operationId": "authRegister",
         "parameters": [],
@@ -638,7 +638,7 @@
         ]
       }
     },
-    "/auth/login": {
+    "/v1/auth/login": {
       "post": {
         "operationId": "authLoginUser",
         "parameters": [],
@@ -673,7 +673,7 @@
         ]
       }
     },
-    "/auth/refresh": {
+    "/v1/auth/refresh": {
       "post": {
         "operationId": "authRefresh",
         "parameters": [],
@@ -708,7 +708,7 @@
         ]
       }
     },
-    "/auth/logout": {
+    "/v1/auth/logout": {
       "post": {
         "operationId": "authLogoutUser",
         "parameters": [],
@@ -733,7 +733,7 @@
         ]
       }
     },
-    "/supermarkets": {
+    "/v1/supermarkets": {
       "get": {
         "operationId": "supermarketsList",
         "parameters": [],
@@ -801,7 +801,7 @@
         ]
       }
     },
-    "/supermarkets/{id}": {
+    "/v1/supermarkets/{id}": {
       "get": {
         "operationId": "supermarketsDetail",
         "parameters": [
@@ -840,7 +840,7 @@
         ]
       }
     },
-    "/stores": {
+    "/v1/stores": {
       "get": {
         "operationId": "storesList",
         "parameters": [
@@ -941,7 +941,7 @@
         ]
       }
     },
-    "/stores/nearby": {
+    "/v1/stores/nearby": {
       "get": {
         "operationId": "storesNearby",
         "parameters": [
@@ -1019,7 +1019,7 @@
         ]
       }
     },
-    "/stores/{id}": {
+    "/v1/stores/{id}": {
       "get": {
         "operationId": "storesDetail",
         "parameters": [
@@ -1058,7 +1058,7 @@
         ]
       }
     },
-    "/shopping-lists": {
+    "/v1/shopping-lists": {
       "post": {
         "operationId": "shoppingListsCreate",
         "parameters": [],
@@ -1142,7 +1142,7 @@
         ]
       }
     },
-    "/shopping-lists/{id}": {
+    "/v1/shopping-lists/{id}": {
       "get": {
         "operationId": "shoppingListsGet",
         "parameters": [
@@ -1252,7 +1252,7 @@
         ]
       }
     },
-    "/shopping-lists/{id}/duplicate": {
+    "/v1/shopping-lists/{id}/duplicate": {
       "post": {
         "operationId": "shoppingListsDuplicate",
         "parameters": [
@@ -1298,7 +1298,7 @@
         ]
       }
     },
-    "/shopping-lists/{id}/items": {
+    "/v1/shopping-lists/{id}/items": {
       "post": {
         "operationId": "shoppingListsAddItem",
         "parameters": [
@@ -1350,7 +1350,7 @@
         ]
       }
     },
-    "/shopping-lists/{id}/items/order": {
+    "/v1/shopping-lists/{id}/items/order": {
       "put": {
         "operationId": "shoppingListsReorder",
         "parameters": [
@@ -1396,7 +1396,7 @@
         ]
       }
     },
-    "/shopping-lists/{id}/items/{itemId}": {
+    "/v1/shopping-lists/{id}/items/{itemId}": {
       "patch": {
         "operationId": "shoppingListsUpdateItem",
         "parameters": [
@@ -1485,7 +1485,7 @@
         ]
       }
     },
-    "/shopping-sessions": {
+    "/v1/shopping-sessions": {
       "post": {
         "operationId": "shoppingSessionsStart",
         "parameters": [],
@@ -1586,7 +1586,7 @@
         ]
       }
     },
-    "/shopping-sessions/{id}": {
+    "/v1/shopping-sessions/{id}": {
       "get": {
         "operationId": "shoppingSessionsGet",
         "parameters": [
@@ -1625,7 +1625,7 @@
         ]
       }
     },
-    "/shopping-sessions/{id}/items/{itemId}": {
+    "/v1/shopping-sessions/{id}/items/{itemId}": {
       "patch": {
         "operationId": "shoppingSessionsRecordItem",
         "parameters": [
@@ -1682,7 +1682,7 @@
         ]
       }
     },
-    "/shopping-sessions/{id}/pause": {
+    "/v1/shopping-sessions/{id}/pause": {
       "post": {
         "operationId": "shoppingSessionsPause",
         "parameters": [
@@ -1718,7 +1718,7 @@
         ]
       }
     },
-    "/shopping-sessions/{id}/resume": {
+    "/v1/shopping-sessions/{id}/resume": {
       "post": {
         "operationId": "shoppingSessionsResume",
         "parameters": [
@@ -1754,7 +1754,7 @@
         ]
       }
     },
-    "/shopping-sessions/{id}/complete": {
+    "/v1/shopping-sessions/{id}/complete": {
       "post": {
         "operationId": "shoppingSessionsComplete",
         "parameters": [
@@ -1793,7 +1793,7 @@
         ]
       }
     },
-    "/shopping-sessions/{id}/abandon": {
+    "/v1/shopping-sessions/{id}/abandon": {
       "post": {
         "operationId": "shoppingSessionsAbandon",
         "parameters": [
@@ -1832,7 +1832,7 @@
         ]
       }
     },
-    "/price-observations": {
+    "/v1/price-observations": {
       "post": {
         "operationId": "contributionsReport",
         "parameters": [],
@@ -1878,7 +1878,7 @@
         ]
       }
     },
-    "/price-observations/mine": {
+    "/v1/price-observations/mine": {
       "get": {
         "operationId": "contributionsMine",
         "parameters": [
@@ -1927,7 +1927,7 @@
         ]
       }
     },
-    "/price-evidence": {
+    "/v1/price-evidence": {
       "post": {
         "operationId": "contributionsUploadEvidence",
         "parameters": [],
@@ -1976,7 +1976,7 @@
         ]
       }
     },
-    "/products/{id}/prices": {
+    "/v1/products/{id}/prices": {
       "get": {
         "operationId": "productPricesCompare",
         "parameters": [
@@ -2054,7 +2054,7 @@
         ]
       }
     },
-    "/products/{id}/prices/history": {
+    "/v1/products/{id}/prices/history": {
       "get": {
         "operationId": "productPricesHistory",
         "parameters": [
@@ -2118,7 +2118,7 @@
         ]
       }
     },
-    "/price-sources": {
+    "/v1/price-sources": {
       "get": {
         "operationId": "priceSourcesList",
         "parameters": [],
@@ -2186,7 +2186,7 @@
         ]
       }
     },
-    "/price-sources/adapters": {
+    "/v1/price-sources/adapters": {
       "get": {
         "operationId": "priceSourcesAdapters",
         "parameters": [],
@@ -2213,7 +2213,7 @@
         ]
       }
     },
-    "/price-sources/{id}": {
+    "/v1/price-sources/{id}": {
       "get": {
         "operationId": "priceSourcesGet",
         "parameters": [
@@ -2296,7 +2296,7 @@
         ]
       }
     },
-    "/price-sources/{id}/imports": {
+    "/v1/price-sources/{id}/imports": {
       "post": {
         "operationId": "priceSourcesImport",
         "parameters": [
@@ -2369,7 +2369,7 @@
         ]
       }
     },
-    "/price-sources/{id}/products": {
+    "/v1/price-sources/{id}/products": {
       "get": {
         "operationId": "priceSourcesLinks",
         "parameters": [
@@ -2440,7 +2440,7 @@
         ]
       }
     },
-    "/price-sources/{id}/products/{externalProductId}": {
+    "/v1/price-sources/{id}/products/{externalProductId}": {
       "post": {
         "operationId": "priceSourcesResolve",
         "parameters": [
@@ -2494,7 +2494,7 @@
         ]
       }
     },
-    "/price-sources/{id}/stores": {
+    "/v1/price-sources/{id}/stores": {
       "get": {
         "operationId": "priceSourcesStoreLinks",
         "parameters": [
@@ -2574,7 +2574,7 @@
         ]
       }
     },
-    "/price-sources/{id}/stores/{externalStoreId}": {
+    "/v1/price-sources/{id}/stores/{externalStoreId}": {
       "delete": {
         "operationId": "priceSourcesUnlinkStore",
         "parameters": [
@@ -2611,7 +2611,7 @@
         ]
       }
     },
-    "/shopping-lists/{id}/optimize": {
+    "/v1/shopping-lists/{id}/optimize": {
       "post": {
         "operationId": "optimizationOptimize",
         "parameters": [
@@ -2660,7 +2660,7 @@
         ]
       }
     },
-    "/optimizations": {
+    "/v1/optimizations": {
       "get": {
         "operationId": "optimizationList",
         "parameters": [
@@ -2718,7 +2718,7 @@
         ]
       }
     },
-    "/optimizations/{id}": {
+    "/v1/optimizations/{id}": {
       "get": {
         "operationId": "optimizationGet",
         "parameters": [
@@ -2757,7 +2757,7 @@
         ]
       }
     },
-    "/optimization-preferences": {
+    "/v1/optimization-preferences": {
       "get": {
         "operationId": "optimizationMyPreferences",
         "parameters": [],
@@ -2819,7 +2819,7 @@
         ]
       }
     },
-    "/price-alerts": {
+    "/v1/price-alerts": {
       "post": {
         "operationId": "notificationsCreateAlert",
         "parameters": [],
@@ -2906,7 +2906,7 @@
         ]
       }
     },
-    "/price-alerts/{id}": {
+    "/v1/price-alerts/{id}": {
       "patch": {
         "operationId": "notificationsUpdateAlert",
         "parameters": [
@@ -2982,7 +2982,7 @@
         ]
       }
     },
-    "/notifications": {
+    "/v1/notifications": {
       "get": {
         "operationId": "notificationsListNotifications",
         "parameters": [
@@ -3040,7 +3040,7 @@
         ]
       }
     },
-    "/notifications/{id}/read": {
+    "/v1/notifications/{id}/read": {
       "post": {
         "operationId": "notificationsMarkRead",
         "parameters": [
@@ -3076,7 +3076,7 @@
         ]
       }
     },
-    "/notification-preferences": {
+    "/v1/notification-preferences": {
       "get": {
         "operationId": "notificationsMyPreferences",
         "parameters": [],
@@ -3141,7 +3141,7 @@
         ]
       }
     },
-    "/notification-emails/unsubscribe": {
+    "/v1/notification-emails/unsubscribe": {
       "get": {
         "operationId": "emailUnsubscribeConfirm",
         "parameters": [

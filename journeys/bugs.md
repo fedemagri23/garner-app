@@ -112,3 +112,9 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Symptom:** With the load environment configured for Redis database 2, its workers took jobs queued by the integration tests in database 0, and fifteen queue-dependent tests failed.
 - **Cause:** The BullMQ connection was assembled from the URL's host, port and credentials, and dropped the path — the database index — and the `rediss://` scheme. The cache client was right only because it passes the URL to ioredis whole. Any two deployments sharing a Redis by database index would have consumed each other's jobs, against each other's databases.
 - **Fix:** `bullConnectionFrom` builds the connection from the whole URL: database index, TLS for `rediss://`, decoded credentials, and a refusal of an index that is not a number.
+
+### BUG-017 — The committed API contract left out the /v1 prefix
+- **Phase:** post-plan · **Area:** api contract · **Scope:** production code · **Found by:** mobile client generation · **Fixed in:** (this commit)
+- **Symptom:** The mobile app's generated client had no `/v1/auth/login`, only `/auth/login`; every path in `openapi.json` lacked the prefix the running API serves.
+- **Cause:** The export script enabled versioning with the raw enum value `1`, which is header versioning, not URI. CI's drift check compared the file against that same script, so it agreed with itself.
+- **Fix:** One `applyVersioning` used by both the app and the export, and an integration test comparing the committed file with the document the fully configured app builds.

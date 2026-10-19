@@ -26,10 +26,10 @@ for (const [name, value] of Object.entries(placeholders)) {
 
 const { NestFactory } = await import('@nestjs/core');
 const { AppModule } = await import('../dist/app.module.js');
-const { buildOpenApiDocument } = await import('../dist/app-setup.js');
+const { applyVersioning, buildOpenApiDocument } = await import('../dist/app-setup.js');
 
 const app = await NestFactory.create(AppModule, { preview: true, logger: false });
-app.enableVersioning({ type: 1, defaultVersion: '1' });
+applyVersioning(app);
 
 const document = buildOpenApiDocument(app);
 const json = `${JSON.stringify(document, null, 2)}\n`;
