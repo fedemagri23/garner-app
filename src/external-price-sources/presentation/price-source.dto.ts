@@ -11,7 +11,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import { PaginationQuery } from '../../common/http/pagination.js';
+import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
 import {
   ExternalProductLinkStatus,
   ImportRunStatus,
@@ -131,12 +131,7 @@ export class ExternalProductLinkResponse {
 export class ExternalProductLinkPageResponse {
   @ApiProperty({ type: [ExternalProductLinkResponse] })
   data!: ExternalProductLinkResponse[];
-  @ApiProperty() meta!: {
-    page: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-  };
+  @ApiProperty({ type: PaginationMeta }) meta!: PaginationMeta;
 }
 
 export class CreatePriceSourceRequest {

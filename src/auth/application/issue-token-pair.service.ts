@@ -40,6 +40,10 @@ export class IssueTokenPairService {
       expiresAt,
     });
 
-    return { accessToken, refreshToken };
+    return {
+      accessToken,
+      accessTokenExpiresIn: this.config.jwtAccessTtlSeconds,
+      refreshToken,
+    };
   }
 }

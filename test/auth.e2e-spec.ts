@@ -5,6 +5,7 @@ import { createTestApp, resetDatabase, uniqueEmail } from './helpers/test-app.js
 
 interface TokenPair {
   accessToken: string;
+  accessTokenExpiresIn: number;
   refreshToken: string;
 }
 
@@ -39,6 +40,8 @@ describe('Auth (e2e)', () => {
 
       expect(tokens.accessToken).toEqual(expect.any(String));
       expect(tokens.refreshToken).toEqual(expect.any(String));
+      // Says when to refresh, so a client need not decode the token.
+      expect(tokens.accessTokenExpiresIn).toBe(900);
     });
 
     it('rejects a duplicate email with 409', async () => {
@@ -281,6 +284,34 @@ describe('Auth (e2e)', () => {
         .post('/v1/auth/logout')
         .send({ refreshToken: 'never-issued-by-us' })
         .expect(204);
+    });
+  });
+
+  describe('browser clients', () => {
+    it('lets a configured origin call the API, and read the correlation ids', async () => {
+      const preflight = await request(app.getHttpServer())
+        .options('/v1/auth/login')
+        .set('origin', 'http://localhost:8081')
+        .set('access-control-request-method', 'POST')
+        .set('access-control-request-headers', 'content-type,authorization');
+
+      expect(preflight.status).toBeLessThan(300);
+      expect(preflight.headers['access-control-allow-origin']).toBe('http://localhost:8081');
+
+      const response = await request(app.getHttpServer())
+        .get('/v1/health/live')
+        .set('origin', 'http://localhost:8081')
+        .expect(200);
+      expect(response.headers['access-control-expose-headers']).toContain('x-trace-id');
+    });
+
+    it('gives any other origin no CORS permission', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/v1/health/live')
+        .set('origin', 'https://evil.example')
+        .expect(200);
+
+      expect(response.headers['access-control-allow-origin']).toBeUndefined();
     });
   });
 });

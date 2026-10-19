@@ -269,3 +269,9 @@ Notation: [`README.md`](README.md).
 - **What:** The aggregation is a BullMQ scheduler that repeats every 24 hours from when it was created, and its first run is immediate. On a fresh Redis — a first deploy, a flushed cache — the whole previous day is aggregated at boot, and the daily run thereafter happens at that time of day rather than at a chosen hour.
 - **Why:** Re-running a day is idempotent, so an extra run is wasted work, never wrong data. The cost showed up only in load testing, where a boot-time aggregation ran alongside the measurement.
 - **Revisit when:** The aggregation's timing matters — it competes with peak traffic, or downstream consumers expect yesterday's history by a set hour. A cron pattern (`pattern: '30 3 * * *'`) instead of `every` fixes both.
+
+### CON-042 — The API contract is a committed file, checked by CI
+- **Phase:** post-plan · **Area:** whole system · **Status:** accepted
+- **What:** `openapi.json` is generated from the compiled app (Nest preview mode, no databases) and committed; CI fails when it differs from what the code produces. The mobile app, in its own repository, generates its typed client from that file. CORS is off unless `CORS_ORIGINS` names browser origins — native apps send no `Origin` and need none.
+- **Why:** A separate frontend repository needs a contract it can fetch without running the backend, and a drift check makes "the file on master" and "the API on master" the same thing. Generating rather than hand-writing the client turns an incompatible change into a compile error in the app.
+- **Revisit when:** The app needs more than one API version at once, or the contract is published as a package rather than read from the repository.

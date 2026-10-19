@@ -13,7 +13,7 @@ import {
   Min,
   ValidateIf,
 } from 'class-validator';
-import { PaginationQuery } from '../../common/http/pagination.js';
+import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
 import { MAX_QUANTITY } from '../../shopping-lists/domain/money.js';
 import {
   ProductSummaryResponse,
@@ -141,12 +141,7 @@ export class ShoppingSessionDetailResponse extends ShoppingSessionSummaryRespons
 export class ShoppingSessionPageResponse {
   @ApiProperty({ type: [ShoppingSessionSummaryResponse] })
   data!: ShoppingSessionSummaryResponse[];
-  @ApiProperty() meta!: {
-    page: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-  };
+  @ApiProperty({ type: PaginationMeta }) meta!: PaginationMeta;
 }
 
 export class ListShoppingSessionsQueryDto extends PaginationQuery {

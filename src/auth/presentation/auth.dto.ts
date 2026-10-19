@@ -50,6 +50,12 @@ export class TokenPairResponse {
   @ApiProperty()
   accessToken!: string;
 
+  @ApiProperty({
+    description: 'Seconds until the access token expires; refresh a little before',
+    example: 900,
+  })
+  accessTokenExpiresIn!: number;
+
   @ApiProperty()
   refreshToken!: string;
 }

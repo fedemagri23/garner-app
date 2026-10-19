@@ -14,7 +14,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { PaginationQuery } from '../../common/http/pagination.js';
+import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
 import type { Brand, Category, Product } from '../domain/product.entity.js';
 import { formatPackageSize, UnitOfMeasure } from '../domain/unit-of-measure.js';
 
@@ -89,12 +89,7 @@ export class ProductResponse {
 
 export class ProductPageResponse {
   @ApiProperty({ type: [ProductResponse] }) data!: ProductResponse[];
-  @ApiProperty() meta!: {
-    page: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-  };
+  @ApiProperty({ type: PaginationMeta }) meta!: PaginationMeta;
 }
 
 /** Text search and category browsing share one query shape. */

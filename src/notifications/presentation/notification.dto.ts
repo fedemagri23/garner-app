@@ -14,7 +14,7 @@ import {
   Min,
   ValidateIf,
 } from 'class-validator';
-import { PaginationQuery } from '../../common/http/pagination.js';
+import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
 import {
   NotificationCategory,
   NotificationStatus,
@@ -62,12 +62,7 @@ export class PriceAlertResponse {
 
 export class PriceAlertPageResponse {
   @ApiProperty({ type: [PriceAlertResponse] }) data!: PriceAlertResponse[];
-  @ApiProperty() meta!: {
-    page: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-  };
+  @ApiProperty({ type: PaginationMeta }) meta!: PaginationMeta;
 }
 
 export class NotificationResponse {
@@ -102,12 +97,7 @@ export class NotificationPageResponse {
   @ApiProperty({ type: [NotificationResponse] }) data!: NotificationResponse[];
   @ApiProperty({ description: 'Messages not yet marked read' })
   unreadCount!: number;
-  @ApiProperty() meta!: {
-    page: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-  };
+  @ApiProperty({ type: PaginationMeta }) meta!: PaginationMeta;
 }
 
 export class CreatePriceAlertRequest {

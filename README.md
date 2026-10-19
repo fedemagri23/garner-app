@@ -5,6 +5,10 @@ PostgreSQL databases, with Redis, BullMQ workers and internal domain events.
 
 Running it in anger is documented in [`docs/operations.md`](docs/operations.md):
 health, metrics, runbooks, backup and the rebuild procedure for derived data.
+Building a client — the mobile app — against it is covered in
+[`docs/client-guide.md`](docs/client-guide.md); the contract is
+[`openapi.json`](openapi.json).
+
 How it behaves under a city-sized load, and how to measure that again, is in
 [`docs/performance.md`](docs/performance.md).
 

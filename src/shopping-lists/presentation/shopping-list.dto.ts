@@ -17,7 +17,7 @@ import {
   MinLength,
   ValidateIf,
 } from 'class-validator';
-import { PaginationQuery } from '../../common/http/pagination.js';
+import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
 import type { Product } from '../../products/domain/product.entity.js';
 import { formatPackageSize } from '../../products/domain/unit-of-measure.js';
 import type { StoreLocation } from '../../supermarkets/domain/supermarket.entity.js';
@@ -161,12 +161,7 @@ export class ShoppingListDetailResponse extends ShoppingListSummaryResponse {
 export class ShoppingListPageResponse {
   @ApiProperty({ type: [ShoppingListSummaryResponse] })
   data!: ShoppingListSummaryResponse[];
-  @ApiProperty() meta!: {
-    page: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-  };
+  @ApiProperty({ type: PaginationMeta }) meta!: PaginationMeta;
 }
 
 export class ListShoppingListsQueryDto extends PaginationQuery {}

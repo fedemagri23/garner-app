@@ -12,7 +12,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { PaginationQuery } from '../../common/http/pagination.js';
+import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
 import type {
   PriceObservation,
   PriceObservationStatus,
@@ -78,12 +78,7 @@ export class ContributionResponse {
 
 export class ContributionPageResponse {
   @ApiProperty({ type: [ContributionResponse] }) data!: ContributionResponse[];
-  @ApiProperty() meta!: {
-    page: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-  };
+  @ApiProperty({ type: PaginationMeta }) meta!: PaginationMeta;
 }
 
 export class ListContributionsQueryDto extends PaginationQuery {}

@@ -53,6 +53,20 @@ export const configSchema = z.object({
   // they are neither actionable nor interesting.
   OPTIMIZATION_RETENTION_DAYS: z.coerce.number().int().min(1).default(30),
 
+  // Browser origins allowed to call the API, comma-separated — the Expo web
+  // target in development (http://localhost:8081), a web app later. Native
+  // apps send no Origin and need none of this; unset, CORS stays off.
+  CORS_ORIGINS: z
+    .string()
+    .default('')
+    .transform((raw) =>
+      raw
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.url())),
+
   // Structured JSON logs. On by default outside development, where readable
   // console output is worth more than machine-parseable lines.
   LOG_FORMAT: z.enum(['json', 'pretty']).optional(),

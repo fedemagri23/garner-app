@@ -19,7 +19,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { PaginationQuery } from '../../common/http/pagination.js';
+import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
 import type { OpeningInterval } from '../domain/opening-hours.js';
 import type {
   NearbyStore,
@@ -113,12 +113,7 @@ export class NearbyStoreResponse extends StoreResponse {
 
 export class StorePageResponse {
   @ApiProperty({ type: [StoreResponse] }) data!: StoreResponse[];
-  @ApiProperty() meta!: {
-    page: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-  };
+  @ApiProperty({ type: PaginationMeta }) meta!: PaginationMeta;
 }
 
 export class NearbyStoresQueryDto {

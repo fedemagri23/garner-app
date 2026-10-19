@@ -98,6 +98,10 @@ export class AppConfigService {
     };
   }
 
+  get corsOrigins(): string[] {
+    return this.get('CORS_ORIGINS');
+  }
+
   get trustProxyHops(): number {
     return this.get('TRUST_PROXY_HOPS');
   }

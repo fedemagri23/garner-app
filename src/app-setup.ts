@@ -1,6 +1,10 @@
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import {
+  DocumentBuilder,
+  SwaggerModule,
+  type OpenAPIObject,
+} from '@nestjs/swagger';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppConfigService } from './common/config/app-config.service.js';
@@ -18,6 +22,15 @@ export function configureApp(app: INestApplication): void {
   const config = app.get(AppConfigService);
 
   app.use(helmet());
+
+  if (config.corsOrigins.length > 0) {
+    app.enableCors({
+      origin: config.corsOrigins,
+      // The ids a client quotes back when reporting a problem.
+      exposedHeaders: ['x-request-id', 'x-trace-id'],
+      maxAge: 600,
+    });
+  }
 
   // Behind a load balancer, `req.ip` is the proxy unless Express is told how
   // many hops to look past — and per-IP rate limiting depends on that address
@@ -55,19 +68,7 @@ export function configureApp(app: INestApplication): void {
   );
 
   if (config.swaggerEnabled) {
-    const document = SwaggerModule.createDocument(
-      app,
-      new DocumentBuilder()
-        .setTitle('Garner API')
-        .setDescription(
-          'Smart grocery price comparison — REST API for the Garner backend.',
-        )
-        .setVersion('1.0')
-        .addBearerAuth()
-        .build(),
-    );
-
-    SwaggerModule.setup('docs', app, document, {
+    SwaggerModule.setup('docs', app, buildOpenApiDocument(app), {
       jsonDocumentUrl: 'docs/openapi.json',
     });
   }
@@ -75,4 +76,37 @@ export function configureApp(app: INestApplication): void {
   // Lets Nest run OnModuleDestroy hooks (Prisma disconnect, Redis quit, BullMQ
   // worker drain) when the process is asked to stop.
   app.enableShutdownHooks();
+}
+
+/**
+ * The API contract clients are generated from — served at
+ * `/docs/openapi.json` and committed as `openapi.json` by
+ * `pnpm run openapi:export`, which CI keeps in step with the code.
+ *
+ * Operation ids are `<controller><Method>` in camel case (`productsSearch`,
+ * `shoppingListsOptimize`), because a generated client turns each one into a
+ * function name.
+ */
+export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
+  return SwaggerModule.createDocument(
+    app,
+    new DocumentBuilder()
+      .setTitle('Garner API')
+      .setDescription(
+        'Smart grocery price comparison — REST API for the Garner backend.',
+      )
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build(),
+    {
+      operationIdFactory: (controllerKey, methodKey) =>
+        camelCase(controllerKey.replace(/Controller$/, '')) +
+        methodKey.charAt(0).toUpperCase() +
+        methodKey.slice(1),
+    },
+  );
+}
+
+function camelCase(name: string): string {
+  return name.charAt(0).toLowerCase() + name.slice(1);
 }

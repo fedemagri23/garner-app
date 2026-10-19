@@ -14,7 +14,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { PaginationQuery } from '../../common/http/pagination.js';
+import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
 import type { Product } from '../../products/domain/product.entity.js';
 import type { StoreLocation } from '../../supermarkets/domain/supermarket.entity.js';
 import type { OptimizationView } from '../application/optimization-view.js';
@@ -234,12 +234,7 @@ export class OptimizationSummaryResponse {
 export class OptimizationPageResponse {
   @ApiProperty({ type: [OptimizationSummaryResponse] })
   data!: OptimizationSummaryResponse[];
-  @ApiProperty() meta!: {
-    page: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-  };
+  @ApiProperty({ type: PaginationMeta }) meta!: PaginationMeta;
 }
 
 function plan(value: Plan | null, names: Names): PlanResponse | null {

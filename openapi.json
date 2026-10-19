@@ -1,0 +1,6284 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/metrics": {
+      "get": {
+        "operationId": "metricsScrape",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "text/plain metrics"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Metrics in Prometheus exposition format",
+        "tags": [
+          "observability"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "healthReadiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Readiness probe covering all dependencies",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/health/live": {
+      "get": {
+        "operationId": "healthLiveness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Liveness probe",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/users/me": {
+      "get": {
+        "operationId": "usersMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the authenticated user profile",
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "operationId": "usersUpdateMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update the authenticated user profile",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/me/preferences": {
+      "get": {
+        "operationId": "usersMyPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPreferencesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get location and interest preferences",
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "operationId": "usersUpdateMyPreferences",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserPreferencesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPreferencesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Half a coordinate, or an unknown interest category"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update location and interest preferences",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/products": {
+      "get": {
+        "operationId": "productsSearch",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Free-text search over name and brand",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "description": "Includes subcategories",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "brandId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductPageResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Search products by text, category or brand",
+        "tags": [
+          "products"
+        ]
+      },
+      "post": {
+        "operationId": "productsCreate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A barcode already belongs elsewhere"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a product to the canonical catalog",
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/products/barcode/{code}": {
+      "get": {
+        "operationId": "productsByBarcode",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed barcode"
+          },
+          "404": {
+            "description": "No product matches this barcode"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Look up the product a scanned barcode identifies",
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "operationId": "productsDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one product",
+        "tags": [
+          "products"
+        ]
+      },
+      "patch": {
+        "operationId": "productsUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Correct a product without changing its identity",
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/products/{id}/barcodes": {
+      "post": {
+        "operationId": "productsAttachBarcode",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddBarcodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Barcode belongs to another product"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Attach another barcode to a product",
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/categories": {
+      "get": {
+        "operationId": "catalogCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List every category, parents before children",
+        "tags": [
+          "catalog"
+        ]
+      },
+      "post": {
+        "operationId": "catalogCreateCategory",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Category name already in use"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a category",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/brands": {
+      "get": {
+        "operationId": "catalogBrands",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BrandResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List every brand",
+        "tags": [
+          "catalog"
+        ]
+      },
+      "post": {
+        "operationId": "catalogCreateBrand",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBrandRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Brand name already in use"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a brand",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "operationId": "authRegister",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPairResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already registered"
+          }
+        },
+        "summary": "Create an account and start a session",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "authLoginUser",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPairResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "summary": "Exchange credentials for a token pair",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "authRefresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPairResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or reused refresh token"
+          }
+        },
+        "summary": "Rotate a refresh token for a new pair",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "authLogoutUser",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Revoke a refresh token",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/supermarkets": {
+      "get": {
+        "operationId": "supermarketsList",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupermarketResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the supermarket chains in the catalog",
+        "tags": [
+          "supermarkets"
+        ]
+      },
+      "post": {
+        "operationId": "supermarketsCreate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupermarketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupermarketResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Supermarket name already in use"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a supermarket chain",
+        "tags": [
+          "supermarkets"
+        ]
+      }
+    },
+    "/supermarkets/{id}": {
+      "get": {
+        "operationId": "supermarketsDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupermarketResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Supermarket not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one supermarket chain",
+        "tags": [
+          "supermarkets"
+        ]
+      }
+    },
+    "/stores": {
+      "get": {
+        "operationId": "storesList",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "supermarketId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorePageResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List stores, optionally by chain or city",
+        "tags": [
+          "stores"
+        ]
+      },
+      "post": {
+        "operationId": "storesCreate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStoreRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a store location to a chain",
+        "tags": [
+          "stores"
+        ]
+      }
+    },
+    "/stores/nearby": {
+      "get": {
+        "operationId": "storesNearby",
+        "parameters": [
+          {
+            "name": "latitude",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": -34.6037,
+              "type": "number"
+            }
+          },
+          {
+            "name": "longitude",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": -58.3816,
+              "type": "number"
+            }
+          },
+          {
+            "name": "radiusKm",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "supermarketId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NearbyStoreResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Find open stores within a radius, nearest first",
+        "tags": [
+          "stores"
+        ]
+      }
+    },
+    "/stores/{id}": {
+      "get": {
+        "operationId": "storesDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Store not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one store",
+        "tags": [
+          "stores"
+        ]
+      }
+    },
+    "/shopping-lists": {
+      "post": {
+        "operationId": "shoppingListsCreate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShoppingListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a shopping list",
+        "tags": [
+          "shopping-lists"
+        ]
+      },
+      "get": {
+        "operationId": "shoppingListsListMine",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListPageResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List my shopping lists, most recently changed first",
+        "tags": [
+          "shopping-lists"
+        ]
+      }
+    },
+    "/shopping-lists/{id}": {
+      "get": {
+        "operationId": "shoppingListsGet",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Shopping list not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a shopping list with its items and totals",
+        "tags": [
+          "shopping-lists"
+        ]
+      },
+      "patch": {
+        "operationId": "shoppingListsUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateShoppingListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rename a list or change its preferences",
+        "tags": [
+          "shopping-lists"
+        ]
+      },
+      "delete": {
+        "operationId": "shoppingListsRemove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a list; trips already started from it are kept",
+        "tags": [
+          "shopping-lists"
+        ]
+      }
+    },
+    "/shopping-lists/{id}/duplicate": {
+      "post": {
+        "operationId": "shoppingListsDuplicate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DuplicateShoppingListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Copy a list and its items into a new list",
+        "tags": [
+          "shopping-lists"
+        ]
+      }
+    },
+    "/shopping-lists/{id}/items": {
+      "post": {
+        "operationId": "shoppingListsAddItem",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddShoppingListItemRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListDetailResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The client id belongs to another item"
+          },
+          "422": {
+            "description": "Product retired, or the list is full"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a product to the list",
+        "tags": [
+          "shopping-lists"
+        ]
+      }
+    },
+    "/shopping-lists/{id}/items/order": {
+      "put": {
+        "operationId": "shoppingListsReorder",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderShoppingListItemsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set the manual order of every item",
+        "tags": [
+          "shopping-lists"
+        ]
+      }
+    },
+    "/shopping-lists/{id}/items/{itemId}": {
+      "patch": {
+        "operationId": "shoppingListsUpdateItem",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateShoppingListItemRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change quantity, notes, expected price or store",
+        "tags": [
+          "shopping-lists"
+        ]
+      },
+      "delete": {
+        "operationId": "shoppingListsRemoveItem",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove an item from the list",
+        "tags": [
+          "shopping-lists"
+        ]
+      }
+    },
+    "/shopping-sessions": {
+      "post": {
+        "operationId": "shoppingSessionsStart",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartShoppingSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingSessionDetailResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The list is empty"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a trip from a list, or return the one in progress",
+        "tags": [
+          "shopping-sessions"
+        ]
+      },
+      "get": {
+        "operationId": "shoppingSessionsListMine",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "PAUSED",
+                "COMPLETED",
+                "ABANDONED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingSessionPageResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List my trips, most recent first",
+        "tags": [
+          "shopping-sessions"
+        ]
+      }
+    },
+    "/shopping-sessions/{id}": {
+      "get": {
+        "operationId": "shoppingSessionsGet",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingSessionDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Shopping session not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a trip with its lines and running totals",
+        "tags": [
+          "shopping-sessions"
+        ]
+      }
+    },
+    "/shopping-sessions/{id}/items/{itemId}": {
+      "patch": {
+        "operationId": "shoppingSessionsRecordItem",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordItemProgressRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingSessionDetailResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The trip is finished and would change"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark an item purchased, record its price or quantity",
+        "tags": [
+          "shopping-sessions"
+        ]
+      }
+    },
+    "/shopping-sessions/{id}/pause": {
+      "post": {
+        "operationId": "shoppingSessionsPause",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingSessionDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Pause a trip",
+        "tags": [
+          "shopping-sessions"
+        ]
+      }
+    },
+    "/shopping-sessions/{id}/resume": {
+      "post": {
+        "operationId": "shoppingSessionsResume",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingSessionDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Continue a paused trip",
+        "tags": [
+          "shopping-sessions"
+        ]
+      }
+    },
+    "/shopping-sessions/{id}/complete": {
+      "post": {
+        "operationId": "shoppingSessionsComplete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingSessionDetailResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The trip was abandoned"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Finish a trip; retrying is safe",
+        "tags": [
+          "shopping-sessions"
+        ]
+      }
+    },
+    "/shopping-sessions/{id}/abandon": {
+      "post": {
+        "operationId": "shoppingSessionsAbandon",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingSessionDetailResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The trip was already completed"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Give up on a trip without recording it as done",
+        "tags": [
+          "shopping-sessions"
+        ]
+      }
+    },
+    "/price-observations": {
+      "post": {
+        "operationId": "contributionsReport",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportPriceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContributionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not a plausible price"
+          },
+          "422": {
+            "description": "Retired product, inactive store, or evidence not found"
+          },
+          "429": {
+            "description": "Too many reports"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Report a price seen at a store",
+        "tags": [
+          "contributions"
+        ]
+      }
+    },
+    "/price-observations/mine": {
+      "get": {
+        "operationId": "contributionsMine",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContributionPageResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the prices I have contributed",
+        "tags": [
+          "contributions"
+        ]
+      }
+    },
+    "/price-evidence": {
+      "post": {
+        "operationId": "contributionsUploadEvidence",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "photo"
+                ],
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceUploadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Not a JPEG, PNG or WebP image"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload a photo to attach to a price report",
+        "tags": [
+          "contributions"
+        ]
+      }
+    },
+    "/products/{id}/prices": {
+      "get": {
+        "operationId": "productPricesCompare",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "latitude",
+            "required": false,
+            "in": "query",
+            "description": "With longitude, limits to nearby stores",
+            "schema": {
+              "example": -34.6037,
+              "type": "number"
+            }
+          },
+          {
+            "name": "longitude",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": -58.3816,
+              "type": "number"
+            }
+          },
+          {
+            "name": "radiusKm",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceComparisonResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Compare a product’s current prices by store",
+        "tags": [
+          "prices"
+        ]
+      }
+    },
+    "/products/{id}/prices/history": {
+      "get": {
+        "operationId": "productPricesHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "range",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "30d",
+              "type": "string",
+              "enum": [
+                "30d",
+                "90d",
+                "6m",
+                "1y"
+              ]
+            }
+          },
+          {
+            "name": "storeId",
+            "required": false,
+            "in": "query",
+            "description": "One store; omitted, the history covers every store",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceHistoryResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Daily price history and its trend",
+        "tags": [
+          "prices"
+        ]
+      }
+    },
+    "/price-sources": {
+      "get": {
+        "operationId": "priceSourcesList",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceSourceResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List configured price sources and their status",
+        "tags": [
+          "price-sources"
+        ]
+      },
+      "post": {
+        "operationId": "priceSourcesCreate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePriceSourceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceSourceResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A source with this name exists"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register a price source",
+        "tags": [
+          "price-sources"
+        ]
+      }
+    },
+    "/price-sources/adapters": {
+      "get": {
+        "operationId": "priceSourcesAdapters",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdaptersResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the adapters this deployment can run",
+        "tags": [
+          "price-sources"
+        ]
+      }
+    },
+    "/price-sources/{id}": {
+      "get": {
+        "operationId": "priceSourcesGet",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceSourceResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Price source not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one price source",
+        "tags": [
+          "price-sources"
+        ]
+      },
+      "patch": {
+        "operationId": "priceSourcesUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePriceSourceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceSourceResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Enable, disable or reconfigure a source",
+        "tags": [
+          "price-sources"
+        ]
+      }
+    },
+    "/price-sources/{id}/imports": {
+      "post": {
+        "operationId": "priceSourcesImport",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportRunResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Run this source’s import now; the day’s slot runs only once",
+        "tags": [
+          "price-sources"
+        ]
+      },
+      "get": {
+        "operationId": "priceSourcesRuns",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ImportRunResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Recent import runs, newest first",
+        "tags": [
+          "price-sources"
+        ]
+      }
+    },
+    "/price-sources/{id}/products": {
+      "get": {
+        "operationId": "priceSourcesLinks",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "UNMATCHED",
+              "type": "string",
+              "enum": [
+                "MATCHED",
+                "UNMATCHED",
+                "IGNORED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalProductLinkPageResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "External products, by default those awaiting a decision",
+        "tags": [
+          "price-sources"
+        ]
+      }
+    },
+    "/price-sources/{id}/products/{externalProductId}": {
+      "post": {
+        "operationId": "priceSourcesResolve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveLinkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalProductLinkResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Match an external product to a canonical one, or ignore it",
+        "tags": [
+          "price-sources"
+        ]
+      }
+    },
+    "/price-sources/{id}/stores": {
+      "get": {
+        "operationId": "priceSourcesStoreLinks",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "example": {
+                    "0042": "0b3c…"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "How this source’s branches map to stores",
+        "tags": [
+          "price-sources"
+        ]
+      },
+      "post": {
+        "operationId": "priceSourcesLinkStore",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkStoreRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Map one of the source’s branches to a store",
+        "tags": [
+          "price-sources"
+        ]
+      }
+    },
+    "/price-sources/{id}/stores/{externalStoreId}": {
+      "delete": {
+        "operationId": "priceSourcesUnlinkStore",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalStoreId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a branch mapping",
+        "tags": [
+          "price-sources"
+        ]
+      }
+    },
+    "/shopping-lists/{id}/optimize": {
+      "post": {
+        "operationId": "optimizationOptimize",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OptimizeListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "202 while it is computed; 200 when a recent answer is reused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimizationResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The list is empty"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Work out where to buy this list",
+        "tags": [
+          "optimization"
+        ]
+      }
+    },
+    "/optimizations": {
+      "get": {
+        "operationId": "optimizationList",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "listId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimizationPageResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "My optimizations, newest first",
+        "tags": [
+          "optimization"
+        ]
+      }
+    },
+    "/optimizations/{id}": {
+      "get": {
+        "operationId": "optimizationGet",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimizationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Optimization not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "One optimization, with its plans once computed",
+        "tags": [
+          "optimization"
+        ]
+      }
+    },
+    "/optimization-preferences": {
+      "get": {
+        "operationId": "optimizationMyPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimizationPreferencesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "My standing optimization preferences",
+        "tags": [
+          "optimization"
+        ]
+      },
+      "patch": {
+        "operationId": "optimizationUpdatePreferences",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOptimizationPreferencesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimizationPreferencesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change how far I will go to save money",
+        "tags": [
+          "optimization"
+        ]
+      }
+    },
+    "/price-alerts": {
+      "post": {
+        "operationId": "notificationsCreateAlert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePriceAlertRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceAlertResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The alert is missing the figures it needs"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Watch a product’s price",
+        "tags": [
+          "notifications"
+        ]
+      },
+      "get": {
+        "operationId": "notificationsListAlerts",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceAlertPageResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "My price alerts",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/price-alerts/{id}": {
+      "patch": {
+        "operationId": "notificationsUpdateAlert",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePriceAlertRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceAlertResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Price alert not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Pause an alert or change what it watches for",
+        "tags": [
+          "notifications"
+        ]
+      },
+      "delete": {
+        "operationId": "notificationsDeleteAlert",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stop watching",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/notifications": {
+      "get": {
+        "operationId": "notificationsListNotifications",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "unreadOnly",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPageResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "My messages, newest first",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/notifications/{id}/read": {
+      "post": {
+        "operationId": "notificationsMarkRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark a message read; repeating it is harmless",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/notification-preferences": {
+      "get": {
+        "operationId": "notificationsMyPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPreferencesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "How and when I want to be reached",
+        "tags": [
+          "notifications"
+        ]
+      },
+      "patch": {
+        "operationId": "notificationsUpdatePreferences",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotificationPreferencesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPreferencesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Email asked for, but this server cannot send it"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Turn categories or email on and off, or set quiet hours",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/notification-emails/unsubscribe": {
+      "get": {
+        "operationId": "emailUnsubscribeConfirm",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An HTML page with a confirm button"
+          }
+        },
+        "summary": "Confirmation page for an email unsubscribe link",
+        "tags": [
+          "notifications"
+        ]
+      },
+      "post": {
+        "operationId": "emailUnsubscribeUnsubscribe",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Always the same answer, so the link cannot probe for accounts"
+          }
+        },
+        "summary": "Turn email alerts off, from an email link",
+        "tags": [
+          "notifications"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Garner API",
+    "description": "Smart grocery price comparison — REST API for the Garner backend.",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "MODERATOR",
+              "ADMIN"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "displayName",
+          "role",
+          "isActive",
+          "createdAt"
+        ]
+      },
+      "UpdateUserProfileRequest": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        }
+      },
+      "UserPreferencesResponse": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "object",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "object",
+            "nullable": true
+          },
+          "locationLabel": {
+            "type": "object",
+            "nullable": true
+          },
+          "searchRadiusKm": {
+            "type": "number"
+          },
+          "interests": {
+            "description": "Category slugs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude",
+          "locationLabel",
+          "searchRadiusKm",
+          "interests"
+        ]
+      },
+      "UpdateUserPreferencesRequest": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "object",
+            "nullable": true,
+            "example": -34.6037
+          },
+          "longitude": {
+            "type": "object",
+            "nullable": true,
+            "example": -58.3816
+          },
+          "locationLabel": {
+            "type": "object",
+            "nullable": true,
+            "maxLength": 120
+          },
+          "searchRadiusKm": {
+            "type": "number",
+            "maximum": 50
+          },
+          "interests": {
+            "maxItems": 30,
+            "description": "Category slugs, validated against the catalog",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "BrandResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "CategoryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "parentId"
+        ]
+      },
+      "ProductBarcodeResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "isPrimary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "isPrimary"
+        ]
+      },
+      "ProductResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "object",
+            "nullable": true
+          },
+          "brand": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BrandResponse"
+              }
+            ]
+          },
+          "category": {
+            "$ref": "#/components/schemas/CategoryResponse"
+          },
+          "packageSize": {
+            "type": "object",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "GRAM",
+              "KILOGRAM",
+              "MILLILITER",
+              "LITER",
+              "UNIT"
+            ]
+          },
+          "packageLabel": {
+            "type": "object",
+            "nullable": true,
+            "example": "1 L"
+          },
+          "imageUrl": {
+            "type": "object",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "barcodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductBarcodeResponse"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "brand",
+          "category",
+          "packageSize",
+          "unit",
+          "packageLabel",
+          "imageUrl",
+          "isActive",
+          "barcodes",
+          "createdAt"
+        ]
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          },
+          "totalItems": {
+            "type": "number"
+          },
+          "totalPages": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
+      },
+      "ProductPageResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductResponse"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "CreateProductRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageSize": {
+            "type": "number",
+            "description": "Package size expressed in `unit`"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "GRAM",
+              "KILOGRAM",
+              "MILLILITER",
+              "LITER",
+              "UNIT"
+            ]
+          },
+          "imageUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "barcodes": {
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "categoryId",
+          "unit"
+        ]
+      },
+      "UpdateProductRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageSize": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "GRAM",
+              "KILOGRAM",
+              "MILLILITER",
+              "LITER",
+              "UNIT"
+            ]
+          },
+          "imageUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Retire a product by setting this to false; products are never deleted"
+          }
+        }
+      },
+      "AddBarcodeRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "7790070410122"
+          },
+          "isPrimary": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "CreateCategoryRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          },
+          "parentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CreateBrandRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "password": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 128
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "displayName"
+        ]
+      },
+      "TokenPairResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "accessTokenExpiresIn": {
+            "type": "number",
+            "description": "Seconds until the access token expires; refresh a little before",
+            "example": 900
+          },
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accessToken",
+          "accessTokenExpiresIn",
+          "refreshToken"
+        ]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "SupermarketResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": "object",
+            "nullable": true
+          },
+          "websiteUrl": {
+            "type": "object",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "logoUrl",
+          "websiteUrl",
+          "isActive"
+        ]
+      },
+      "CreateSupermarketRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "logoUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "websiteUrl": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "OpeningHoursResponse": {
+        "type": "object",
+        "properties": {
+          "dayOfWeek": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 6,
+            "description": "0 = Sunday"
+          },
+          "opensAt": {
+            "type": "string",
+            "example": "09:00"
+          },
+          "closesAt": {
+            "type": "string",
+            "example": "21:00"
+          }
+        },
+        "required": [
+          "dayOfWeek",
+          "opensAt",
+          "closesAt"
+        ]
+      },
+      "StoreResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supermarketId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supermarketName": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "addressLine": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "province": {
+            "type": "object",
+            "nullable": true
+          },
+          "postalCode": {
+            "type": "object",
+            "nullable": true
+          },
+          "country": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "phone": {
+            "type": "object",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "openingHours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpeningHoursResponse"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "supermarketId",
+          "supermarketName",
+          "name",
+          "addressLine",
+          "city",
+          "province",
+          "postalCode",
+          "country",
+          "latitude",
+          "longitude",
+          "phone",
+          "isActive",
+          "openingHours"
+        ]
+      },
+      "StorePageResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StoreResponse"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "NearbyStoreResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supermarketId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supermarketName": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "addressLine": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "province": {
+            "type": "object",
+            "nullable": true
+          },
+          "postalCode": {
+            "type": "object",
+            "nullable": true
+          },
+          "country": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "phone": {
+            "type": "object",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "openingHours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpeningHoursResponse"
+            }
+          },
+          "distanceKm": {
+            "type": "number",
+            "description": "Great-circle distance from the searched point"
+          },
+          "isOpenNow": {
+            "type": "boolean",
+            "description": "Evaluated against the store opening hours"
+          }
+        },
+        "required": [
+          "id",
+          "supermarketId",
+          "supermarketName",
+          "name",
+          "addressLine",
+          "city",
+          "province",
+          "postalCode",
+          "country",
+          "latitude",
+          "longitude",
+          "phone",
+          "isActive",
+          "openingHours",
+          "distanceKm",
+          "isOpenNow"
+        ]
+      },
+      "OpeningHoursRequest": {
+        "type": "object",
+        "properties": {
+          "dayOfWeek": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 6,
+            "description": "0 = Sunday"
+          },
+          "opensAt": {
+            "type": "string",
+            "example": "09:00"
+          },
+          "closesAt": {
+            "type": "string",
+            "example": "21:00"
+          }
+        },
+        "required": [
+          "dayOfWeek",
+          "opensAt",
+          "closesAt"
+        ]
+      },
+      "CreateStoreRequest": {
+        "type": "object",
+        "properties": {
+          "supermarketId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "addressLine": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "province": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "postalCode": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "country": {
+            "type": "string",
+            "maxLength": 60,
+            "example": "AR"
+          },
+          "latitude": {
+            "type": "number",
+            "example": -34.6037
+          },
+          "longitude": {
+            "type": "number",
+            "example": -58.3816
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "openingHours": {
+            "maxItems": 21,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpeningHoursRequest"
+            }
+          }
+        },
+        "required": [
+          "supermarketId",
+          "name",
+          "addressLine",
+          "city",
+          "country",
+          "latitude",
+          "longitude"
+        ]
+      },
+      "CreateShoppingListRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional client-generated id. Retrying with the same id returns the existing resource instead of creating a duplicate."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "example": "Weekly groceries"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "currency": {
+            "type": "string",
+            "example": "ARS",
+            "description": "ISO 4217; fixed once the list exists"
+          },
+          "sortMode": {
+            "type": "string",
+            "enum": [
+              "MANUAL",
+              "NAME",
+              "CATEGORY",
+              "STORE"
+            ],
+            "default": "MANUAL"
+          }
+        },
+        "required": [
+          "name",
+          "currency"
+        ]
+      },
+      "ShoppingListTotalsResponse": {
+        "type": "object",
+        "properties": {
+          "expectedTotalCents": {
+            "type": "number",
+            "description": "Minor units (cents)"
+          },
+          "itemCount": {
+            "type": "number"
+          },
+          "unpricedItemCount": {
+            "type": "number",
+            "description": "Items with no expected price; when non-zero the total is a lower bound"
+          }
+        },
+        "required": [
+          "expectedTotalCents",
+          "itemCount",
+          "unpricedItemCount"
+        ]
+      },
+      "ProductSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "brandName": {
+            "type": "object",
+            "nullable": true
+          },
+          "categoryName": {
+            "type": "string"
+          },
+          "packageLabel": {
+            "type": "object",
+            "nullable": true,
+            "example": "1 L"
+          },
+          "imageUrl": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "brandName",
+          "categoryName",
+          "packageLabel",
+          "imageUrl"
+        ]
+      },
+      "StoreSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "supermarketName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "supermarketName"
+        ]
+      },
+      "ShoppingListItemResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductSummaryResponse"
+          },
+          "quantity": {
+            "type": "number",
+            "example": 1.5
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          },
+          "expectedUnitPriceCents": {
+            "type": "object",
+            "nullable": true,
+            "description": "Minor units (cents)"
+          },
+          "expectedLineTotalCents": {
+            "type": "object",
+            "nullable": true,
+            "description": "quantity × unit price, rounded"
+          },
+          "selectedStore": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StoreSummaryResponse"
+              }
+            ]
+          },
+          "position": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "product",
+          "quantity",
+          "notes",
+          "expectedUnitPriceCents",
+          "expectedLineTotalCents",
+          "selectedStore",
+          "position"
+        ]
+      },
+      "ShoppingListDetailResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "example": "ARS"
+          },
+          "sortMode": {
+            "type": "string",
+            "enum": [
+              "MANUAL",
+              "NAME",
+              "CATEGORY",
+              "STORE"
+            ]
+          },
+          "totals": {
+            "$ref": "#/components/schemas/ShoppingListTotalsResponse"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "items": {
+            "description": "Ordered by the list sort mode",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShoppingListItemResponse"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "notes",
+          "currency",
+          "sortMode",
+          "totals",
+          "createdAt",
+          "updatedAt",
+          "items"
+        ]
+      },
+      "ShoppingListSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "example": "ARS"
+          },
+          "sortMode": {
+            "type": "string",
+            "enum": [
+              "MANUAL",
+              "NAME",
+              "CATEGORY",
+              "STORE"
+            ]
+          },
+          "totals": {
+            "$ref": "#/components/schemas/ShoppingListTotalsResponse"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "notes",
+          "currency",
+          "sortMode",
+          "totals",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ShoppingListPageResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShoppingListSummaryResponse"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "UpdateShoppingListRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true,
+            "maxLength": 1000
+          },
+          "sortMode": {
+            "type": "string",
+            "enum": [
+              "MANUAL",
+              "NAME",
+              "CATEGORY",
+              "STORE"
+            ]
+          }
+        }
+      },
+      "DuplicateShoppingListRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional client-generated id. Retrying with the same id returns the existing resource instead of creating a duplicate."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Defaults to the original name with \" (copy)\""
+          }
+        }
+      },
+      "AddShoppingListItemRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional client-generated id. Retrying with the same id returns the existing resource instead of creating a duplicate."
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "example": 1,
+            "maximum": 9999
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "expectedUnitPriceCents": {
+            "type": "number",
+            "description": "Minor units (cents)",
+            "example": 125
+          },
+          "selectedStoreId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "productId",
+          "quantity"
+        ]
+      },
+      "ReorderShoppingListItemsRequest": {
+        "type": "object",
+        "properties": {
+          "itemIds": {
+            "description": "Every item id of the list, exactly once, in the new order",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "itemIds"
+        ]
+      },
+      "UpdateShoppingListItemRequest": {
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "type": "number",
+            "maximum": 9999
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true,
+            "maxLength": 500
+          },
+          "expectedUnitPriceCents": {
+            "type": "object",
+            "nullable": true,
+            "description": "Minor units (cents)"
+          },
+          "selectedStoreId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      },
+      "StartShoppingSessionRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional client-generated id. Retrying with the same id returns the session already started."
+          },
+          "listId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The store being shopped; applies to every line of the trip"
+          }
+        },
+        "required": [
+          "listId"
+        ]
+      },
+      "SessionTotalsResponse": {
+        "type": "object",
+        "properties": {
+          "expectedTotalCents": {
+            "type": "number",
+            "description": "Every line at its expected price (cents)"
+          },
+          "actualTotalCents": {
+            "type": "number",
+            "description": "Purchased lines, at the actual price where recorded (cents)"
+          },
+          "remainingExpectedTotalCents": {
+            "type": "number",
+            "description": "Lines not yet purchased, at expected price (cents)"
+          },
+          "projectedTotalCents": {
+            "type": "number",
+            "description": "actual + remaining (cents)"
+          },
+          "itemCount": {
+            "type": "number"
+          },
+          "purchasedItemCount": {
+            "type": "number"
+          },
+          "unpricedItemCount": {
+            "type": "number",
+            "description": "Lines contributing nothing for lack of a price"
+          }
+        },
+        "required": [
+          "expectedTotalCents",
+          "actualTotalCents",
+          "remainingExpectedTotalCents",
+          "projectedTotalCents",
+          "itemCount",
+          "purchasedItemCount",
+          "unpricedItemCount"
+        ]
+      },
+      "ShoppingSessionItemResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductSummaryResponse"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          },
+          "expectedUnitPriceCents": {
+            "type": "object",
+            "nullable": true
+          },
+          "actualUnitPriceCents": {
+            "type": "object",
+            "nullable": true
+          },
+          "expectedLineTotalCents": {
+            "type": "object",
+            "nullable": true
+          },
+          "actualLineTotalCents": {
+            "type": "object",
+            "nullable": true
+          },
+          "store": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StoreSummaryResponse"
+              }
+            ]
+          },
+          "isPurchased": {
+            "type": "boolean"
+          },
+          "purchasedAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
+          "sourceListItemId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "product",
+          "quantity",
+          "notes",
+          "expectedUnitPriceCents",
+          "actualUnitPriceCents",
+          "expectedLineTotalCents",
+          "actualLineTotalCents",
+          "store",
+          "isPurchased",
+          "purchasedAt",
+          "sourceListItemId"
+        ]
+      },
+      "ShoppingSessionDetailResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "listId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Null once the list is deleted"
+          },
+          "listName": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "PAUSED",
+              "COMPLETED",
+              "ABANDONED"
+            ]
+          },
+          "store": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StoreSummaryResponse"
+              }
+            ]
+          },
+          "totals": {
+            "$ref": "#/components/schemas/SessionTotalsResponse"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pausedAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
+          "completedAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
+          "abandonedAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShoppingSessionItemResponse"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "listId",
+          "listName",
+          "currency",
+          "status",
+          "store",
+          "totals",
+          "startedAt",
+          "pausedAt",
+          "completedAt",
+          "abandonedAt",
+          "items"
+        ]
+      },
+      "ShoppingSessionSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "listId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Null once the list is deleted"
+          },
+          "listName": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "PAUSED",
+              "COMPLETED",
+              "ABANDONED"
+            ]
+          },
+          "store": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StoreSummaryResponse"
+              }
+            ]
+          },
+          "totals": {
+            "$ref": "#/components/schemas/SessionTotalsResponse"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pausedAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
+          "completedAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
+          "abandonedAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "listId",
+          "listName",
+          "currency",
+          "status",
+          "store",
+          "totals",
+          "startedAt",
+          "pausedAt",
+          "completedAt",
+          "abandonedAt"
+        ]
+      },
+      "ShoppingSessionPageResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShoppingSessionSummaryResponse"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "RecordItemProgressRequest": {
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "type": "number",
+            "maximum": 9999
+          },
+          "actualUnitPriceCents": {
+            "type": "object",
+            "nullable": true,
+            "description": "What was paid per unit, in cents. Null clears it."
+          },
+          "isPurchased": {
+            "type": "boolean"
+          },
+          "purchasedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When the shopper marked the item, from the device clock. Lets an offline client report the real moment rather than the sync time."
+          }
+        }
+      },
+      "PriceEvidenceRequest": {
+        "type": "object",
+        "properties": {
+          "photoKey": {
+            "type": "string",
+            "description": "Key returned by POST /v1/price-evidence for a photo you uploaded"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      },
+      "ReportPriceRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional client-generated id. Retrying with the same id returns the report already stored."
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "priceCents": {
+            "type": "number",
+            "description": "Price of one unit, in minor units (cents)",
+            "example": 125
+          },
+          "currency": {
+            "type": "string",
+            "example": "ARS"
+          },
+          "observedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When the price was seen; defaults to now. At most 7 days old."
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/PriceEvidenceRequest"
+          }
+        },
+        "required": [
+          "productId",
+          "storeId",
+          "priceCents",
+          "currency"
+        ]
+      },
+      "ContributionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "priceCents": {
+            "type": "number",
+            "description": "Price of one unit, in minor units (cents)"
+          },
+          "currency": {
+            "type": "string",
+            "example": "ARS"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": [
+              "USER_REPORTED",
+              "USER_WITH_EVIDENCE",
+              "PURCHASE_CONFIRMED",
+              "EXTERNAL_API"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "UNDER_REVIEW",
+              "REJECTED"
+            ],
+            "description": "UNDER_REVIEW prices are kept but do not affect shown prices until confirmed"
+          },
+          "hasPhotoEvidence": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "storeId",
+          "priceCents",
+          "currency",
+          "observedAt",
+          "receivedAt",
+          "sourceType",
+          "status",
+          "hasPhotoEvidence",
+          "note"
+        ]
+      },
+      "ContributionPageResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContributionResponse"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "EvidenceUploadResponse": {
+        "type": "object",
+        "properties": {
+          "photoKey": {
+            "type": "string",
+            "description": "Pass as evidence.photoKey when reporting a price"
+          }
+        },
+        "required": [
+          "photoKey"
+        ]
+      },
+      "StorePriceResponse": {
+        "type": "object",
+        "properties": {
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeName": {
+            "type": "string"
+          },
+          "supermarketName": {
+            "type": "string"
+          },
+          "priceCents": {
+            "type": "number",
+            "description": "Derived current price, in minor units (cents)"
+          },
+          "currency": {
+            "type": "string",
+            "example": "ARS"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "VERY_RECENT",
+              "RECENTLY_VERIFIED",
+              "LIKELY_CURRENT",
+              "POSSIBLY_OUTDATED"
+            ],
+            "description": "How far the price can be relied on"
+          },
+          "observationCount": {
+            "type": "number",
+            "description": "Observations behind the price"
+          },
+          "lastObservedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "distanceKm": {
+            "type": "object",
+            "nullable": true,
+            "description": "Null when no location was given"
+          },
+          "isOpenNow": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "storeId",
+          "storeName",
+          "supermarketName",
+          "priceCents",
+          "currency",
+          "confidence",
+          "observationCount",
+          "lastObservedAt",
+          "distanceKm",
+          "isOpenNow"
+        ]
+      },
+      "PriceComparisonResponse": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "prices": {
+            "description": "Cheapest first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorePriceResponse"
+            }
+          },
+          "lowestPriceCents": {
+            "type": "object",
+            "nullable": true,
+            "description": "Cheapest price found, in cents"
+          }
+        },
+        "required": [
+          "productId",
+          "productName",
+          "prices",
+          "lowestPriceCents"
+        ]
+      },
+      "DailyPricePointResponse": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-09-22"
+          },
+          "averageCents": {
+            "type": "number"
+          },
+          "minPriceCents": {
+            "type": "number"
+          },
+          "maxPriceCents": {
+            "type": "number"
+          },
+          "observationCount": {
+            "type": "number"
+          },
+          "isAnomalous": {
+            "type": "boolean",
+            "description": "The day moved sharply against the one before it"
+          }
+        },
+        "required": [
+          "date",
+          "averageCents",
+          "minPriceCents",
+          "maxPriceCents",
+          "observationCount",
+          "isAnomalous"
+        ]
+      },
+      "PriceTrendResponse": {
+        "type": "object",
+        "properties": {
+          "averageCents": {
+            "type": "number"
+          },
+          "lowestCents": {
+            "type": "number"
+          },
+          "highestCents": {
+            "type": "number"
+          },
+          "changePercent": {
+            "type": "number",
+            "description": "Percent change across the range"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down",
+              "stable"
+            ]
+          }
+        },
+        "required": [
+          "averageCents",
+          "lowestCents",
+          "highestCents",
+          "changePercent",
+          "direction"
+        ]
+      },
+      "PriceHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "range": {
+            "type": "string",
+            "enum": [
+              "30d",
+              "90d",
+              "6m",
+              "1y"
+            ]
+          },
+          "points": {
+            "description": "Oldest first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DailyPricePointResponse"
+            }
+          },
+          "trend": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PriceTrendResponse"
+              }
+            ]
+          },
+          "currentPriceCents": {
+            "type": "object",
+            "nullable": true,
+            "description": "Current derived price; only when a store was named"
+          }
+        },
+        "required": [
+          "productId",
+          "storeId",
+          "range",
+          "points",
+          "trend",
+          "currentPriceCents"
+        ]
+      },
+      "PriceSourceResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "supermarketId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "adapterKey": {
+            "type": "string",
+            "example": "json-http"
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "scheduleHourUtc": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 23
+          },
+          "config": {
+            "type": "object",
+            "description": "Adapter configuration; credentials are never stored here"
+          },
+          "lastRunAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastSuccessfulRunAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastStatus": {
+            "type": "string",
+            "enum": [
+              "STARTED",
+              "COMPLETED",
+              "PARTIAL",
+              "FAILED"
+            ],
+            "nullable": true
+          },
+          "consecutiveFailures": {
+            "type": "number",
+            "description": "Runs that failed outright since the last good one"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "supermarketId",
+          "adapterKey",
+          "isEnabled",
+          "scheduleHourUtc",
+          "config",
+          "lastRunAt",
+          "lastSuccessfulRunAt",
+          "lastStatus",
+          "consecutiveFailures"
+        ]
+      },
+      "AdaptersResponse": {
+        "type": "object",
+        "properties": {
+          "adapters": {
+            "description": "Adapter keys this deployment can run",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "adapters"
+        ]
+      },
+      "CreatePriceSourceRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120,
+            "example": "Coto API"
+          },
+          "supermarketId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The supermarket this source prices"
+          },
+          "adapterKey": {
+            "type": "string",
+            "example": "json-http"
+          },
+          "scheduleHourUtc": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 23,
+            "default": 8
+          },
+          "config": {
+            "type": "object",
+            "description": "Adapter configuration. Never put credentials here."
+          }
+        },
+        "required": [
+          "name",
+          "supermarketId",
+          "adapterKey"
+        ]
+      },
+      "UpdatePriceSourceRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "scheduleHourUtc": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 23
+          },
+          "config": {
+            "type": "object"
+          }
+        }
+      },
+      "ImportRunResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "runKey": {
+            "type": "string",
+            "example": "2026-09-24",
+            "description": "The daily slot this run served"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "STARTED",
+              "COMPLETED",
+              "PARTIAL",
+              "FAILED"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
+          "productsSeen": {
+            "type": "number"
+          },
+          "pricesSeen": {
+            "type": "number"
+          },
+          "observationsCreated": {
+            "type": "number"
+          },
+          "observationsConfirmed": {
+            "type": "number",
+            "description": "Unchanged prices that confirmed an earlier observation instead of adding one"
+          },
+          "matchedProducts": {
+            "type": "number"
+          },
+          "unmatchedProducts": {
+            "type": "number",
+            "description": "Products awaiting a person’s decision"
+          },
+          "skippedPrices": {
+            "type": "number",
+            "description": "Prices that could not be placed or failed validation"
+          },
+          "error": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "runKey",
+          "status",
+          "startedAt",
+          "finishedAt",
+          "productsSeen",
+          "pricesSeen",
+          "observationsCreated",
+          "observationsConfirmed",
+          "matchedProducts",
+          "unmatchedProducts",
+          "skippedPrices",
+          "error"
+        ]
+      },
+      "ExternalProductLinkResponse": {
+        "type": "object",
+        "properties": {
+          "externalProductId": {
+            "type": "string"
+          },
+          "externalName": {
+            "type": "string"
+          },
+          "externalBarcode": {
+            "type": "object",
+            "nullable": true
+          },
+          "productId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "matchMethod": {
+            "type": "string",
+            "enum": [
+              "BARCODE",
+              "EXTERNAL_ID",
+              "NORMALIZED_IDENTITY",
+              "MANUAL"
+            ],
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "MATCHED",
+              "UNMATCHED",
+              "IGNORED"
+            ]
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "externalProductId",
+          "externalName",
+          "externalBarcode",
+          "productId",
+          "matchMethod",
+          "status",
+          "lastSeenAt"
+        ]
+      },
+      "ExternalProductLinkPageResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExternalProductLinkResponse"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "ResolveLinkRequest": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The canonical product this is. Omit with ignore: true."
+          },
+          "ignore": {
+            "type": "boolean",
+            "description": "Mark as having no canonical counterpart"
+          }
+        }
+      },
+      "LinkStoreRequest": {
+        "type": "object",
+        "properties": {
+          "externalStoreId": {
+            "type": "string",
+            "description": "What the source calls the branch"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "externalStoreId",
+          "storeId"
+        ]
+      },
+      "OptimizeListRequest": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "example": -34.6037,
+            "description": "Where the trip starts"
+          },
+          "longitude": {
+            "type": "number",
+            "example": -58.3816
+          },
+          "radiusKm": {
+            "type": "number",
+            "default": 10,
+            "maximum": 50,
+            "description": "Stores considered within"
+          },
+          "maxStores": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 4
+          },
+          "maxAdditionalDistanceKm": {
+            "type": "number",
+            "maximum": 50
+          },
+          "maxAdditionalMinutes": {
+            "type": "number",
+            "maximum": 240
+          },
+          "minSavingsCentsPerExtraStore": {
+            "type": "number",
+            "description": "What an extra shop must save, in cents"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "CHEAPEST",
+              "BEST_BALANCE",
+              "SIMPLEST"
+            ]
+          },
+          "preferredSupermarketIds": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "excludedSupermarketIds": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ]
+      },
+      "PlanAssignmentResponse": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unitPriceCents": {
+            "type": "number",
+            "description": "Derived unit price, in minor units (cents)"
+          },
+          "lineTotalCents": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "productId",
+          "productName",
+          "quantity",
+          "unitPriceCents",
+          "lineTotalCents"
+        ]
+      },
+      "PlanStoreResponse": {
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "number",
+            "description": "Position in the route, from 1"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeName": {
+            "type": "string"
+          },
+          "supermarketName": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanAssignmentResponse"
+            }
+          },
+          "subtotalCents": {
+            "type": "number",
+            "description": "Expected spending at this store"
+          }
+        },
+        "required": [
+          "order",
+          "storeId",
+          "storeName",
+          "supermarketName",
+          "items",
+          "subtotalCents"
+        ]
+      },
+      "PlanResponse": {
+        "type": "object",
+        "properties": {
+          "stores": {
+            "description": "In route order",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanStoreResponse"
+            }
+          },
+          "totalCents": {
+            "type": "number"
+          },
+          "savingsCents": {
+            "type": "number",
+            "description": "Against shopping at one convenient store"
+          },
+          "additionalDistanceKm": {
+            "type": "number"
+          },
+          "additionalMinutes": {
+            "type": "number"
+          },
+          "travelDistanceKm": {
+            "type": "number",
+            "description": "Whole trip, there and back"
+          },
+          "travelMinutes": {
+            "type": "number"
+          },
+          "missingProducts": {
+            "description": "Products this plan cannot buy",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "stores",
+          "totalCents",
+          "savingsCents",
+          "additionalDistanceKm",
+          "additionalMinutes",
+          "travelDistanceKm",
+          "travelMinutes",
+          "missingProducts"
+        ]
+      },
+      "RejectedPlanResponse": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "$ref": "#/components/schemas/PlanResponse"
+          },
+          "violations": {
+            "description": "Which of your limits this plan breaks",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "plan",
+          "violations"
+        ]
+      },
+      "OptimizationResultResponse": {
+        "type": "object",
+        "properties": {
+          "cheapest": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PlanResponse"
+              }
+            ]
+          },
+          "bestBalance": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PlanResponse"
+              }
+            ]
+          },
+          "simplest": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PlanResponse"
+              }
+            ]
+          },
+          "recommended": {
+            "type": "string",
+            "enum": [
+              "CHEAPEST",
+              "BEST_BALANCE",
+              "SIMPLEST"
+            ],
+            "description": "Which of the three this request treats as its recommendation"
+          },
+          "rejectedCheaperAlternatives": {
+            "description": "Cheaper plans that break a limit you set; never recommended",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RejectedPlanResponse"
+            }
+          },
+          "unavailableProducts": {
+            "description": "Products no nearby store sells",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "consideredStoreCount": {
+            "type": "number"
+          },
+          "consideredCombinationCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "cheapest",
+          "bestBalance",
+          "simplest",
+          "recommended",
+          "rejectedCheaperAlternatives",
+          "unavailableProducts",
+          "consideredStoreCount",
+          "consideredCombinationCount"
+        ]
+      },
+      "OptimizationResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "listId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "COMPLETED",
+              "FAILED"
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "CHEAPEST",
+              "BEST_BALANCE",
+              "SIMPLEST"
+            ]
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
+          "error": {
+            "type": "object",
+            "nullable": true
+          },
+          "result": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OptimizationResultResponse"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "listId",
+          "status",
+          "mode",
+          "requestedAt",
+          "completedAt",
+          "error",
+          "result"
+        ]
+      },
+      "OptimizationSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "listId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "COMPLETED",
+              "FAILED"
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "CHEAPEST",
+              "BEST_BALANCE",
+              "SIMPLEST"
+            ]
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recommendedTotalCents": {
+            "type": "object",
+            "nullable": true
+          },
+          "recommendedStoreCount": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "listId",
+          "status",
+          "mode",
+          "requestedAt",
+          "recommendedTotalCents",
+          "recommendedStoreCount"
+        ]
+      },
+      "OptimizationPageResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptimizationSummaryResponse"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "OptimizationPreferencesResponse": {
+        "type": "object",
+        "properties": {
+          "maxStores": {
+            "type": "number"
+          },
+          "maxAdditionalDistanceKm": {
+            "type": "number"
+          },
+          "maxAdditionalMinutes": {
+            "type": "number"
+          },
+          "minSavingsCentsPerExtraStore": {
+            "type": "number"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "CHEAPEST",
+              "BEST_BALANCE",
+              "SIMPLEST"
+            ]
+          },
+          "preferredSupermarketIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "excludedSupermarketIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "maxStores",
+          "maxAdditionalDistanceKm",
+          "maxAdditionalMinutes",
+          "minSavingsCentsPerExtraStore",
+          "mode",
+          "preferredSupermarketIds",
+          "excludedSupermarketIds"
+        ]
+      },
+      "UpdateOptimizationPreferencesRequest": {
+        "type": "object",
+        "properties": {
+          "maxStores": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 4
+          },
+          "maxAdditionalDistanceKm": {
+            "type": "number",
+            "maximum": 50
+          },
+          "maxAdditionalMinutes": {
+            "type": "number",
+            "maximum": 240
+          },
+          "minSavingsCentsPerExtraStore": {
+            "type": "number"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "CHEAPEST",
+              "BEST_BALANCE",
+              "SIMPLEST"
+            ]
+          },
+          "preferredSupermarketIds": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "excludedSupermarketIds": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "CreatePriceAlertRequest": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "BELOW_THRESHOLD",
+              "PRICE_DROP",
+              "CHEAPER_NEARBY"
+            ]
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Watch one store; omit to watch anywhere nearby"
+          },
+          "thresholdCents": {
+            "type": "number",
+            "description": "BELOW_THRESHOLD: the figure, in cents"
+          },
+          "dropPercent": {
+            "type": "number",
+            "description": "PRICE_DROP: how big a fall is worth hearing about"
+          },
+          "latitude": {
+            "type": "number",
+            "description": "CHEAPER_NEARBY: where nearby is measured from"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "radiusKm": {
+            "type": "number",
+            "maximum": 50
+          }
+        },
+        "required": [
+          "productId",
+          "type"
+        ]
+      },
+      "PriceAlertResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "BELOW_THRESHOLD",
+              "PRICE_DROP",
+              "CHEAPER_NEARBY"
+            ]
+          },
+          "storeId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Null watches anywhere nearby"
+          },
+          "thresholdCents": {
+            "type": "object",
+            "nullable": true
+          },
+          "dropPercent": {
+            "type": "object",
+            "nullable": true
+          },
+          "radiusKm": {
+            "type": "object",
+            "nullable": true
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "lastTriggeredAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "type",
+          "storeId",
+          "thresholdCents",
+          "dropPercent",
+          "radiusKm",
+          "isEnabled",
+          "lastTriggeredAt",
+          "createdAt"
+        ]
+      },
+      "PriceAlertPageResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceAlertResponse"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "UpdatePriceAlertRequest": {
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "thresholdCents": {
+            "type": "number"
+          },
+          "dropPercent": {
+            "type": "number"
+          }
+        }
+      },
+      "NotificationResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "PRICE_ALERT",
+              "SHOPPING_REMINDER"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "storeId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "listId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "SENT",
+              "FAILED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "readAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "title",
+          "body",
+          "productId",
+          "storeId",
+          "listId",
+          "status",
+          "createdAt",
+          "readAt"
+        ]
+      },
+      "NotificationPageResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationResponse"
+            }
+          },
+          "unreadCount": {
+            "type": "number",
+            "description": "Messages not yet marked read"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "unreadCount",
+          "meta"
+        ]
+      },
+      "NotificationPreferencesResponse": {
+        "type": "object",
+        "properties": {
+          "priceAlertsEnabled": {
+            "type": "boolean"
+          },
+          "remindersEnabled": {
+            "type": "boolean"
+          },
+          "quietHoursStartUtc": {
+            "type": "object",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 23
+          },
+          "quietHoursEndUtc": {
+            "type": "object",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 23
+          },
+          "minMinutesBetweenAlerts": {
+            "type": "number",
+            "description": "The least time between two messages from one alert"
+          },
+          "emailEnabled": {
+            "type": "boolean",
+            "description": "Whether alerts are also emailed. Off until turned on."
+          },
+          "emailAvailable": {
+            "type": "boolean",
+            "description": "Whether this server can send email at all"
+          },
+          "emailOptedInAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
+          "emailOptedOutAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "priceAlertsEnabled",
+          "remindersEnabled",
+          "quietHoursStartUtc",
+          "quietHoursEndUtc",
+          "minMinutesBetweenAlerts",
+          "emailEnabled",
+          "emailAvailable",
+          "emailOptedInAt",
+          "emailOptedOutAt"
+        ]
+      },
+      "UpdateNotificationPreferencesRequest": {
+        "type": "object",
+        "properties": {
+          "priceAlertsEnabled": {
+            "type": "boolean"
+          },
+          "emailEnabled": {
+            "type": "boolean",
+            "description": "Also email alerts to the account address. Recorded as consent."
+          },
+          "remindersEnabled": {
+            "type": "boolean"
+          },
+          "quietHoursStartUtc": {
+            "type": "object",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 23,
+            "description": "Set with quietHoursEndUtc, or null to be reachable always"
+          },
+          "quietHoursEndUtc": {
+            "type": "object",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 23
+          },
+          "minMinutesBetweenAlerts": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10080
+          }
+        }
+      }
+    }
+  }
+}

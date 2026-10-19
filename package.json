@@ -31,7 +31,8 @@
     "load:prepare": "node load/prepare.mjs",
     "load:api": "node --env-file=load/load.env dist/main",
     "load:jobs": "node --env-file=load/load.env load/bench-jobs.mjs",
-    "load:http": "docker run --rm --network host -v ./load/k6:/scripts -e BASE_URL=http://localhost:3100 grafana/k6:0.54.0 run /scripts/mixed.js"
+    "load:http": "docker run --rm --network host -v ./load/k6:/scripts -e BASE_URL=http://localhost:3100 grafana/k6:0.54.0 run /scripts/mixed.js",
+    "openapi:export": "node scripts/export-openapi.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1152.0",

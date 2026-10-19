@@ -27,6 +27,8 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run typecheck
       - run: pnpm run build
+      # The mobile app generates its client from openapi.json; it must match.
+      - run: pnpm run openapi:export --check
       - run: pnpm test
 
   integration:
