@@ -169,35 +169,49 @@ export class PrismaPriceObservationRepository
     }
   }
 
-  async findLatestByDedupePrefix(query: {
-    productId: string;
-    storeId: string;
-    dedupeKeyPrefix: string;
-  }): Promise<PriceObservation | null> {
-    const row = await this.prisma.priceObservation.findFirst({
-      where: {
-        productId: query.productId,
-        storeId: query.storeId,
-        dedupeKey: { startsWith: query.dedupeKeyPrefix },
-      },
-      orderBy: [{ observedAt: 'desc' }, { receivedAt: 'desc' }],
-    });
+  async findLatestByDedupePrefix(
+    dedupeKeyPrefix: string,
+    pairs: { productId: string; storeId: string }[],
+  ): Promise<Map<string, PriceObservation>> {
+    if (pairs.length === 0) {
+      return new Map();
+    }
 
-    return row ? this.toDomain(row) : null;
+    // DISTINCT ON keeps the newest row per pair; the pair list travels as two
+    // arrays, so a thousand pairs are one statement rather than a thousand.
+    const rows = await this.prisma.$queryRaw<PriceObservationRow[]>`
+      SELECT DISTINCT ON (o."productId", o."storeId") o.*
+      FROM price_observations o
+      JOIN unnest(${pairs.map((pair) => pair.productId)}::uuid[], ${pairs.map((pair) => pair.storeId)}::uuid[])
+        AS wanted(product_id, store_id)
+        ON o."productId" = wanted.product_id AND o."storeId" = wanted.store_id
+      WHERE starts_with(o."dedupeKey", ${dedupeKeyPrefix})
+      ORDER BY o."productId", o."storeId", o."observedAt" DESC, o."receivedAt" DESC`;
+
+    return new Map(
+      rows.map((row) => [`${row.productId}:${row.storeId}`, this.toDomain(row)]),
+    );
   }
 
-  async confirm(id: string, at: Date): Promise<PriceObservation | null> {
-    // Conditional, so two overlapping confirmations cannot move the end back.
-    await this.prisma.priceObservation.updateMany({
-      where: {
-        id,
-        observedAt: { lt: at },
-        OR: [{ lastConfirmedAt: null }, { lastConfirmedAt: { lt: at } }],
-      },
-      data: { lastConfirmedAt: at },
-    });
+  async confirmMany(
+    confirmations: { id: string; at: Date }[],
+  ): Promise<Set<string>> {
+    if (confirmations.length === 0) {
+      return new Set();
+    }
 
-    return this.findById(id);
+    // Conditional, so overlapping confirmations cannot move an end back.
+    const rows = await this.prisma.$queryRaw<{ id: string }[]>`
+      UPDATE price_observations o
+      SET "lastConfirmedAt" = c.at
+      FROM unnest(${confirmations.map((c) => c.id)}::uuid[], ${confirmations.map((c) => c.at)}::timestamptz[])
+        AS c(id, at)
+      WHERE o.id = c.id
+        AND o."observedAt" < c.at
+        AND (o."lastConfirmedAt" IS NULL OR o."lastConfirmedAt" < c.at)
+      RETURNING o.id`;
+
+    return new Set(rows.map((row) => row.id));
   }
 
   async findInWindow(query: {

@@ -73,21 +73,21 @@ export interface IngestPriceObservationCommand {
   /** Natural identity of the observation, e.g. one purchased line of a trip. */
   dedupeKey?: string | null;
   evidence?: { photoKey: string | null; note: string | null };
-  /**
-   * Delta detection for sources that resend their whole catalog: the dedupe
-   * key prefix identifying this source. When the source's newest observation
-   * for the product and store is accepted and has the same price, it is
-   * confirmed instead of a new row being written.
-   */
-  confirmUnchangedFrom?: string;
 }
 
 export interface IngestResult {
   observation: PriceObservation;
   /** False when this was a retry or a duplicate of something already stored. */
   created: boolean;
-  /** True when an earlier observation was confirmed instead of a row written. */
-  confirmed?: boolean;
+}
+
+/** A price a source is reporting again, to confirm rather than store. */
+export interface ConfirmationCandidate {
+  productId: string;
+  storeId: string;
+  priceCents: number;
+  currency: string;
+  observedAt: Date;
 }
 
 /** How far back recent prices are sampled for the deviation check. */
@@ -133,17 +133,6 @@ export class IngestPriceObservationService {
     }
 
     await this.assertCatalogTargets(command);
-
-    if (command.confirmUnchangedFrom) {
-      const confirmed = await this.confirmUnchanged(
-        command,
-        command.confirmUnchangedFrom,
-      );
-
-      if (confirmed) {
-        return { observation: confirmed, created: false, confirmed: true };
-      }
-    }
 
     const userSubmitted = isUserSubmitted(command.sourceType);
 
@@ -202,52 +191,79 @@ export class IngestPriceObservationService {
   }
 
   /**
-   * Only an ACCEPTED observation is confirmed. A flagged one stays in doubt,
-   * so the source repeating it is new evidence and gets its own row; a price
-   * that moved, however slightly, is a new observation by definition.
+   * Delta detection for sources that resend their whole catalog. For each
+   * candidate, the source's newest observation of that product and store —
+   * found by `dedupeKeyPrefix`, which identifies the source — is confirmed
+   * instead of a new row being written, when it was ACCEPTED and has the same
+   * price in the same currency.
+   *
+   * A flagged observation stays in doubt, so the source repeating it is new
+   * evidence and gets its own row; a price that moved, however slightly, is a
+   * new observation by definition. Those come back `false` and go through
+   * `ingest` like any other price.
+   *
+   * Batched — one lookup and one update for the whole list — because a feed
+   * is mostly unchanged prices, and taking each one through the full
+   * pipeline made a daily import of a real catalog take hours.
+   *
+   * Returns, aligned with `candidates`, whether each one was confirmed.
    */
-  private async confirmUnchanged(
-    command: IngestPriceObservationCommand,
+  async confirmUnchanged(
+    candidates: ConfirmationCandidate[],
     dedupeKeyPrefix: string,
-  ): Promise<PriceObservation | null> {
-    const latest = await this.observations.findLatestByDedupePrefix({
-      productId: command.productId,
-      storeId: command.storeId,
+    now: Date = new Date(),
+  ): Promise<boolean[]> {
+    const latest = await this.observations.findLatestByDedupePrefix(
       dedupeKeyPrefix,
+      candidates,
+    );
+
+    const outcome = candidates.map(() => false);
+    const pending: { index: number; observation: PriceObservation; at: Date }[] = [];
+
+    candidates.forEach((candidate, index) => {
+      const previous = latest.get(`${candidate.productId}:${candidate.storeId}`);
+
+      if (
+        !previous ||
+        checkPlausibility({ ...candidate, sourceType: 'EXTERNAL_API' }, now) !== null ||
+        previous.status !== 'ACCEPTED' ||
+        previous.priceCents !== candidate.priceCents ||
+        previous.currency !== candidate.currency ||
+        previous.observedAt >= candidate.observedAt
+      ) {
+        return;
+      }
+
+      // Already confirmed this far — a retried run. Nothing to write.
+      if (previous.lastConfirmedAt && previous.lastConfirmedAt >= candidate.observedAt) {
+        outcome[index] = true;
+        return;
+      }
+
+      pending.push({ index, observation: previous, at: candidate.observedAt });
     });
 
-    if (
-      !latest ||
-      latest.status !== 'ACCEPTED' ||
-      latest.priceCents !== command.priceCents ||
-      latest.currency !== command.currency ||
-      latest.observedAt >= command.observedAt
-    ) {
-      return null;
-    }
-
-    const confirmed = await this.observations.confirm(
-      latest.id,
-      command.observedAt,
+    const confirmed = await this.observations.confirmMany(
+      pending.map(({ observation, at }) => ({ id: observation.id, at })),
     );
 
-    if (!confirmed) {
-      // Pruned between the read and the update; write a fresh row instead.
-      return null;
+    for (const { index, observation, at } of pending) {
+      // Pruned between the read and the update: it gets a fresh row instead.
+      if (!confirmed.has(observation.id)) {
+        continue;
+      }
+
+      outcome[index] = true;
+
+      const event: PriceObservationConfirmedEvent = createDomainEvent(
+        DomainEventName.PriceObservationConfirmed,
+        { ...this.payloadOf(observation), lastConfirmedAt: at.toISOString() },
+      );
+      await this.events.publish(event);
     }
 
-    const event: PriceObservationConfirmedEvent = createDomainEvent(
-      DomainEventName.PriceObservationConfirmed,
-      {
-        ...this.payloadOf(confirmed),
-        lastConfirmedAt: (
-          confirmed.lastConfirmedAt ?? command.observedAt
-        ).toISOString(),
-      },
-    );
-    await this.events.publish(event);
-
-    return confirmed;
+    return outcome;
   }
 
   private async findReplay(

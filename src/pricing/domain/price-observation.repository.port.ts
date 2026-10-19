@@ -56,19 +56,20 @@ export interface PriceObservationRepository {
     observation: NewPriceObservation,
   ): Promise<{ observation: PriceObservation; created: boolean }>;
   /**
-   * The newest observation for a product and store whose dedupe key starts
-   * with `dedupeKeyPrefix` — that is, the last thing one source said.
+   * For each product/store pair, the newest observation whose dedupe key
+   * starts with `dedupeKeyPrefix` — the last thing one source said about it.
+   * One query for the whole batch. Keyed by `productId:storeId`.
    */
-  findLatestByDedupePrefix(query: {
-    productId: string;
-    storeId: string;
-    dedupeKeyPrefix: string;
-  }): Promise<PriceObservation | null>;
+  findLatestByDedupePrefix(
+    dedupeKeyPrefix: string,
+    pairs: { productId: string; storeId: string }[],
+  ): Promise<Map<string, PriceObservation>>;
   /**
-   * Records that the observation's price was seen again at `at`. Never moves
-   * the confirmation backwards, so an out-of-order retry is harmless.
+   * Records that each observation's price was seen again at its `at`. Never
+   * moves a confirmation backwards, so an out-of-order retry is harmless.
+   * Returns the ids actually confirmed — a row pruned meanwhile is not.
    */
-  confirm(id: string, at: Date): Promise<PriceObservation | null>;
+  confirmMany(confirmations: { id: string; at: Date }[]): Promise<Set<string>>;
   /**
    * Observations whose price held at some point in a window — made in it, or
    * made before it and confirmed into it — whatever their status: the caller decides

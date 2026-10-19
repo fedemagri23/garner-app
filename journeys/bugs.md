@@ -108,7 +108,7 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Fix:** Runs carry a heartbeat, refreshed every 250 prices. A `STARTED` run is taken over only once its heartbeat is five minutes old, by a conditional update only one claimant can win; otherwise the second trigger returns the running run untouched. A lost create race resolves to the winner's run.
 
 ### BUG-016 — Queues ignored the database index in REDIS_URL
-- **Phase:** post-plan · **Area:** common/queue · **Scope:** production code · **Found by:** load test · **Fixed in:** (this commit)
+- **Phase:** post-plan · **Area:** common/queue · **Scope:** production code · **Found by:** load test · **Fixed in:** dfe7c80
 - **Symptom:** With the load environment configured for Redis database 2, its workers took jobs queued by the integration tests in database 0, and fifteen queue-dependent tests failed.
 - **Cause:** The BullMQ connection was assembled from the URL's host, port and credentials, and dropped the path — the database index — and the `rediss://` scheme. The cache client was right only because it passes the URL to ioredis whole. Any two deployments sharing a Redis by database index would have consumed each other's jobs, against each other's databases.
 - **Fix:** `bullConnectionFrom` builds the connection from the whole URL: database index, TLS for `rediss://`, decoded credentials, and a refusal of an index that is not a number.

@@ -23,6 +23,7 @@ import type {
 import { HARD_LIMITS } from '../domain/submission-policy.js';
 import {
   IngestPriceObservationService,
+  type ConfirmationCandidate,
   type IngestPriceObservationCommand,
 } from './ingest-price-observation.service.js';
 
@@ -66,8 +67,10 @@ describe('IngestPriceObservationService', () => {
       recentAcceptedPrices: jest.fn().mockResolvedValue([]),
       countByUserWithReasonSince: jest.fn().mockResolvedValue(0),
       findByUser: jest.fn(),
-      findLatestByDedupePrefix: jest.fn().mockResolvedValue(null),
-      confirm: jest.fn(),
+      findLatestByDedupePrefix: jest.fn().mockResolvedValue(new Map()),
+      confirmMany: jest
+        .fn()
+        .mockImplementation(async (rows: { id: string }[]) => new Set(rows.map((row) => row.id))),
       findInWindow: jest.fn(),
       listAggregationTargets: jest.fn(),
       create: jest
@@ -293,25 +296,32 @@ describe('IngestPriceObservationService', () => {
     });
   });
 
-  describe('confirming an unchanged feed price', () => {
-    const feed = (overrides: Partial<IngestPriceObservationCommand> = {}) =>
-      report({
-        sourceType: 'EXTERNAL_API',
-        userId: null,
-        clientIp: null,
-        dedupeKey: 'external:source-1:2026-10-19:p1:s1',
-        confirmUnchangedFrom: 'external:source-1:',
-        ...overrides,
-      });
+  describe('confirming unchanged feed prices', () => {
+    const PREFIX = 'external:source-1:';
+    const seenNow = new Date();
+
+    const candidate = (overrides: Partial<ConfirmationCandidate> = {}): ConfirmationCandidate => ({
+      productId: 'product-1',
+      storeId: 'store-1',
+      priceCents: 125,
+      currency: 'ARS',
+      observedAt: seenNow,
+      ...overrides,
+    });
 
     const previous = (overrides: Partial<PriceObservation> = {}): PriceObservation => ({
       ...stored({
-        ...feed(),
-        observedAt: new Date(Date.now() - DAY),
+        productId: 'product-1',
+        storeId: 'store-1',
+        priceCents: 125,
+        currency: 'ARS',
+        observedAt: new Date(seenNow.getTime() - DAY),
+        sourceType: 'EXTERNAL_API',
         status: 'ACCEPTED',
         reviewReasons: [],
+        userId: null,
         shoppingSessionId: null,
-        dedupeKey: 'external:source-1:2026-10-18:p1:s1',
+        dedupeKey: `${PREFIX}2026-10-18:p1:s1`,
         evidencePhotoKey: null,
         evidenceNote: null,
       }),
@@ -319,67 +329,70 @@ describe('IngestPriceObservationService', () => {
       ...overrides,
     });
 
-    it('moves the previous observation forward instead of writing a row', async () => {
-      const command = feed();
-      observations.findLatestByDedupePrefix.mockResolvedValue(previous());
-      observations.confirm.mockResolvedValue(
-        previous({ lastConfirmedAt: command.observedAt }),
+    const lastSaid = (observation: PriceObservation) =>
+      observations.findLatestByDedupePrefix.mockResolvedValue(
+        new Map([[`${observation.productId}:${observation.storeId}`, observation]]),
       );
 
-      const result = await service.ingest(command);
+    it('moves the previous observation forward instead of writing a row', async () => {
+      lastSaid(previous());
 
-      expect(result).toMatchObject({ created: false, confirmed: true });
-      expect(observations.confirm).toHaveBeenCalledWith('previous', command.observedAt);
+      expect(await service.confirmUnchanged([candidate()], PREFIX)).toEqual([true]);
+
+      expect(observations.confirmMany).toHaveBeenCalledWith([{ id: 'previous', at: seenNow }]);
       expect(observations.create).not.toHaveBeenCalled();
       expect(publishedNames()).toEqual(['PriceObservationConfirmed']);
     });
 
-    it('looks only at what the same source said before', async () => {
-      await service.ingest(feed());
+    it('looks up a whole batch at once, and only what this source said', async () => {
+      const second = candidate({ productId: 'product-2' });
 
-      expect(observations.findLatestByDedupePrefix).toHaveBeenCalledWith({
-        productId: 'product-1',
-        storeId: 'store-1',
-        dedupeKeyPrefix: 'external:source-1:',
-      });
+      await service.confirmUnchanged([candidate(), second], PREFIX);
+
+      expect(observations.findLatestByDedupePrefix).toHaveBeenCalledTimes(1);
+      expect(observations.findLatestByDedupePrefix).toHaveBeenCalledWith(PREFIX, [
+        candidate(),
+        second,
+      ]);
     });
 
     it.each([
       ['the price moved', { priceCents: 126 }],
       ['the currency differs', { currency: 'EUR' }],
       ['the previous one is still in doubt', { status: 'FLAGGED' as const }],
-    ])('writes a new observation when %s', async (_case, overrides) => {
-      observations.findLatestByDedupePrefix.mockResolvedValue(previous(overrides));
+      ['the previous one is not older', { observedAt: new Date(seenNow.getTime() + 60_000) }],
+    ])('leaves it to the full pipeline when %s', async (_case, overrides) => {
+      lastSaid(previous(overrides));
 
-      const result = await service.ingest(feed());
-
-      expect(result.created).toBe(true);
-      expect(observations.confirm).not.toHaveBeenCalled();
+      expect(await service.confirmUnchanged([candidate()], PREFIX)).toEqual([false]);
+      expect(publishedNames()).toEqual([]);
     });
 
-    it('does not confirm with a sighting older than the observation', async () => {
-      observations.findLatestByDedupePrefix.mockResolvedValue(
-        previous({ observedAt: new Date(Date.now() + 60_000) }),
-      );
-
-      const result = await service.ingest(feed());
-
-      expect(result.created).toBe(true);
+    it('leaves a price the source never reported before to the full pipeline', async () => {
+      expect(await service.confirmUnchanged([candidate()], PREFIX)).toEqual([false]);
     });
 
-    it('writes a fresh row if the previous one vanished before it was confirmed', async () => {
-      observations.findLatestByDedupePrefix.mockResolvedValue(previous());
-      observations.confirm.mockResolvedValue(null);
+    it('counts a retried confirmation without writing it again', async () => {
+      lastSaid(previous({ lastConfirmedAt: seenNow }));
 
-      const result = await service.ingest(feed());
-
-      expect(result.created).toBe(true);
+      expect(await service.confirmUnchanged([candidate()], PREFIX)).toEqual([true]);
+      expect(observations.confirmMany).toHaveBeenCalledWith([]);
+      expect(publishedNames()).toEqual([]);
     });
 
-    it('is never attempted for a source that did not ask for it', async () => {
-      await service.ingest(report());
+    it('does not count an observation pruned before it could be confirmed', async () => {
+      lastSaid(previous());
+      observations.confirmMany.mockResolvedValue(new Set());
 
-      expect(observations.findLatestByDedupePrefix).not.toHaveBeenCalled();
+      expect(await service.confirmUnchanged([candidate()], PREFIX)).toEqual([false]);
+    });
+
+    it('never confirms with a price that could not be one', async () => {
+      lastSaid(previous({ priceCents: 0 }));
+
+      expect(await service.confirmUnchanged([candidate({ priceCents: 0 })], PREFIX)).toEqual([
+        false,
+      ]);
     });
   });
 });

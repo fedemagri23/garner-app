@@ -49,8 +49,22 @@ import {
  */
 export const RUN_LEASE_MS = 5 * 60 * 1000;
 
-/** Prices between two heartbeats. */
+/** Prices taken through the full pipeline between two heartbeats. */
 const HEARTBEAT_EVERY = 250;
+
+/** Prices checked for confirmation in one lookup and one update. */
+const CONFIRM_BATCH = 1_000;
+
+/** A feed price tied to our product and store. */
+interface PlacedPrice {
+  productId: string;
+  storeId: string;
+  priceCents: number;
+  currency: string;
+  observedAt: Date;
+  externalProductId: string;
+  externalStoreId: string;
+}
 
 export interface ImportOutcome {
   run: ImportRun;
@@ -213,15 +227,15 @@ export class RunSourceImportUseCase {
 
     const prices = await adapter.fetchPrices(context);
     totals.pricesSeen = prices.length;
+    // A feed without its own timestamps is a snapshot taken now.
+    const fetchedAt = new Date();
 
     const storeIdByExternalId = await this.storeLinks.mapForSource(source.id);
     const dedupePrefix = `external:${source.id}:`;
 
-    for (const [index, price] of prices.entries()) {
-      if (index % HEARTBEAT_EVERY === 0) {
-        await this.runs.heartbeat(runId);
-      }
+    const placed: PlacedPrice[] = [];
 
+    for (const price of prices) {
       const productId = productIdByExternalId.get(price.externalProductId);
       const storeId = storeIdByExternalId.get(price.externalStoreId);
 
@@ -232,41 +246,78 @@ export class RunSourceImportUseCase {
         continue;
       }
 
-      try {
-        const result = await this.ingestion.ingest({
-          productId,
-          storeId,
-          priceCents: price.priceCents,
-          currency: price.currency,
-          observedAt: price.observedAt ?? new Date(),
-          sourceType: PriceSourceType.ExternalApi,
-          userId: null,
-          // One observation per product, store and run: a retried run rewrites
-          // nothing and adds only what the first attempt missed.
-          dedupeKey: `${dedupePrefix}${runKey}:${price.externalProductId}:${price.externalStoreId}`,
-          // Feeds resend their whole catalog daily and most prices do not
-          // move: an unchanged price confirms the last observation rather
-          // than adding a row per product, store and day.
-          confirmUnchangedFrom: dedupePrefix,
-        });
+      placed.push({
+        productId,
+        storeId,
+        priceCents: price.priceCents,
+        currency: price.currency,
+        observedAt: price.observedAt ?? fetchedAt,
+        externalProductId: price.externalProductId,
+        externalStoreId: price.externalStoreId,
+      });
+    }
 
-        if (result.confirmed) {
+    let ingested = 0;
+
+    for (let start = 0; start < placed.length; start += CONFIRM_BATCH) {
+      await this.runs.heartbeat(runId);
+
+      const batch = placed.slice(start, start + CONFIRM_BATCH);
+
+      // Feeds resend their whole catalog daily and most prices do not move:
+      // an unchanged price confirms the source's last observation, in bulk,
+      // rather than adding a row per product, store and day.
+      const confirmed = await this.ingestion.confirmUnchanged(batch, dedupePrefix);
+
+      for (const [index, price] of batch.entries()) {
+        if (confirmed[index]) {
           totals.observationsConfirmed += 1;
-        } else {
-          totals.observationsCreated += 1;
-        }
-      } catch (failure) {
-        // A price the pipeline refuses (implausible, a deleted store) is this
-        // row's problem, not the import's.
-        if (!(failure instanceof HttpException)) {
-          throw failure;
+          continue;
         }
 
-        totals.skippedPrices += 1;
-        this.logger.warn(
-          `Source ${source.slug} price for ${price.externalProductId} skipped: ${failure.message}`,
-        );
+        if (++ingested % HEARTBEAT_EVERY === 0) {
+          await this.runs.heartbeat(runId);
+        }
+
+        await this.ingestOne(source, runKey, dedupePrefix, price, totals);
       }
+    }
+  }
+
+  /** A new or moved price, through the full pipeline like any other. */
+  private async ingestOne(
+    source: ExternalPriceSource,
+    runKey: string,
+    dedupePrefix: string,
+    price: PlacedPrice,
+    totals: ImportRunTotals,
+  ): Promise<void> {
+    try {
+      await this.ingestion.ingest({
+        productId: price.productId,
+        storeId: price.storeId,
+        priceCents: price.priceCents,
+        currency: price.currency,
+        observedAt: price.observedAt,
+        sourceType: PriceSourceType.ExternalApi,
+        userId: null,
+        // One observation per product, store and run: a retried run rewrites
+        // nothing and adds only what the first attempt missed.
+        dedupeKey: `${dedupePrefix}${runKey}:${price.externalProductId}:${price.externalStoreId}`,
+      });
+
+      totals.observationsCreated += 1;
+    } catch (failure) {
+      // A price the pipeline refuses (implausible, a deleted store) is this
+      // row's problem, not the import's.
+      if (!(failure instanceof HttpException)) {
+        throw failure;
+      }
+
+      totals.skippedPrices += 1;
+      this.logger.warn(
+        `Source ${source.slug} price for ${price.externalProductId} skipped: ${failure.message}`,
+      );
     }
   }
 
@@ -300,13 +351,19 @@ export class RunSourceImportUseCase {
       }
 
       const barcode = externalBarcode(product);
+      const linkedProductId = link?.productId ?? null;
 
+      // An existing link decides the match outright, so the catalog is only
+      // searched for products the source has not been tied to yet.
       const match = matchExternalProduct(product, {
-        linkedProductId: link?.productId ?? null,
-        byBarcode: barcode ? await this.products.findByBarcode(barcode) : null,
-        byNormalizedName: await this.products.findByNormalizedName(
-          externalMatchKey(product),
-        ),
+        linkedProductId,
+        byBarcode:
+          !linkedProductId && barcode
+            ? await this.products.findByBarcode(barcode)
+            : null,
+        byNormalizedName: linkedProductId
+          ? []
+          : await this.products.findByNormalizedName(externalMatchKey(product)),
       });
 
       await this.links.save({

@@ -79,7 +79,7 @@ describe('RunSourceImportUseCase', () => {
   let adapter: jest.Mocked<PriceSourceAdapter>;
   let registry: jest.Mocked<AdapterRegistry>;
   let products: { findByBarcode: jest.Mock; findByNormalizedName: jest.Mock };
-  let ingestion: { ingest: jest.Mock };
+  let ingestion: { ingest: jest.Mock; confirmUnchanged: jest.Mock };
   let events: { publish: jest.Mock };
   let useCase: RunSourceImportUseCase;
 
@@ -118,7 +118,12 @@ describe('RunSourceImportUseCase', () => {
       findByBarcode: jest.fn().mockResolvedValue(null),
       findByNormalizedName: jest.fn().mockResolvedValue([]),
     };
-    ingestion = { ingest: jest.fn().mockResolvedValue({ created: true }) };
+    ingestion = {
+      ingest: jest.fn().mockResolvedValue({ created: true }),
+      confirmUnchanged: jest
+        .fn()
+        .mockImplementation(async (batch: unknown[]) => batch.map(() => false)),
+    };
     events = { publish: jest.fn() };
 
     useCase = new RunSourceImportUseCase(
@@ -168,19 +173,20 @@ describe('RunSourceImportUseCase', () => {
     );
   });
 
-  it('asks for an unchanged price to confirm this source’s last observation', async () => {
+  it('offers every placed price for confirmation, as this source', async () => {
     adapter.fetchProducts.mockResolvedValue([externalProduct]);
     adapter.fetchPrices.mockResolvedValue([externalPrice]);
     products.findByNormalizedName.mockResolvedValue([product('product-1')]);
 
     await useCase.execute('source-1', '2026-09-24');
 
-    expect(ingestion.ingest).toHaveBeenCalledWith(
-      expect.objectContaining({ confirmUnchangedFrom: 'external:source-1:' }),
+    expect(ingestion.confirmUnchanged).toHaveBeenCalledWith(
+      [expect.objectContaining({ productId: 'product-1', storeId: 'store-1', priceCents: 450 })],
+      'external:source-1:',
     );
   });
 
-  it('counts confirmations apart from new observations', async () => {
+  it('writes only what was not confirmed, and counts the two apart', async () => {
     adapter.fetchProducts.mockResolvedValue([
       externalProduct,
       { ...externalProduct, externalId: 'SKU-2' },
@@ -190,13 +196,12 @@ describe('RunSourceImportUseCase', () => {
       { ...externalPrice, externalProductId: 'SKU-2' },
     ]);
     products.findByNormalizedName.mockResolvedValue([product('product-1')]);
-    ingestion.ingest
-      .mockResolvedValueOnce({ created: false, confirmed: true })
-      .mockResolvedValueOnce({ created: true });
+    ingestion.confirmUnchanged.mockResolvedValue([true, false]);
 
     const { status } = await useCase.execute('source-1', '2026-09-24');
 
     expect(status).toBe('COMPLETED');
+    expect(ingestion.ingest).toHaveBeenCalledTimes(1);
     expect(runs.finish).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
@@ -206,6 +211,23 @@ describe('RunSourceImportUseCase', () => {
         }),
       }),
     );
+  });
+
+  it('does not search the catalog for a product it has already linked', async () => {
+    links.findBySource.mockResolvedValue([
+      {
+        sourceId: 'source-1',
+        externalProductId: externalProduct.externalId,
+        productId: 'product-1',
+        status: 'MATCHED',
+      } as never,
+    ]);
+    adapter.fetchProducts.mockResolvedValue([externalProduct]);
+
+    await useCase.execute('source-1', '2026-09-24');
+
+    expect(products.findByNormalizedName).not.toHaveBeenCalled();
+    expect(products.findByBarcode).not.toHaveBeenCalled();
   });
 
   it('records what the source calls each product, matched or not', async () => {
