@@ -51,12 +51,28 @@ export const EXTERNAL_PRICE_SOURCE_REPOSITORY = Symbol(
   'EXTERNAL_PRICE_SOURCE_REPOSITORY',
 );
 
+/**
+ * What a trigger got when it asked for a slot's run:
+ * - `created` — nobody had started it; this trigger runs it.
+ * - `resumed` — it was left STARTED by a crash (no recent heartbeat); this
+ *   trigger takes it over.
+ * - `running` — someone else is running it right now; leave it alone.
+ * - `finished` — it already ended; nothing to do.
+ */
+export type ImportRunClaim = 'created' | 'resumed' | 'running' | 'finished';
+
 export interface ImportRunRepository {
-  /** Starts the run for this slot, or returns the one already there. */
+  /**
+   * Claims the run for this slot. A STARTED run is taken over only when its
+   * heartbeat is older than `staleBefore`, and only by one claimant.
+   */
   startOrResume(
     sourceId: string,
     runKey: string,
-  ): Promise<{ run: ImportRun; created: boolean }>;
+    staleBefore: Date,
+  ): Promise<{ run: ImportRun; claim: ImportRunClaim }>;
+  /** Proves the run is still alive, so nobody takes it over. */
+  heartbeat(runId: string): Promise<void>;
   finish(
     runId: string,
     outcome: {

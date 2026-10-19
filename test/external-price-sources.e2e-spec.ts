@@ -297,6 +297,22 @@ describe('External price sources (e2e)', () => {
       }
     });
 
+    it('runs a slot once when two triggers arrive together', async () => {
+      // The scheduler's job and an operator's "import now" for the same day.
+      const [first, second] = await Promise.all([
+        runImport.execute(sourceId, 'together'),
+        runImport.execute(sourceId, 'together'),
+      ]);
+
+      const statuses = [first.status, second.status].sort();
+      expect(statuses).toEqual(['PARTIAL', 'STARTED']);
+
+      const run = await pricing.importRun.findFirstOrThrow({
+        where: { sourceId, runKey: 'together' },
+      });
+      expect(run).toMatchObject({ status: 'PARTIAL', observationsConfirmed: 2 });
+    });
+
     it('records a price that moved as a new observation', async () => {
       await writeFixture('carrefour-prices.json', [
         { externalProductId: 'SKU-MILK', externalStoreId: 'branch-7', priceCents: 455, currency: 'ARS' },

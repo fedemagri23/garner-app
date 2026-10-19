@@ -42,6 +42,16 @@ import {
   matchExternalProduct,
 } from '../domain/product-matching.js';
 
+/**
+ * How long a run may go without a heartbeat before it is presumed crashed and
+ * another trigger may take it over. Far longer than the gap between two
+ * heartbeats, which is a few hundred prices.
+ */
+export const RUN_LEASE_MS = 5 * 60 * 1000;
+
+/** Prices between two heartbeats. */
+const HEARTBEAT_EVERY = 250;
+
 export interface ImportOutcome {
   run: ImportRun;
   status: ImportRunStatus;
@@ -91,10 +101,16 @@ export class RunSourceImportUseCase {
     }
 
     const key = runKey ?? dailyRunKey(new Date());
-    const { run, created } = await this.runs.startOrResume(source.id, key);
+    const { run, claim } = await this.runs.startOrResume(
+      source.id,
+      key,
+      new Date(Date.now() - RUN_LEASE_MS),
+    );
 
-    if (!created && run.status !== ImportRunStatus.Started) {
-      // Today's slot has already been served; a second trigger is a no-op.
+    // Today's slot has been served, or is being served right now — by the
+    // scheduler while an operator pressed "import now", say. Running it a
+    // second time alongside would do all the work twice.
+    if (claim === 'finished' || claim === 'running') {
       return { run, status: run.status };
     }
 
@@ -123,7 +139,7 @@ export class RunSourceImportUseCase {
     let error: string | null = null;
 
     try {
-      await this.importFrom(source, key, totals);
+      await this.importFrom(source, run.id, key, totals);
 
       // Everything the source sent was used, or some of it could not be.
       status =
@@ -170,6 +186,7 @@ export class RunSourceImportUseCase {
 
   private async importFrom(
     source: ExternalPriceSource,
+    runId: string,
     runKey: string,
     totals: ImportRunTotals,
   ): Promise<void> {
@@ -192,13 +209,19 @@ export class RunSourceImportUseCase {
       totals,
     );
 
+    await this.runs.heartbeat(runId);
+
     const prices = await adapter.fetchPrices(context);
     totals.pricesSeen = prices.length;
 
     const storeIdByExternalId = await this.storeLinks.mapForSource(source.id);
     const dedupePrefix = `external:${source.id}:`;
 
-    for (const price of prices) {
+    for (const [index, price] of prices.entries()) {
+      if (index % HEARTBEAT_EVERY === 0) {
+        await this.runs.heartbeat(runId);
+      }
+
       const productId = productIdByExternalId.get(price.externalProductId);
       const storeId = storeIdByExternalId.get(price.externalStoreId);
 

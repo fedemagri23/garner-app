@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "import_runs" ADD COLUMN     "heartbeatAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

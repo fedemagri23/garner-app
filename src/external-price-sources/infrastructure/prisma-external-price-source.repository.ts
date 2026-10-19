@@ -5,6 +5,7 @@ import type {
   ImportRun as ImportRunRow,
   ExternalProductLink as LinkRow,
 } from '../../../generated/prisma/pricing/index.js';
+import { isUniqueViolation } from '../../common/database/prisma-errors.js';
 import { PricingPrismaService } from '../../common/database/pricing-prisma.service.js';
 import type {
   ExternalPriceSource,
@@ -22,6 +23,7 @@ import type {
   ImportRunRepository,
   ImportRunTotals,
   UpdateSourceInput,
+  ImportRunClaim,
 } from '../domain/external-price-source.repository.port.js';
 
 /**
@@ -147,25 +149,49 @@ export class PrismaImportRunRepository implements ImportRunRepository {
 
   /**
    * One run per source per slot. Two triggers for the same day meet on the
-   * unique key, and the second gets the first's run rather than its own.
+   * unique key; the second gets the first's run, and may take it over only if
+   * its heartbeat has stopped. The takeover is a conditional update, so two
+   * triggers finding the same stale run cannot both win it.
    */
   async startOrResume(
     sourceId: string,
     runKey: string,
-  ): Promise<{ run: ImportRun; created: boolean }> {
-    const existing = await this.prisma.importRun.findUnique({
-      where: { sourceId_runKey: { sourceId, runKey } },
-    });
+    staleBefore: Date,
+  ): Promise<{ run: ImportRun; claim: ImportRunClaim }> {
+    const key = { sourceId_runKey: { sourceId, runKey } };
+    let existing = await this.prisma.importRun.findUnique({ where: key });
 
-    if (existing) {
-      return { run: this.toDomain(existing), created: false };
+    if (!existing) {
+      try {
+        const row = await this.prisma.importRun.create({ data: { sourceId, runKey } });
+        return { run: this.toDomain(row), claim: 'created' };
+      } catch (error) {
+        if (!isUniqueViolation(error)) {
+          throw error;
+        }
+
+        // Lost the race to create it; the winner is running it.
+        existing = await this.prisma.importRun.findUniqueOrThrow({ where: key });
+      }
     }
 
-    const row = await this.prisma.importRun.create({
-      data: { sourceId, runKey },
+    if (existing.status !== 'STARTED') {
+      return { run: this.toDomain(existing), claim: 'finished' };
+    }
+
+    const { count } = await this.prisma.importRun.updateMany({
+      where: { id: existing.id, status: 'STARTED', heartbeatAt: { lt: staleBefore } },
+      data: { heartbeatAt: new Date() },
     });
 
-    return { run: this.toDomain(row), created: true };
+    return { run: this.toDomain(existing), claim: count === 1 ? 'resumed' : 'running' };
+  }
+
+  async heartbeat(runId: string): Promise<void> {
+    await this.prisma.importRun.updateMany({
+      where: { id: runId, status: 'STARTED' },
+      data: { heartbeatAt: new Date() },
+    });
   }
 
   async finish(

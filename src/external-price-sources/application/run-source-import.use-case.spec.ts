@@ -19,7 +19,9 @@ import {
   type AdapterRegistry,
   type PriceSourceAdapter,
 } from '../domain/price-source-adapter.port.js';
-import { RunSourceImportUseCase } from './run-source-import.use-case.js';
+import {
+  RUN_LEASE_MS,
+  RunSourceImportUseCase } from './run-source-import.use-case.js';
 
 const source: ExternalPriceSource = {
   id: 'source-1',
@@ -71,7 +73,7 @@ const product = (id: string): Product =>
 
 describe('RunSourceImportUseCase', () => {
   let sources: jest.Mocked<Pick<ExternalPriceSourceRepository, 'findById' | 'recordRunOutcome'>>;
-  let runs: jest.Mocked<Pick<ImportRunRepository, 'startOrResume' | 'finish'>>;
+  let runs: jest.Mocked<Pick<ImportRunRepository, 'startOrResume' | 'finish' | 'heartbeat'>>;
   let links: jest.Mocked<Pick<ExternalProductLinkRepository, 'findBySource' | 'save'>>;
   let storeLinks: jest.Mocked<Pick<ExternalStoreLinkRepository, 'mapForSource'>>;
   let adapter: jest.Mocked<PriceSourceAdapter>;
@@ -87,7 +89,8 @@ describe('RunSourceImportUseCase', () => {
       recordRunOutcome: jest.fn(),
     };
     runs = {
-      startOrResume: jest.fn().mockResolvedValue({ run, created: true }),
+      startOrResume: jest.fn().mockResolvedValue({ run, claim: 'created' }),
+      heartbeat: jest.fn(),
       finish: jest
         .fn()
         .mockImplementation(async (_id, outcome) => ({
@@ -343,7 +346,7 @@ describe('RunSourceImportUseCase', () => {
     it('does nothing when the day’s slot already finished', async () => {
       runs.startOrResume.mockResolvedValue({
         run: { ...run, status: 'COMPLETED' },
-        created: false,
+        claim: 'finished',
       });
 
       const { status } = await useCase.execute('source-1', '2026-09-24');
@@ -354,12 +357,44 @@ describe('RunSourceImportUseCase', () => {
     });
 
     it('resumes a run left started by a crash', async () => {
-      runs.startOrResume.mockResolvedValue({ run, created: false });
+      runs.startOrResume.mockResolvedValue({ run, claim: 'resumed' });
       adapter.fetchProducts.mockResolvedValue([externalProduct]);
 
       await useCase.execute('source-1', '2026-09-24');
 
       expect(adapter.fetchProducts).toHaveBeenCalled();
+    });
+
+    it('leaves a run that is still going to whoever is running it', async () => {
+      runs.startOrResume.mockResolvedValue({ run, claim: 'running' });
+
+      const { status } = await useCase.execute('source-1', '2026-09-24');
+
+      expect(status).toBe('STARTED');
+      expect(adapter.fetchProducts).not.toHaveBeenCalled();
+      expect(runs.finish).not.toHaveBeenCalled();
+    });
+
+    it('counts a run as crashed only after its lease has run out', async () => {
+      const before = Date.now();
+
+      await useCase.execute('source-1', '2026-09-24');
+
+      const staleBefore = runs.startOrResume.mock.calls[0][2].getTime();
+      expect(before - staleBefore).toBeGreaterThanOrEqual(RUN_LEASE_MS - 1_000);
+    });
+
+    it('keeps its heartbeat going while it works', async () => {
+      adapter.fetchProducts.mockResolvedValue([externalProduct]);
+      adapter.fetchPrices.mockResolvedValue(
+        Array.from({ length: 600 }, () => externalPrice),
+      );
+      products.findByNormalizedName.mockResolvedValue([product('product-1')]);
+
+      await useCase.execute('source-1', '2026-09-24');
+
+      // Once after linking products, then every 250 prices.
+      expect(runs.heartbeat.mock.calls.length).toBeGreaterThanOrEqual(3);
     });
 
     it('keys every observation to its run, so a retry rewrites nothing', async () => {

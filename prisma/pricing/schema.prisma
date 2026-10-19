@@ -164,6 +164,10 @@ model ImportRun {
 
   status                ImportRunStatus @default(STARTED)
   startedAt             DateTime        @default(now()) @db.Timestamptz(3)
+  /// Moved forward while the run is working. A STARTED run whose heartbeat
+  /// has gone quiet was left by a crash and may be taken over; one with a
+  /// recent heartbeat is still running and must not be run a second time.
+  heartbeatAt           DateTime        @default(now()) @db.Timestamptz(3)
   finishedAt            DateTime?       @db.Timestamptz(3)
   productsSeen          Int             @default(0)
   pricesSeen            Int             @default(0)

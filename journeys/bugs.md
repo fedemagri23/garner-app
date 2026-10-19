@@ -96,7 +96,13 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Fix:** The ledger reports a vanished notification as such, and delivery stops there: nothing left to send and nothing to retry.
 
 ### BUG-014 — Trace ids never reached the jobs a request queued
-- **Phase:** post-plan · **Area:** common/observability · **Scope:** production code · **Found by:** review · **Fixed in:** (tracing commit)
+- **Phase:** post-plan · **Area:** common/observability · **Scope:** production code · **Found by:** review · **Fixed in:** 5e944cc
 - **Symptom:** A job's log lines carried a fresh random trace id, unrelated to the request that queued it — the opposite of what the README, `docs/operations.md` and CON-025 described.
 - **Cause:** The worker side read `traceId` from the job's data, but no producer ever put it there. The consumer half of the propagation was built; the producer half was not, and no test followed a trace across a queue.
 - **Fix:** Propagation moved to OpenTelemetry: BullMQ's telemetry injects the context on every `add` and the worker runs inside a consumer span of the same trace. `test/tracing.e2e-spec.ts` follows one request through to its job.
+
+### BUG-015 — "Import now" during a scheduled import ran the same slot twice
+- **Phase:** post-plan · **Area:** external-price-sources · **Scope:** production code · **Found by:** load test · **Fixed in:** (this commit)
+- **Symptom:** In the load environment, a feed's run reported 28,118 confirmations and 2,051 new observations for a fixture in which 3,017 prices had moved. The stored data was right; the run's totals were not, and the import took twice as long as it should have.
+- **Cause:** `startOrResume` treated every `STARTED` run as one left behind by a crash and resumed it. The scheduler's job was still working on the slot when an HTTP "import now" arrived, so both executed the whole feed side by side; dedupe keys kept the rows single, and whichever finished last overwrote the totals. Two triggers creating the slot at the same instant could also fail one of them on the unique key.
+- **Fix:** Runs carry a heartbeat, refreshed every 250 prices. A `STARTED` run is taken over only once its heartbeat is five minutes old, by a conditional update only one claimant can win; otherwise the second trigger returns the running run untouched. A lost create race resolves to the winner's run.
