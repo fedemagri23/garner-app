@@ -218,8 +218,11 @@ the daily aggregate phase 5 derives.
   uploaded first to `POST /v1/price-evidence` (JPEG, PNG or WebP, identified
   by content rather than name, 5 MB, 30 uploads per hour). The returned key
   names its owner, so a report can only cite its author's own photo. Evidence
-  storage is behind a port. The local-disk adapter suits a single instance,
-  and an object store replaces it in production.
+  storage is behind a port with two adapters, chosen by
+  `EVIDENCE_STORAGE_DRIVER`: `local` (one directory, development and a single
+  instance) and `s3` (any S3-compatible store — AWS, R2, MinIO — shared by
+  every instance). The compose stack runs an S3 mock on port 9090 for trying
+  the latter.
 - **Shopping trips:** completing a trip turns each purchased line with an
   actual price into a `PURCHASE_CONFIRMED` observation, with no extra step
   for the shopper. The completion event only enqueues a job, and the worker

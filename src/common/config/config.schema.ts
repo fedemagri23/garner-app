@@ -51,8 +51,26 @@ export const configSchema = z.object({
   // route and limit; nothing else needs to be large.
   MAX_REQUEST_BODY_KB: z.coerce.number().int().min(16).max(4_096).default(256),
 
+  // Where evidence photos are kept. `local` is one directory on this host and
+  // suits development and a single instance; `s3` is any S3-compatible object
+  // store, and is what more than one instance needs.
+  EVIDENCE_STORAGE_DRIVER: z.enum(['local', 's3']).default('local'),
+
   // Where the local-disk evidence store keeps uploaded photos.
   EVIDENCE_STORAGE_DIR: z.string().min(1).default('var/evidence'),
+
+  // The object store, when the driver is `s3`. The endpoint is only for a
+  // non-AWS provider (R2, MinIO, a local mock); credentials, when omitted,
+  // come from the SDK's default chain — an instance or task role in AWS.
+  EVIDENCE_S3_BUCKET: z.string().min(1).optional(),
+  EVIDENCE_S3_REGION: z.string().min(1).default('us-east-1'),
+  EVIDENCE_S3_ENDPOINT: z.url().optional(),
+  EVIDENCE_S3_FORCE_PATH_STYLE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+  EVIDENCE_S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+  EVIDENCE_S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
 
   // Bearer tokens for external price sources, as {"source-slug":"token"}.
   // Kept here rather than in the source registry row so a credential never
@@ -93,6 +111,26 @@ export const configSchema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform((value) => value === 'true'),
+}).superRefine((config, ctx) => {
+  if (config.EVIDENCE_STORAGE_DRIVER === 's3' && !config.EVIDENCE_S3_BUCKET) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['EVIDENCE_S3_BUCKET'],
+      message: 'is required when EVIDENCE_STORAGE_DRIVER is s3',
+    });
+  }
+
+  // Half a key pair would silently fall back to the default chain.
+  if (
+    Boolean(config.EVIDENCE_S3_ACCESS_KEY_ID) !==
+    Boolean(config.EVIDENCE_S3_SECRET_ACCESS_KEY)
+  ) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['EVIDENCE_S3_SECRET_ACCESS_KEY'],
+      message: 'EVIDENCE_S3_ACCESS_KEY_ID and EVIDENCE_S3_SECRET_ACCESS_KEY go together',
+    });
+  }
 });
 
 export type AppConfig = z.infer<typeof configSchema>;

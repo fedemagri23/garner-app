@@ -18,9 +18,9 @@ NestJS API + workers
    └── Redis            cache, rate limits, queues
 ```
 
-Before running more than one instance, read CON-015 in
-[`../journeys/considerations.md`](../journeys/considerations.md): evidence
-photos are on local disk and the directory would have to be shared.
+Before running more than one instance, set `EVIDENCE_STORAGE_DRIVER=s3`:
+the default `local` driver keeps evidence photos in a directory only one host
+can see (CON-015 in [`../journeys/considerations.md`](../journeys/considerations.md)).
 
 ## Configuration
 
@@ -33,6 +33,7 @@ operationally:
 | `TRUST_PROXY_HOPS` | Number of proxies in front of the API. Wrong, and `req.ip` is the load balancer, so per-IP rate limiting throttles everyone as one client. |
 | `LOG_FORMAT` | `json` outside development. Defaults correctly; set it explicitly if a platform captures stdout differently. |
 | `MAX_REQUEST_BODY_KB` | Bounds request bodies. Evidence uploads have their own 5 MB limit. |
+| `EVIDENCE_STORAGE_DRIVER` | `local` or `s3`. More than one instance needs `s3` and `EVIDENCE_S3_BUCKET`; credentials come from `EVIDENCE_S3_ACCESS_KEY_ID`/`_SECRET_ACCESS_KEY` or, when unset, the AWS default chain (an instance or task role). `EVIDENCE_S3_ENDPOINT` and `EVIDENCE_S3_FORCE_PATH_STYLE=true` are for non-AWS providers. |
 | `EXTERNAL_SOURCE_TOKENS` | Supermarket credentials, as `{"source-slug":"token"}`. Never in the database. |
 | `*_RETENTION_DAYS` | What the maintenance jobs prune, and after how long. |
 

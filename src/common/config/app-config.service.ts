@@ -94,8 +94,34 @@ export class AppConfigService {
     return this.get('NOTIFICATION_RETENTION_DAYS');
   }
 
+  get evidenceStorageDriver(): AppConfig['EVIDENCE_STORAGE_DRIVER'] {
+    return this.get('EVIDENCE_STORAGE_DRIVER');
+  }
+
   get evidenceStorageDir(): string {
     return this.get('EVIDENCE_STORAGE_DIR');
+  }
+
+  /** The evidence object store. Only meaningful when the driver is `s3`. */
+  get evidenceS3(): {
+    bucket: string;
+    region: string;
+    endpoint: string | null;
+    forcePathStyle: boolean;
+    credentials: { accessKeyId: string; secretAccessKey: string } | null;
+  } {
+    const accessKeyId = this.get('EVIDENCE_S3_ACCESS_KEY_ID');
+    const secretAccessKey = this.get('EVIDENCE_S3_SECRET_ACCESS_KEY');
+
+    return {
+      // Validation guarantees a bucket whenever the driver is `s3`.
+      bucket: this.get('EVIDENCE_S3_BUCKET') ?? '',
+      region: this.get('EVIDENCE_S3_REGION'),
+      endpoint: this.get('EVIDENCE_S3_ENDPOINT') ?? null,
+      forcePathStyle: this.get('EVIDENCE_S3_FORCE_PATH_STYLE'),
+      credentials:
+        accessKeyId && secretAccessKey ? { accessKeyId, secretAccessKey } : null,
+    };
   }
 
   /** Bearer token for one external source, when one is configured. */

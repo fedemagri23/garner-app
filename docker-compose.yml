@@ -31,5 +31,16 @@ services:
       retries: 30
     restart: always
 
+  # An S3-compatible API for the evidence store's object-storage adapter, so
+  # it can be exercised locally and in CI without a cloud account.
+  s3:
+    image: adobe/s3mock:3.12.0
+    container_name: garner_s3
+    environment:
+      initialBuckets: garner-evidence,garner-evidence-test
+    ports:
+      - '9090:9090'
+    restart: always
+
 volumes:
   postgres_data:

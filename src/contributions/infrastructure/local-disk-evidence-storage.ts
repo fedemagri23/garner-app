@@ -14,8 +14,8 @@ import {
  * Evidence photos on the local filesystem, under one directory per owner.
  *
  * Suited to development and to a single instance. With more than one instance
- * the directory would have to be shared, which is the point at which an
- * object-store adapter behind the same port should replace this one.
+ * the directory would have to be shared; `EVIDENCE_STORAGE_DRIVER=s3` selects
+ * the object-store adapter behind the same port instead.
  */
 @Injectable()
 export class LocalDiskEvidenceStorage implements EvidenceStorage {

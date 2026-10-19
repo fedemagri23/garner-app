@@ -2,8 +2,8 @@ import type { EvidenceImageType } from './evidence.js';
 
 /**
  * Where evidence photos live. Abstract on purpose: the local-disk adapter
- * serves development and a single instance, and an object store replaces it
- * in production without the contribution flow changing.
+ * serves development and a single instance, and the S3 adapter replaces it in
+ * production without the contribution flow changing.
  */
 export interface EvidenceStorage {
   /** Stores the photo and returns the key a report refers to it by. */

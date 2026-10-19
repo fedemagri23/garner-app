@@ -1,5 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+import { AppConfigService } from '../common/config/app-config.service.js';
 import { PricingModule } from '../pricing/pricing.module.js';
 import { ShoppingSessionsModule } from '../shopping-sessions/shopping-sessions.module.js';
 import { ListMyContributionsUseCase } from './application/list-my-contributions.use-case.js';
@@ -23,6 +24,7 @@ import {
 import { LocalDiskEvidenceStorage } from './infrastructure/local-disk-evidence-storage.js';
 import { PrismaSessionContributionLedger } from './infrastructure/prisma-session-contribution-ledger.js';
 import { RedisEvidenceUploadQuota } from './infrastructure/redis-evidence-upload-quota.js';
+import { S3EvidenceStorage } from './infrastructure/s3-evidence-storage.js';
 import { ContributionsController } from './presentation/contributions.controller.js';
 
 /**
@@ -44,7 +46,14 @@ import { ContributionsController } from './presentation/contributions.controller
     ReconcileSessionContributionsUseCase,
     SessionCompletedListener,
     ContributionsProcessor,
-    { provide: EVIDENCE_STORAGE, useClass: LocalDiskEvidenceStorage },
+    {
+      provide: EVIDENCE_STORAGE,
+      inject: [AppConfigService],
+      useFactory: (config: AppConfigService) =>
+        config.evidenceStorageDriver === 's3'
+          ? new S3EvidenceStorage(config)
+          : new LocalDiskEvidenceStorage(config),
+    },
     { provide: EVIDENCE_UPLOAD_QUOTA, useClass: RedisEvidenceUploadQuota },
     {
       provide: SESSION_CONTRIBUTION_LEDGER,

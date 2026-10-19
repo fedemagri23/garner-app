@@ -96,10 +96,11 @@ Notation: [`README.md`](README.md).
 - **Revisit when:** A delay of minutes is unacceptable, or other events need the same guarantee — then an outbox earns its place.
 
 ### CON-015 — Evidence photos are stored on local disk
-- **Phase:** 4 · **Area:** contributions/evidence · **Status:** deferred
+- **Phase:** 4 · **Area:** contributions/evidence · **Status:** resolved
 - **What:** The `EvidenceStorage` port is implemented by a local-disk adapter under one directory.
 - **Why:** The port is the point; a provider can be swapped without touching the contribution flow. Disk suits development and a single instance.
 - **Revisit when:** More than one instance runs — the directory would have to be shared, which is where an object store belongs.
+- **Resolved:** An S3 adapter sits behind the same port, selected by `EVIDENCE_STORAGE_DRIVER=s3`; local disk stays the default for development. See CON-035.
 
 ## Price intelligence
 
@@ -223,3 +224,9 @@ Notation: [`README.md`](README.md).
 - **What:** When a source reports the same price, in the same currency, as its newest observation for that product and store, and that observation was accepted, the import moves the observation's `lastConfirmedAt` forward instead of writing a row. Weighting, confidence, daily aggregation, deviation sampling and retention all treat the observation as holding from `observedAt` to `lastConfirmedAt`.
 - **Why:** A daily full-catalog import would write products × stores rows a day — 10,000 × 50 is 500,000 a day, ~45 million inside the retention window — almost all repeating yesterday. Simply skipping unchanged prices was not an option: the price would age, lose confidence, drop out of the 30-day window and vanish while the supermarket was still publishing it. What is traded: a stable feed price is one observation, so a day's `observationCount` for it is 1 rather than one per import, and the deviation reference samples one price where it used to sample many copies of it. A confirmation skips trust evaluation, which is safe only because it is restricted to an already-accepted row with an identical price.
 - **Revisit when:** A source publishes several prices a day and intra-day changes matter, or a reviewer needs a per-import audit trail of what a feed said — at that point store the raw feed separately rather than undo this.
+
+### CON-035 — Evidence object storage is S3-compatible, tested against a mock
+- **Phase:** post-plan · **Area:** contributions/evidence · **Status:** accepted
+- **What:** `EVIDENCE_STORAGE_DRIVER=s3` stores photos in any S3-compatible bucket under the same keys the disk adapter uses. Integration tests run it against `adobe/s3mock` in the compose stack, not against a cloud provider. Existence checks treat only a 404 as "missing"; any other failure surfaces as an error.
+- **Why:** The S3 API is the common denominator of AWS, R2, GCS interop and MinIO, so one adapter covers the realistic choices. A mock catches signing, keys and status handling without credentials in CI. Reading an outage as "photo not found" would have quietly downgraded honest evidence-backed reports, so it fails loudly instead.
+- **Revisit when:** Photos need to be shown back to people (that wants pre-signed URLs or a CDN), or a provider's behaviour differs from the mock's in a way that matters — conditional writes, consistency, lifecycle rules.
