@@ -42,5 +42,15 @@ services:
       - '9090:9090'
     restart: always
 
+  # Catches every email the API sends, with a web inbox on :8025 and an API the
+  # integration tests read. Nothing sent here leaves the machine.
+  mail:
+    image: axllent/mailpit:v1.20.0
+    container_name: garner_mail
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+    restart: always
+
 volumes:
   postgres_data:

@@ -48,6 +48,12 @@ export interface NotificationPreferences {
   quietHoursStartUtc: number | null;
   quietHoursEndUtc: number | null;
   minMinutesBetweenAlerts: number;
+  /** Opt-in: nothing is emailed until the account holder turns this on. */
+  emailEnabled: boolean;
+  /** When email was last switched on. Part of the consent trail. */
+  emailOptedInAt: Date | null;
+  /** When email was last switched off, by the holder or an unsubscribe link. */
+  emailOptedOutAt: Date | null;
 }
 
 export const DEFAULT_NOTIFICATION_PREFERENCES: Omit<
@@ -59,6 +65,9 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: Omit<
   quietHoursStartUtc: null,
   quietHoursEndUtc: null,
   minMinutesBetweenAlerts: 360,
+  emailEnabled: false,
+  emailOptedInAt: null,
+  emailOptedOutAt: null,
 };
 
 export interface Notification {

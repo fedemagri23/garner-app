@@ -528,16 +528,22 @@ model PriceAlert {
 
 /// How a shopper wants to be reached, and when they would rather not be.
 model NotificationPreferences {
-  userId                  String   @id @db.Uuid
-  priceAlertsEnabled      Boolean  @default(true)
-  remindersEnabled        Boolean  @default(true)
+  userId                  String    @id @db.Uuid
+  priceAlertsEnabled      Boolean   @default(true)
+  remindersEnabled        Boolean   @default(true)
   /// Hours of the UTC day to stay silent in; a message raised then waits.
   quietHoursStartUtc      Int?
   quietHoursEndUtc        Int?
   /// The least time between two messages from one alert.
-  minMinutesBetweenAlerts Int      @default(360)
-  createdAt               DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt               DateTime @updatedAt @db.Timestamptz(3)
+  minMinutesBetweenAlerts Int       @default(360)
+  /// Email is opt-in: nothing is emailed until the account holder asks.
+  emailEnabled            Boolean   @default(false)
+  /// The consent trail: when email was last switched on, and last switched
+  /// off — by the holder, or by the unsubscribe link in a message.
+  emailOptedInAt          DateTime? @db.Timestamptz(3)
+  emailOptedOutAt         DateTime? @db.Timestamptz(3)
+  createdAt               DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime  @updatedAt @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -567,10 +573,33 @@ model Notification {
   readAt    DateTime?          @db.Timestamptz(3)
   error     String?
 
-  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  alert PriceAlert? @relation(fields: [alertId], references: [id], onDelete: SetNull)
+  user              User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alert             PriceAlert?                   @relation(fields: [alertId], references: [id], onDelete: SetNull)
+  channelDeliveries NotificationChannelDelivery[]
 
   @@index([userId, createdAt])
   @@index([status, deliverAt])
   @@map("notifications")
+}
+
+/// How one notification fared on one channel. A retry after a partial failure
+/// sends only to the channels still missing, so nobody gets the same email
+/// twice because a push provider was down.
+model NotificationChannelDelivery {
+  id             String    @id @default(uuid()) @db.Uuid
+  notificationId String    @db.Uuid
+  /// `in-app`, `email`, and whatever channel is added next.
+  channel        String
+  sentAt         DateTime? @db.Timestamptz(3)
+  attempts       Int       @default(0)
+  /// Set once a channel has failed too often to keep trying.
+  abandonedAt    DateTime? @db.Timestamptz(3)
+  lastError      String?
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, channel])
+  @@map("notification_channel_deliveries")
 }

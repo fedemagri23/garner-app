@@ -20,6 +20,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { paginate } from '../../common/http/pagination.js';
 import type { AuthenticatedUser } from '../../security/domain/authenticated-user.js';
@@ -144,12 +145,14 @@ export class NotificationsController {
   ): Promise<NotificationPreferencesResponse> {
     return NotificationPreferencesResponse.from(
       await this.preferences.get(actor.id),
+      this.preferences.emailAvailable,
     );
   }
 
   @Patch('notification-preferences')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Turn categories off, or set quiet hours' })
+  @ApiOperation({ summary: 'Turn categories or email on and off, or set quiet hours' })
+  @ApiUnprocessableEntityResponse({ description: 'Email asked for, but this server cannot send it' })
   @ApiOkResponse({ type: NotificationPreferencesResponse })
   async updatePreferences(
     @CurrentUser() actor: AuthenticatedUser,
@@ -157,6 +160,7 @@ export class NotificationsController {
   ): Promise<NotificationPreferencesResponse> {
     return NotificationPreferencesResponse.from(
       await this.preferences.update(actor, body),
+      this.preferences.emailAvailable,
     );
   }
 }

@@ -5,7 +5,10 @@ import type {
   PriceAlert as PriceAlertRow,
 } from '../../../generated/prisma/core/index.js';
 import { CorePrismaService } from '../../common/database/core-prisma.service.js';
-import { isUniqueViolation } from '../../common/database/prisma-errors.js';
+import {
+  isForeignKeyViolation,
+  isUniqueViolation,
+} from '../../common/database/prisma-errors.js';
 import type {
   Notification,
   NotificationCategory,
@@ -15,6 +18,8 @@ import type {
   PriceAlertType,
 } from '../domain/price-alert.entity.js';
 import type {
+  ChannelDelivery,
+  ChannelDeliveryLedger,
   CreateNotificationInput,
   CreatePriceAlertInput,
   NotificationPreferencesRepository,
@@ -150,6 +155,9 @@ export class PrismaNotificationPreferencesRepository
       quietHoursStartUtc: row.quietHoursStartUtc,
       quietHoursEndUtc: row.quietHoursEndUtc,
       minMinutesBetweenAlerts: row.minMinutesBetweenAlerts,
+      emailEnabled: row.emailEnabled,
+      emailOptedInAt: row.emailOptedInAt,
+      emailOptedOutAt: row.emailOptedOutAt,
     };
   }
 }
@@ -199,10 +207,10 @@ export class PrismaNotificationRepository implements NotificationRepository {
     return { notifications: rows.map((row) => this.toDomain(row)), totalItems };
   }
 
-  async markSent(id: string, at: Date): Promise<void> {
+  async markSent(id: string, at: Date, note: string | null = null): Promise<void> {
     await this.prisma.notification.updateMany({
       where: { id },
-      data: { status: 'SENT', sentAt: at, error: null },
+      data: { status: 'SENT', sentAt: at, error: note?.slice(0, 1_000) ?? null },
     });
   }
 
@@ -273,5 +281,64 @@ export class PrismaNotificationRepository implements NotificationRepository {
       readAt: row.readAt,
       error: row.error,
     };
+  }
+}
+
+@Injectable()
+export class PrismaChannelDeliveryLedger implements ChannelDeliveryLedger {
+  constructor(private readonly prisma: CorePrismaService) {}
+
+  async findForNotification(notificationId: string): Promise<ChannelDelivery[]> {
+    return this.prisma.notificationChannelDelivery.findMany({
+      where: { notificationId },
+      select: {
+        channel: true,
+        sentAt: true,
+        attempts: true,
+        abandonedAt: true,
+        lastError: true,
+      },
+    });
+  }
+
+  async recordSent(notificationId: string, channel: string, at: Date): Promise<boolean> {
+    return this.unlessGone(() =>
+      this.prisma.notificationChannelDelivery.upsert({
+        where: { notificationId_channel: { notificationId, channel } },
+        create: { notificationId, channel, sentAt: at, attempts: 1 },
+        update: { sentAt: at, attempts: { increment: 1 }, lastError: null },
+      }),
+    );
+  }
+
+  async recordFailure(
+    notificationId: string,
+    channel: string,
+    error: string,
+    abandonedAt: Date | null,
+  ): Promise<boolean> {
+    const lastError = error.slice(0, 1_000);
+
+    return this.unlessGone(() =>
+      this.prisma.notificationChannelDelivery.upsert({
+        where: { notificationId_channel: { notificationId, channel } },
+        create: { notificationId, channel, attempts: 1, lastError, abandonedAt },
+        update: { attempts: { increment: 1 }, lastError, abandonedAt },
+      }),
+    );
+  }
+
+  /** False when the notification was deleted while it was being delivered. */
+  private async unlessGone(write: () => Promise<unknown>): Promise<boolean> {
+    try {
+      await write();
+      return true;
+    } catch (error) {
+      if (isForeignKeyViolation(error)) {
+        return false;
+      }
+
+      throw error;
+    }
   }
 }

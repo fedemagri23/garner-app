@@ -79,7 +79,8 @@ export interface NotificationRepository {
     userId: string,
     filter: { unreadOnly: boolean; skip: number; take: number },
   ): Promise<{ notifications: Notification[]; totalItems: number }>;
-  markSent(id: string, at: Date): Promise<void>;
+  /** `note` records a channel given up on, when the rest went out. */
+  markSent(id: string, at: Date, note?: string | null): Promise<void>;
   markFailed(id: string, error: string): Promise<void>;
   markRead(id: string, at: Date): Promise<Notification>;
   /** Messages whose quiet period has passed and which are still unsent. */
@@ -91,24 +92,83 @@ export interface NotificationRepository {
 
 export const NOTIFICATION_REPOSITORY = Symbol('NOTIFICATION_REPOSITORY');
 
-export interface DeliveryResult {
-  delivered: boolean;
-  error?: string;
+/** Who a message is for, as much as any channel needs to know. */
+export interface NotificationRecipient {
+  userId: string;
+  /** Null when the account no longer exists. */
+  email: string | null;
+  preferences: NotificationPreferences;
 }
 
 /**
- * Where a notification actually goes.
+ * One way a notification reaches a person: the in-app inbox, email, and
+ * whatever comes next (push needs a client to register devices first).
  *
- * One seam for every channel that might exist later — push, email, SMS — so
- * adding one does not touch how alerts are evaluated. Today's implementation
- * records the message for the client to fetch.
+ * Adding a channel touches neither how alerts are evaluated nor how delivery
+ * is retried: the delivery use case fans a message out to every channel that
+ * applies and records each one's outcome separately.
  */
-export interface NotificationDelivery {
-  readonly channel: string;
-  send(notification: Notification): Promise<DeliveryResult>;
+export interface NotificationChannel {
+  readonly name: string;
+  /** Whether this message goes out on this channel at all, e.g. consent. */
+  appliesTo(recipient: NotificationRecipient): boolean;
+  /** Sends the message, or throws; a throw is retried later. */
+  send(notification: Notification, recipient: NotificationRecipient): Promise<void>;
 }
 
-export const NOTIFICATION_DELIVERY = Symbol('NOTIFICATION_DELIVERY');
+/** Every channel this deployment can deliver on, in order. */
+export const NOTIFICATION_CHANNELS = Symbol('NOTIFICATION_CHANNELS');
+
+export interface ChannelDelivery {
+  channel: string;
+  sentAt: Date | null;
+  attempts: number;
+  abandonedAt: Date | null;
+  lastError: string | null;
+}
+
+/**
+ * What happened to a notification on each channel. The record methods return
+ * false when the notification itself is gone — deleted with its account, or
+ * pruned — which ends its delivery rather than failing it.
+ */
+export interface ChannelDeliveryLedger {
+  findForNotification(notificationId: string): Promise<ChannelDelivery[]>;
+  recordSent(notificationId: string, channel: string, at: Date): Promise<boolean>;
+  /** Counts an attempt; `abandonedAt` set means stop trying this channel. */
+  recordFailure(
+    notificationId: string,
+    channel: string,
+    error: string,
+    abandonedAt: Date | null,
+  ): Promise<boolean>;
+}
+
+export const CHANNEL_DELIVERY_LEDGER = Symbol('CHANNEL_DELIVERY_LEDGER');
+
+export interface EmailMessage {
+  to: string;
+  subject: string;
+  text: string;
+  headers: Record<string, string>;
+}
+
+/** Hands an email to a mail server. Throws when it is not accepted. */
+export interface EmailSender {
+  send(message: EmailMessage): Promise<void>;
+}
+
+/**
+ * Signed, non-expiring tokens for unsubscribe links. An email can sit in an
+ * inbox for months; the link in it has to keep working without a login.
+ */
+export interface UnsubscribeTokens {
+  issue(userId: string): string;
+  /** The user id the token was issued for, or null if it is not genuine. */
+  verify(token: string): string | null;
+}
+
+export const UNSUBSCRIBE_TOKENS = Symbol('UNSUBSCRIBE_TOKENS');
 
 export interface NotificationJobs {
   /** Evaluate alerts watching a product whose price at a store changed. */

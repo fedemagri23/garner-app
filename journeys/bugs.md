@@ -88,3 +88,9 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Symptom:** `sweeps up a message whose delivery was missed` passed locally and failed on the first CI run: `deliverDue()` found nothing to send.
 - **Cause:** Integration tests boot the real application, workers included. Evaluating an alert enqueues a delivery job with no delay, and on a fast runner the worker sent the message before the test's sweep looked for it. Every delivery test had the same race; this one lost it first.
 - **Fix:** The delivery tests pause the notifications queue while they run, so the use case under test is the only thing delivering, then drain and resume it.
+
+### BUG-013 — A notification deleted mid-delivery failed its job instead of ending it
+- **Phase:** post-plan · **Area:** notifications · **Scope:** production code · **Found by:** e2e test · **Fixed in:** (email channel commit)
+- **Symptom:** Foreign-key errors from `notification_channel_deliveries` in the worker log while the notifications suite cleaned up between tests.
+- **Cause:** Recording a channel's outcome references the notification. When the notification is deleted while it is being delivered — with its account, or by retention — the write fails, and the delivery was reported as a failure to be retried.
+- **Fix:** The ledger reports a vanished notification as such, and delivery stops there: nothing left to send and nothing to retry.

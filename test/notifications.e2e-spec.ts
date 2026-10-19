@@ -414,6 +414,126 @@ describe('Price alerts and notifications (e2e)', () => {
       expect(await deliver.execute(stored!.id)).toBe(false);
     });
 
+    describe('by email', () => {
+      const MAILPIT = 'http://127.0.0.1:8025/api/v1';
+
+      interface MailSummary {
+        ID: string;
+        Subject: string;
+        To: { Address: string }[];
+      }
+
+      const mailTo = async (address: string): Promise<MailSummary[]> => {
+        const response = await fetch(`${MAILPIT}/messages?limit=200`);
+        const { messages } = (await response.json()) as { messages: MailSummary[] };
+        return messages.filter((mail) => mail.To.some((to) => to.Address === address));
+      };
+
+      const shopperEmail = async () =>
+        (await http().get('/v1/users/me').set(auth(shopper)).expect(200)).body.email as string;
+
+      const optIn = () =>
+        http()
+          .patch('/v1/notification-preferences')
+          .set(auth(shopper))
+          .send({ emailEnabled: true })
+          .expect(200);
+
+      const deliverOne = async () => {
+        await createAlert({ type: 'BELOW_THRESHOLD', thresholdCents: 100 });
+        await priceChanges(90, 120);
+
+        const stored = await core.notification.findFirst();
+        expect(await deliver.execute(stored!.id)).toBe(true);
+        return stored!;
+      };
+
+      /** The path and query of the link in the email, to call on the test server. */
+      const unsubscribeLink = async (mailId: string): Promise<string> => {
+        const response = await fetch(`${MAILPIT}/message/${mailId}`);
+        const { Text } = (await response.json()) as { Text: string };
+        const url = /Stop these emails: (\S+)/.exec(Text)![1];
+        const { pathname, search } = new URL(url);
+        return `${pathname}${search}`;
+      };
+
+      beforeEach(async () => {
+        await fetch(`${MAILPIT}/messages`, { method: 'DELETE' });
+      });
+
+      it('records consent when a shopper turns email on', async () => {
+        const response = await optIn();
+
+        expect(response.body).toMatchObject({ emailEnabled: true, emailAvailable: true });
+        expect(response.body.emailOptedInAt).not.toBeNull();
+      });
+
+      it('emails a shopper who opted in, alongside the inbox', async () => {
+        await optIn();
+        const stored = await deliverOne();
+
+        const [mail] = await mailTo(await shopperEmail());
+        expect(mail.Subject).toBe(stored.title);
+
+        const headers = (await (
+          await fetch(`${MAILPIT}/message/${mail.ID}/headers`)
+        ).json()) as Record<string, string[]>;
+        expect(headers['List-Unsubscribe'][0]).toMatch(/notification-emails\/unsubscribe\?token=/);
+        expect(headers['List-Unsubscribe-Post']).toEqual(['List-Unsubscribe=One-Click']);
+
+        const channels = await core.notificationChannelDelivery.findMany({
+          where: { notificationId: stored.id },
+        });
+        expect(channels.map((row) => row.channel).sort()).toEqual(['email', 'in-app']);
+        expect(channels.every((row) => row.sentAt !== null)).toBe(true);
+      });
+
+      it('emails nobody who has not opted in', async () => {
+        await deliverOne();
+
+        expect(await mailTo(await shopperEmail())).toHaveLength(0);
+      });
+
+      it('stops emailing from the link in the message, without a login', async () => {
+        await optIn();
+        await deliverOne();
+        const [mail] = await mailTo(await shopperEmail());
+        const link = await unsubscribeLink(mail.ID);
+
+        // Opening the link only asks; a link scanner fetching it changes nothing.
+        const page = await http().get(link).expect(200);
+        expect(page.text).toContain('<form method="post">');
+        expect(
+          (await http().get('/v1/notification-preferences').set(auth(shopper))).body.emailEnabled,
+        ).toBe(true);
+
+        await http()
+          .post(link)
+          .type('form')
+          .send('List-Unsubscribe=One-Click')
+          .expect(200);
+
+        const preferences = (
+          await http().get('/v1/notification-preferences').set(auth(shopper)).expect(200)
+        ).body;
+        expect(preferences.emailEnabled).toBe(false);
+        expect(preferences.emailOptedOutAt).not.toBeNull();
+      });
+
+      it('answers a forged link exactly as a genuine one', async () => {
+        await optIn();
+
+        const response = await http()
+          .post('/v1/notification-emails/unsubscribe?token=forged.token')
+          .expect(200);
+
+        expect(response.text).toContain('Email alerts are off');
+        expect(
+          (await http().get('/v1/notification-preferences').set(auth(shopper))).body.emailEnabled,
+        ).toBe(true);
+      });
+    });
+
     it('sweeps up a message whose delivery was missed', async () => {
       await createAlert({ type: 'BELOW_THRESHOLD', thresholdCents: 100 });
       await priceChanges(90, 120);

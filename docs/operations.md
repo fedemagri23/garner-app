@@ -34,6 +34,7 @@ operationally:
 | `LOG_FORMAT` | `json` outside development. Defaults correctly; set it explicitly if a platform captures stdout differently. |
 | `MAX_REQUEST_BODY_KB` | Bounds request bodies. Evidence uploads have their own 5 MB limit. |
 | `EVIDENCE_STORAGE_DRIVER` | `local` or `s3`. More than one instance needs `s3` and `EVIDENCE_S3_BUCKET`; credentials come from `EVIDENCE_S3_ACCESS_KEY_ID`/`_SECRET_ACCESS_KEY` or, when unset, the AWS default chain (an instance or task role). `EVIDENCE_S3_ENDPOINT` and `EVIDENCE_S3_FORCE_PATH_STYLE=true` are for non-AWS providers. |
+| `SMTP_URL`, `EMAIL_FROM`, `PUBLIC_BASE_URL` | Email notifications. Unset `SMTP_URL` and email is not offered. `PUBLIC_BASE_URL` is what unsubscribe links point at — wrong, and nobody can unsubscribe. |
 | `EXTERNAL_SOURCE_TOKENS` | Supermarket credentials, as `{"source-slug":"token"}`. Never in the database. |
 | `*_RETENTION_DAYS` | What the maintenance jobs prune, and after how long. |
 
@@ -107,6 +108,15 @@ nothing else needs to stop.
 `PARTIAL` is not a failure: the source answered and some rows could not be
 used. Work the queue at `GET /v1/price-sources/:id/products?status=UNMATCHED`.
 
+### Emails are not arriving
+
+`GET /v1/notification-preferences` for the account shows `emailAvailable`
+(false means `SMTP_URL` is unset) and `emailEnabled`. Each notification's
+per-channel outcome is in `core_db.notification_channel_deliveries`: attempts,
+the last error, and `abandonedAt` once a channel was given up on after 5
+tries. A message stays `FAILED` and is retried by the sweep until every
+channel has delivered or been abandoned.
+
 ### A queue is backing up
 
 Check `garner_queue_waiting` and `garner_queue_failed`. Every job is safe to
@@ -176,6 +186,5 @@ The plan's criteria, and where each is met:
 - [x] **Derived intelligence rebuildable** — within the retention window, as above.
 - [x] **Docker deployment reproducible** — `docker compose up -d` plus `pnpm run prisma:migrate:deploy`.
 
-Known gaps are recorded as considerations rather than hidden here: single
-instance only (CON-015), no load testing yet (CON-026), tracing hooks without
-an exporter (CON-025).
+Known gaps are recorded as considerations rather than hidden here: no load
+testing yet (CON-032), tracing hooks without an exporter (CON-025).

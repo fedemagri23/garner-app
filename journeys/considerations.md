@@ -183,10 +183,11 @@ Notation: [`README.md`](README.md).
 - **Revisit when:** The endpoint is bound to an internal interface a scraper reaches directly, which would make the token redundant.
 
 ### CON-028 — Notification delivery is an inbox, not a push
-- **Phase:** 8 · **Area:** notifications · **Status:** deferred
+- **Phase:** 8 · **Area:** notifications · **Status:** resolved
 - **What:** The only delivery channel stores the message for the client to read from `GET /v1/notifications`.
 - **Why:** A real channel for an app that polls, and the port is the point: push, email or SMS is another implementation rather than a change to how alerts are evaluated.
 - **Revisit when:** The product needs to reach someone who is not in the app — that is a provider, a device-token store and a consent trail, none of which this phase needs.
+- **Resolved:** Delivery now fans out over channels with a per-channel ledger; email is the second channel, opt-in with a consent trail and one-click unsubscribe. Push is still not built — see CON-036.
 
 ### CON-029 — Quiet hours hold messages rather than dropping them
 - **Phase:** 8 · **Area:** notifications · **Status:** accepted
@@ -230,3 +231,15 @@ Notation: [`README.md`](README.md).
 - **What:** `EVIDENCE_STORAGE_DRIVER=s3` stores photos in any S3-compatible bucket under the same keys the disk adapter uses. Integration tests run it against `adobe/s3mock` in the compose stack, not against a cloud provider. Existence checks treat only a 404 as "missing"; any other failure surfaces as an error.
 - **Why:** The S3 API is the common denominator of AWS, R2, GCS interop and MinIO, so one adapter covers the realistic choices. A mock catches signing, keys and status handling without credentials in CI. Reading an outage as "photo not found" would have quietly downgraded honest evidence-backed reports, so it fails loudly instead.
 - **Revisit when:** Photos need to be shown back to people (that wants pre-signed URLs or a CDN), or a provider's behaviour differs from the mock's in a way that matters — conditional writes, consistency, lifecycle rules.
+
+### CON-036 — Email is the second channel; push waits for a client
+- **Phase:** post-plan · **Area:** notifications · **Status:** accepted
+- **What:** Notifications go to the in-app inbox and, for people who opted in, by email over SMTP. Push is not implemented. Emails are plain text, and are sent to the account address, which is not verified.
+- **Why:** Email reaches people outside the app with nothing but an address the system already holds, and SMTP is spoken by every transactional provider (SES, Postmark, Mailgun), so no provider SDK is needed. Push needs a client to register device tokens; there is no client yet. Sending to an unverified address is bounded: it is opt-in, alerts are throttled per alert, and every message carries an unsubscribe link that works for whoever holds the mailbox.
+- **Revisit when:** A mobile or web client exists (push becomes one more `NotificationChannel` plus a device-token store), signups are open to the public (verify the address before allowing email), or messages need branding (HTML templates).
+
+### CON-037 — Unsubscribe links do not expire
+- **Phase:** post-plan · **Area:** notifications · **Status:** accepted
+- **What:** The token in an unsubscribe link is an HMAC of the user id under `JWT_SECRET`, with no expiry. It can only turn email off, and the endpoint answers identically for genuine, forged and stale tokens.
+- **Why:** An email can sit in an inbox for months and its unsubscribe link must still work; an expiring link would be the one that fails when someone finally wants out. A leaked link lets a third party do only what the recipient would want anyway.
+- **Revisit when:** The token is ever given a second power, or `JWT_SECRET` rotation becomes routine — rotating it currently breaks every link already sent.

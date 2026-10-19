@@ -396,11 +396,25 @@ knows teaches them to ignore the next one:
 - a message is identified by alert, store and price, so two workers
   evaluating the same change raise one message between them.
 
-Delivery is one port. Today's implementation stores the message for the client
-to read from `GET /v1/notifications` — a real channel for an app with an inbox
-— and push or email would be a second implementation rather than a change to
-how alerts are evaluated. A sweep every 5 minutes delivers held and missed
-messages, and prunes delivered ones after `NOTIFICATION_RETENTION_DAYS`.
+Delivery fans a message out over **channels**, and records each channel's
+outcome separately, so a retry after a partial failure sends only where the
+message has not gone yet:
+
+- **in-app**, always: the message is stored for the client to read from
+  `GET /v1/notifications`.
+- **email**, opt-in: on only after the account holder sets
+  `emailEnabled: true` in their notification preferences (the time of each
+  opt-in and opt-out is kept as a consent trail), and offered only when
+  `SMTP_URL` is configured. Every email carries a one-click unsubscribe link
+  (RFC 8058 `List-Unsubscribe`) that needs no login; opening it only shows a
+  confirm button, so link scanners cannot unsubscribe anyone.
+
+A channel that keeps failing is given up on after 5 attempts, and the message
+still counts as delivered on the others. Push would be one more channel —
+it waits on a client app that can register devices. A sweep every 5 minutes
+delivers held, missed and failed messages, and prunes delivered ones after
+`NOTIFICATION_RETENTION_DAYS`. In development, Mailpit in the compose stack
+catches every email at http://localhost:8025.
 
 ### Observability
 
@@ -472,6 +486,7 @@ npx prisma migrate dev --config prisma/core/prisma.config.ts
 | `POST\|GET /v1/price-alerts`, `PATCH\|DELETE /v1/price-alerts/:id` | the alert owner |
 | `GET /v1/notifications`, `POST /v1/notifications/:id/read` | the recipient |
 | `GET\|PATCH /v1/notification-preferences` | the account holder |
+| `GET\|POST /v1/notification-emails/unsubscribe?token=` | public (signed token) |
 | `GET\|POST /v1/price-sources`, `GET\|PATCH /v1/price-sources/:id` | admin |
 | `GET /v1/price-sources/adapters` | admin |
 | `POST\|GET /v1/price-sources/:id/imports` | admin |

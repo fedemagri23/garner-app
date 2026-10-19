@@ -192,12 +192,28 @@ export class NotificationPreferencesResponse {
   quietHoursEndUtc!: number | null;
   @ApiProperty({ description: 'The least time between two messages from one alert' })
   minMinutesBetweenAlerts!: number;
+  @ApiProperty({ description: 'Whether alerts are also emailed. Off until turned on.' })
+  emailEnabled!: boolean;
+  @ApiProperty({ description: 'Whether this server can send email at all' })
+  emailAvailable!: boolean;
+  @ApiProperty({ format: 'date-time', nullable: true })
+  emailOptedInAt!: string | null;
+  @ApiProperty({ format: 'date-time', nullable: true })
+  emailOptedOutAt!: string | null;
 
   static from(
     preferences: NotificationPreferences,
+    emailAvailable: boolean,
   ): NotificationPreferencesResponse {
-    const { userId: _userId, ...rest } = preferences;
-    return rest;
+    const { userId: _userId, emailOptedInAt, emailOptedOutAt, ...rest } =
+      preferences;
+
+    return {
+      ...rest,
+      emailAvailable,
+      emailOptedInAt: emailOptedInAt?.toISOString() ?? null,
+      emailOptedOutAt: emailOptedOutAt?.toISOString() ?? null,
+    };
   }
 }
 
@@ -206,6 +222,13 @@ export class UpdateNotificationPreferencesRequest {
   @IsOptional()
   @IsBoolean()
   priceAlertsEnabled?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Also email alerts to the account address. Recorded as consent.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  emailEnabled?: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()

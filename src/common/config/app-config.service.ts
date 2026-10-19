@@ -90,6 +90,19 @@ export class AppConfigService {
     return this.get('MAX_REQUEST_BODY_KB') * 1024;
   }
 
+  /** Null when no mail server is configured, which turns email off. */
+  get smtpUrl(): string | null {
+    return this.get('SMTP_URL') ?? null;
+  }
+
+  get emailFrom(): string {
+    return this.get('EMAIL_FROM');
+  }
+
+  get publicBaseUrl(): string {
+    return this.get('PUBLIC_BASE_URL').replace(/\/+$/, '');
+  }
+
   get notificationRetentionDays(): number {
     return this.get('NOTIFICATION_RETENTION_DAYS');
   }

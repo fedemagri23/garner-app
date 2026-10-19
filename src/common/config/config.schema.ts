@@ -35,6 +35,15 @@ export const configSchema = z.object({
   // a record anything depends on.
   NOTIFICATION_RETENTION_DAYS: z.coerce.number().int().min(1).default(30),
 
+  // The mail server notifications are emailed through, e.g.
+  // smtp://user:pass@smtp.example.com:587. Unset, email is not offered at all
+  // and the in-app inbox is the only channel.
+  SMTP_URL: z.url().optional(),
+  EMAIL_FROM: z.string().min(3).default('Garner <alerts@garner.local>'),
+
+  // Where this API is reachable from outside, for links in emails.
+  PUBLIC_BASE_URL: z.url().default('http://localhost:3000'),
+
   // Optimizations are snapshots of prices that have since moved; past this
   // they are neither actionable nor interesting.
   OPTIMIZATION_RETENTION_DAYS: z.coerce.number().int().min(1).default(30),
