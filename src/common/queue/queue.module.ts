@@ -3,6 +3,7 @@ import { Global, Module } from '@nestjs/common';
 import { BullMQOtel } from 'bullmq-otel';
 import { AppConfigService } from '../config/app-config.service.js';
 import { QueueName } from './queue.constants.js';
+import { bullConnectionFrom } from './redis-connection.js';
 import { SystemQueueService } from './system-queue.service.js';
 import { SystemProcessor } from './system.processor.js';
 
@@ -17,15 +18,8 @@ import { SystemProcessor } from './system.processor.js';
     BullModule.forRootAsync({
       inject: [AppConfigService],
       useFactory: (config: AppConfigService) => {
-        const url = new URL(config.redisUrl);
         return {
-          connection: {
-            host: url.hostname,
-            port: Number(url.port || 6379),
-            username: url.username || undefined,
-            password: url.password || undefined,
-            maxRetriesPerRequest: null,
-          },
+          connection: bullConnectionFrom(config.redisUrl),
           // Carries the trace context from whoever added a job into the
           // worker that runs it, for every queue and worker alike.
           telemetry: new BullMQOtel({ tracerName: 'garner-queues' }),

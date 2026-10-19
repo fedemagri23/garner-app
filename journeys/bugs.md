@@ -102,7 +102,13 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Fix:** Propagation moved to OpenTelemetry: BullMQ's telemetry injects the context on every `add` and the worker runs inside a consumer span of the same trace. `test/tracing.e2e-spec.ts` follows one request through to its job.
 
 ### BUG-015 — "Import now" during a scheduled import ran the same slot twice
-- **Phase:** post-plan · **Area:** external-price-sources · **Scope:** production code · **Found by:** load test · **Fixed in:** (this commit)
+- **Phase:** post-plan · **Area:** external-price-sources · **Scope:** production code · **Found by:** load test · **Fixed in:** 5215247
 - **Symptom:** In the load environment, a feed's run reported 28,118 confirmations and 2,051 new observations for a fixture in which 3,017 prices had moved. The stored data was right; the run's totals were not, and the import took twice as long as it should have.
 - **Cause:** `startOrResume` treated every `STARTED` run as one left behind by a crash and resumed it. The scheduler's job was still working on the slot when an HTTP "import now" arrived, so both executed the whole feed side by side; dedupe keys kept the rows single, and whichever finished last overwrote the totals. Two triggers creating the slot at the same instant could also fail one of them on the unique key.
 - **Fix:** Runs carry a heartbeat, refreshed every 250 prices. A `STARTED` run is taken over only once its heartbeat is five minutes old, by a conditional update only one claimant can win; otherwise the second trigger returns the running run untouched. A lost create race resolves to the winner's run.
+
+### BUG-016 — Queues ignored the database index in REDIS_URL
+- **Phase:** post-plan · **Area:** common/queue · **Scope:** production code · **Found by:** load test · **Fixed in:** (this commit)
+- **Symptom:** With the load environment configured for Redis database 2, its workers took jobs queued by the integration tests in database 0, and fifteen queue-dependent tests failed.
+- **Cause:** The BullMQ connection was assembled from the URL's host, port and credentials, and dropped the path — the database index — and the `rediss://` scheme. The cache client was right only because it passes the URL to ioredis whole. Any two deployments sharing a Redis by database index would have consumed each other's jobs, against each other's databases.
+- **Fix:** `bullConnectionFrom` builds the connection from the whole URL: database index, TLS for `rediss://`, decoded credentials, and a refusal of an index that is not a number.
