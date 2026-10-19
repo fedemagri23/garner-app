@@ -2,7 +2,7 @@
  * Fills the development databases with a small, coherent world: two accounts,
  * a catalog, three chains with branches around Buenos Aires, and derived
  * prices that differ per store so comparison and optimization have something
- * to say.
+ * to say, and a few price drops for the home screen's "Bajaron cerca tuyo".
  *
  * Idempotent — running it again rewrites the same rows rather than adding
  * more, so it is safe to re-run while poking at the app.
@@ -154,6 +154,17 @@ async function seedHistory(productId, storeId, endPriceCents) {
   }
 }
 
+/** A recent fall to the current price, as the recompute would have recorded. */
+async function setPriceDrop(productId, storeId, priceCents, previousPriceCents) {
+  const droppedAt = new Date(Date.now() - 6 * 60 * 60 * 1000);
+
+  await intelligence.priceDrop.upsert({
+    where: { productId_storeId: { productId, storeId } },
+    create: { productId, storeId, currency: 'ARS', priceCents, previousPriceCents, droppedAt },
+    update: { priceCents, previousPriceCents, droppedAt },
+  });
+}
+
 async function main() {
   console.log('Seeding development data…');
 
@@ -276,13 +287,33 @@ async function main() {
     stores.diaCaballito,
   ];
 
+  // Falls from these prices to today's: product index, store index, before.
+  const drops = [
+    [0, 2, 150000], // milk at Día, −12%
+    [5, 0, 106000], // water at Coto, −7%
+    [3, 1, 250000], // oil at Carrefour, −6%
+  ];
+  const dropBefore = new Map(
+    drops.map(([productIndex, storeIndex, before]) => [`${productIndex}:${storeIndex}`, before]),
+  );
+
   for (const [productIndex, prices] of priceTable) {
     for (const [storeIndex, priceCents] of prices.entries()) {
       const product = products[productIndex];
       const store = storeOrder[storeIndex];
+      const before = dropBefore.get(`${productIndex}:${storeIndex}`);
 
       await setDerivedPrice(product.id, store.id, priceCents);
-      await seedHistory(product.id, store.id, priceCents);
+      // A dropped price's history runs up to where it was, so the fall shows.
+      await seedHistory(product.id, store.id, before ?? priceCents);
+
+      if (before) {
+        await setPriceDrop(product.id, store.id, priceCents, before);
+      } else {
+        await intelligence.priceDrop.deleteMany({
+          where: { productId: product.id, storeId: store.id },
+        });
+      }
     }
   }
 
@@ -315,6 +346,7 @@ Seeded:
   catalog      ${products.length} products, 4 categories, 2 brands, 1 barcode
   stores       ${storeOrder.length} across Coto, Carrefour and Día
   prices       current price + 14 days of history per product/store
+  price drops  ${drops.length} near the home point
   list         "Compra semanal" (4 items) owned by the shopper
   home point   ${HOME.latitude}, ${HOME.longitude}
 `);

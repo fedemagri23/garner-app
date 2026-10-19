@@ -16,6 +16,7 @@ import type {
   PriceComparison,
   StorePriceView,
 } from '../application/compare-prices.use-case.js';
+import type { NearbyPriceDrop } from '../application/find-nearby-price-drops.use-case.js';
 import type { PriceHistoryView } from '../application/get-price-history.use-case.js';
 import { PriceConfidenceLevel } from '../domain/price-confidence.js';
 import {
@@ -189,4 +190,71 @@ export class PriceHistoryQueryDto {
   @IsOptional()
   @IsUUID()
   storeId?: string;
+}
+
+export class PriceDropResponse {
+  @ApiProperty({ format: 'uuid' }) productId!: string;
+  @ApiProperty() productName!: string;
+  @ApiProperty({ nullable: true }) brandName!: string | null;
+  @ApiProperty({ nullable: true }) imageUrl!: string | null;
+  @ApiProperty({ format: 'uuid' }) storeId!: string;
+  @ApiProperty() storeName!: string;
+  @ApiProperty() supermarketName!: string;
+  @ApiProperty({ example: 'ARS' }) currency!: string;
+  @ApiProperty({ description: 'Current derived price, in cents' })
+  priceCents!: number;
+  @ApiProperty({ description: 'The price before the drop began, in cents' })
+  previousPriceCents!: number;
+  @ApiProperty({ description: 'Whole percent below the previous price', example: 12 })
+  dropPercent!: number;
+  @ApiProperty({ format: 'date-time', description: 'When it last fell' })
+  droppedAt!: string;
+  @ApiProperty({ description: 'Great-circle distance from the searched point' })
+  distanceKm!: number;
+
+  static from(view: NearbyPriceDrop): PriceDropResponse {
+    return {
+      productId: view.product.id,
+      productName: view.product.name,
+      brandName: view.product.brand?.name ?? null,
+      imageUrl: view.product.imageUrl,
+      storeId: view.store.id,
+      storeName: view.store.name,
+      supermarketName: view.store.supermarket.name,
+      currency: view.drop.currency,
+      priceCents: view.drop.priceCents,
+      previousPriceCents: view.drop.previousPriceCents,
+      dropPercent: view.dropPercent,
+      droppedAt: view.drop.droppedAt.toISOString(),
+      distanceKm: view.distanceKm,
+    };
+  }
+}
+
+export class NearbyPriceDropsQueryDto {
+  @ApiProperty({ example: -34.6037 })
+  @Type(() => Number)
+  @IsLatitude()
+  latitude!: number;
+
+  @ApiProperty({ example: -58.3816 })
+  @Type(() => Number)
+  @IsLongitude()
+  longitude!: number;
+
+  @ApiPropertyOptional({ default: 5, maximum: 50 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @IsPositive()
+  @Max(50)
+  radiusKm: number = 5;
+
+  @ApiPropertyOptional({ default: 10, maximum: 50 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  limit: number = 10;
 }

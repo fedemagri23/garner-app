@@ -5,6 +5,7 @@ import type { DerivedPrice } from '../domain/derived-price.entity.js';
 import type {
   DerivedPriceRepository,
   PriceCache,
+  PriceDropRepository,
 } from '../domain/price-intelligence.repository.port.js';
 import { RecomputeDerivedPriceUseCase } from './recompute-derived-price.use-case.js';
 
@@ -36,6 +37,7 @@ describe('RecomputeDerivedPriceUseCase', () => {
   let observations: { findInWindow: jest.Mock };
   let derivedPrices: jest.Mocked<DerivedPriceRepository>;
   let cache: jest.Mocked<PriceCache>;
+  let priceDrops: jest.Mocked<PriceDropRepository>;
   let events: { publish: jest.Mock };
   let useCase: RecomputeDerivedPriceUseCase;
 
@@ -55,12 +57,19 @@ describe('RecomputeDerivedPriceUseCase', () => {
       invalidateProduct: jest.fn(),
       productNamespace: jest.fn(),
     };
+    priceDrops = {
+      find: jest.fn().mockResolvedValue(null),
+      upsert: jest.fn(),
+      remove: jest.fn(),
+      findRecentAtStores: jest.fn(),
+    };
     events = { publish: jest.fn() };
 
     useCase = new RecomputeDerivedPriceUseCase(
       observations as unknown as PriceObservationRepository,
       derivedPrices,
       cache,
+      priceDrops,
       events as unknown as EventBus,
     );
   });
@@ -149,6 +158,48 @@ describe('RecomputeDerivedPriceUseCase', () => {
       name: 'DerivedPriceUpdated',
       payload: { priceCents: 125, previousPriceCents: 100 },
     });
+  });
+
+  it('records a fall as a price drop', async () => {
+    derivedPrices.find.mockResolvedValue({ priceCents: 150 } as DerivedPrice);
+    observations.findInWindow.mockResolvedValue([observation({ id: 'a', priceCents: 125 })]);
+
+    await useCase.execute('product-1', 'store-1', now);
+
+    expect(priceDrops.upsert).toHaveBeenCalledWith({
+      productId: 'product-1',
+      storeId: 'store-1',
+      currency: 'ARS',
+      priceCents: 125,
+      previousPriceCents: 150,
+      droppedAt: now,
+    });
+  });
+
+  it('ends a drop once the price climbs back', async () => {
+    derivedPrices.find.mockResolvedValue({ priceCents: 110 } as DerivedPrice);
+    priceDrops.find.mockResolvedValue({
+      productId: 'product-1',
+      storeId: 'store-1',
+      currency: 'ARS',
+      priceCents: 110,
+      previousPriceCents: 120,
+      droppedAt: new Date(now.getTime() - DAY),
+    });
+    observations.findInWindow.mockResolvedValue([observation({ id: 'a', priceCents: 125 })]);
+
+    await useCase.execute('product-1', 'store-1', now);
+
+    expect(priceDrops.upsert).not.toHaveBeenCalled();
+    expect(priceDrops.remove).toHaveBeenCalledWith('product-1', 'store-1');
+  });
+
+  it('drops the price drop along with a removed price', async () => {
+    derivedPrices.find.mockResolvedValue({ priceCents: 125 } as DerivedPrice);
+
+    await useCase.execute('product-1', 'store-1', now);
+
+    expect(priceDrops.remove).toHaveBeenCalledWith('product-1', 'store-1');
   });
 
   it('says nothing when recomputing lands on the same price', async () => {

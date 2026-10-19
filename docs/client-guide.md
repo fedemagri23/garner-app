@@ -102,6 +102,10 @@ Paginated endpoints take `page` (from 1) and `pageSize` (default 20, at most
 - Timestamps are ISO 8601 in UTC; dates without a time (`2026-10-19`) are UTC
   days.
 - Coordinates are decimal degrees; distances are kilometres.
+- `GET /v1/price-drops?latitude&longitude` lists products whose price fell by
+  3% or more this week at stores nearby, one per product, biggest fall first.
+  Falls in a row add up into one drop; a drop disappears when the price climbs
+  back to where it started.
 
 ## Working offline
 

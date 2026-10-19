@@ -1,5 +1,6 @@
 import type { DailyPricePoint } from './price-history.js';
 import type { DailyPriceRecord, DerivedPrice } from './derived-price.entity.js';
+import type { PriceDrop } from './price-drop.js';
 
 /**
  * The price-intelligence module's data contract over `intelligence_db`.
@@ -50,6 +51,21 @@ export interface DailyPriceHistoryRepository {
 export const DAILY_PRICE_HISTORY_REPOSITORY = Symbol(
   'DAILY_PRICE_HISTORY_REPOSITORY',
 );
+
+export interface PriceDropRepository {
+  find(productId: string, storeId: string): Promise<PriceDrop | null>;
+  /** Idempotent: one row per product and store. */
+  upsert(drop: PriceDrop): Promise<void>;
+  remove(productId: string, storeId: string): Promise<void>;
+  /** Drops at these stores since a moment, newest first, at most `limit`. */
+  findRecentAtStores(query: {
+    storeIds: string[];
+    since: Date;
+    limit: number;
+  }): Promise<PriceDrop[]>;
+}
+
+export const PRICE_DROP_REPOSITORY = Symbol('PRICE_DROP_REPOSITORY');
 
 /** Cache of read-heavy price views. Disposable: a miss just costs a query. */
 export interface PriceCache {

@@ -5,6 +5,7 @@ import { ProductsModule } from '../products/products.module.js';
 import { SupermarketsModule } from '../supermarkets/supermarkets.module.js';
 import { AggregateDailyPricesUseCase } from './application/aggregate-daily-prices.use-case.js';
 import { ComparePricesUseCase } from './application/compare-prices.use-case.js';
+import { FindNearbyPriceDropsUseCase } from './application/find-nearby-price-drops.use-case.js';
 import { GetPriceHistoryUseCase } from './application/get-price-history.use-case.js';
 import { ObservationAcceptedListener } from './application/observation-accepted.listener.js';
 import { RecomputeDerivedPriceUseCase } from './application/recompute-derived-price.use-case.js';
@@ -12,20 +13,24 @@ import {
   DAILY_PRICE_HISTORY_REPOSITORY,
   DERIVED_PRICE_REPOSITORY,
   PRICE_CACHE,
+  PRICE_DROP_REPOSITORY,
 } from './domain/price-intelligence.repository.port.js';
 import { PrismaDailyPriceHistoryRepository } from './infrastructure/prisma-daily-price-history.repository.js';
 import { PrismaDerivedPriceRepository } from './infrastructure/prisma-derived-price.repository.js';
+import { PrismaPriceDropRepository } from './infrastructure/prisma-price-drop.repository.js';
 import {
   PRICE_INTELLIGENCE_QUEUE,
   PriceIntelligenceJobs,
   PriceIntelligenceProcessor,
 } from './infrastructure/price-intelligence.queue.js';
 import { RedisPriceCache } from './infrastructure/redis-price-cache.js';
+import { PriceDropsController } from './presentation/price-drops.controller.js';
 import { ProductPricesController } from './presentation/product-prices.controller.js';
 
 /**
  * Turns raw observations into the prices the product actually shows: a current
- * derived price per product and store, and a compact daily history.
+ * derived price per product and store, a compact daily history, and the
+ * recent drops the home screen announces.
  *
  * It reads observations through pricing's port and owns `intelligence_db`.
  * Optimization (phase 7) and notifications (phase 8) consume the derived
@@ -38,12 +43,13 @@ import { ProductPricesController } from './presentation/product-prices.controlle
     SupermarketsModule,
     BullModule.registerQueue({ name: PRICE_INTELLIGENCE_QUEUE }),
   ],
-  controllers: [ProductPricesController],
+  controllers: [ProductPricesController, PriceDropsController],
   providers: [
     RecomputeDerivedPriceUseCase,
     AggregateDailyPricesUseCase,
     ComparePricesUseCase,
     GetPriceHistoryUseCase,
+    FindNearbyPriceDropsUseCase,
     ObservationAcceptedListener,
     PriceIntelligenceJobs,
     PriceIntelligenceProcessor,
@@ -52,6 +58,7 @@ import { ProductPricesController } from './presentation/product-prices.controlle
       provide: DAILY_PRICE_HISTORY_REPOSITORY,
       useClass: PrismaDailyPriceHistoryRepository,
     },
+    { provide: PRICE_DROP_REPOSITORY, useClass: PrismaPriceDropRepository },
     { provide: PRICE_CACHE, useClass: RedisPriceCache },
   ],
   exports: [DERIVED_PRICE_REPOSITORY, DAILY_PRICE_HISTORY_REPOSITORY],

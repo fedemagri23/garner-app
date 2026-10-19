@@ -15,12 +15,15 @@ import {
   confidenceScore,
 } from '../domain/price-confidence.js';
 import { selectUsableObservations } from '../domain/observation-selection.js';
+import { nextPriceDrop } from '../domain/price-drop.js';
 import { weightedPrice } from '../domain/price-weighting.js';
 import {
   DERIVED_PRICE_REPOSITORY,
   PRICE_CACHE,
+  PRICE_DROP_REPOSITORY,
   type DerivedPriceRepository,
   type PriceCache,
+  type PriceDropRepository,
 } from '../domain/price-intelligence.repository.port.js';
 
 /** How far back observations count toward the current price. */
@@ -41,6 +44,9 @@ export type RecomputeOutcome =
  * from everything recent, weighted by source and age, with quarantined
  * observations left out. Recomputing is idempotent — same inputs, same row —
  * so retried jobs and overlapping triggers are harmless.
+ *
+ * It also keeps the product's price drop at the store in step, since only
+ * here are the old and the new price both in hand.
  */
 @Injectable()
 export class RecomputeDerivedPriceUseCase {
@@ -50,6 +56,8 @@ export class RecomputeDerivedPriceUseCase {
     @Inject(DERIVED_PRICE_REPOSITORY)
     private readonly derivedPrices: DerivedPriceRepository,
     @Inject(PRICE_CACHE) private readonly cache: PriceCache,
+    @Inject(PRICE_DROP_REPOSITORY)
+    private readonly priceDrops: PriceDropRepository,
     private readonly events: EventBus,
   ) {}
 
@@ -81,6 +89,7 @@ export class RecomputeDerivedPriceUseCase {
     if (!computed) {
       if (existing) {
         await this.derivedPrices.remove(productId, storeId);
+        await this.priceDrops.remove(productId, storeId);
         await this.cache.invalidateProduct(productId);
       }
 
@@ -109,6 +118,8 @@ export class RecomputeDerivedPriceUseCase {
     await this.cache.invalidateProduct(productId);
 
     if (!existing || existing.priceCents !== price.priceCents) {
+      await this.trackDrop(existing, price, now);
+
       const event: DerivedPriceUpdatedEvent = createDomainEvent(
         DomainEventName.DerivedPriceUpdated,
         {
@@ -124,5 +135,31 @@ export class RecomputeDerivedPriceUseCase {
     }
 
     return { kind: 'updated', price };
+  }
+
+  private async trackDrop(
+    existing: DerivedPrice | null,
+    price: DerivedPrice,
+    now: Date,
+  ): Promise<void> {
+    const { productId, storeId } = price;
+    const current = await this.priceDrops.find(productId, storeId);
+    const next = nextPriceDrop(
+      current,
+      {
+        productId,
+        storeId,
+        currency: price.currency,
+        fromCents: existing?.priceCents ?? null,
+        toCents: price.priceCents,
+      },
+      now,
+    );
+
+    if (next) {
+      await this.priceDrops.upsert(next);
+    } else if (current) {
+      await this.priceDrops.remove(productId, storeId);
+    }
   }
 }

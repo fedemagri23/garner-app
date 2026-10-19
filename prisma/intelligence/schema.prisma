@@ -71,3 +71,27 @@ model DailyPriceHistory {
   @@index([productId, date])
   @@map("daily_price_history")
 }
+
+/// A recent fall in a product's current price at one store, kept up to date
+/// by the recompute: "bajó cerca tuyo".
+///
+/// One row per product and store. Consecutive falls inside the window merge
+/// into one, measured from the price before the first; a rise back to that
+/// price or above ends the drop. Rebuildable like the derived prices it
+/// follows — losing a row only hides a drop until the next fall.
+model PriceDrop {
+  productId          String   @db.Uuid
+  storeId            String   @db.Uuid
+  currency           String   @db.Char(3)
+  /// The derived price now. Minor units.
+  priceCents         Int
+  /// The derived price before the drop began.
+  previousPriceCents Int
+  /// When the latest fall happened — what makes a drop "recent".
+  droppedAt          DateTime @db.Timestamptz(3)
+
+  @@id([productId, storeId])
+  /// Recent drops at the stores around a shopper.
+  @@index([storeId, droppedAt])
+  @@map("price_drops")
+}

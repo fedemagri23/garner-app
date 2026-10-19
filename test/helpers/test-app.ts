@@ -68,6 +68,7 @@ export async function resetDatabase(app: INestApplication): Promise<void> {
   const intelligence = app.get(IntelligencePrismaService);
   await intelligence.derivedPrice.deleteMany();
   await intelligence.dailyPriceHistory.deleteMany();
+  await intelligence.priceDrop.deleteMany();
 
   // Submission windows last up to a day. Every test run reports from the same
   // loopback address, so without this the per-IP limit would carry over and

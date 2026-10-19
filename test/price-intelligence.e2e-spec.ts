@@ -433,6 +433,76 @@ describe('Price intelligence (e2e)', () => {
     });
   });
 
+  describe('price drops near a point', () => {
+    const CENTRO = { latitude: -34.6037, longitude: -58.3816 };
+
+    /** Moves a product's only observations to a new price and recomputes. */
+    const priceAt = async (productId: string, storeId: string, priceCents: number) => {
+      await pricing.priceObservation.deleteMany({ where: { productId, storeId } });
+      await observe({ productId, storeId, priceCents });
+      await recompute.execute(productId, storeId);
+    };
+
+    const drops = (query: Record<string, unknown> = CENTRO) =>
+      http().get('/v1/price-drops').query(query).set(auth(shopper));
+
+    it('announces a fall at a nearby store, biggest first', async () => {
+      const milk = await newProduct('Leche que bajó');
+      const rice = await newProduct('Arroz que bajó un poco');
+
+      await priceAt(milk, nearStoreId, 150000);
+      await priceAt(milk, nearStoreId, 132000);
+      await priceAt(rice, nearStoreId, 100000);
+      await priceAt(rice, nearStoreId, 95000);
+
+      const response = await drops().expect(200);
+      const ours = response.body.filter((drop: { productId: string }) =>
+        [milk, rice].includes(drop.productId),
+      );
+
+      expect(ours.map((drop: { productId: string }) => drop.productId)).toEqual([milk, rice]);
+      expect(ours[0]).toMatchObject({
+        productName: 'Leche que bajó',
+        storeId: nearStoreId,
+        storeName: 'Disco Centro',
+        supermarketName: 'Disco',
+        priceCents: 132000,
+        previousPriceCents: 150000,
+        dropPercent: 12,
+        currency: 'ARS',
+      });
+      expect(ours[0].distanceKm).toBeLessThan(1);
+    });
+
+    it('leaves out drift, far stores, and drops that recovered', async () => {
+      const drift = await newProduct('Precio que apenas se movió');
+      const far = await newProduct('Bajó lejos');
+      const recovered = await newProduct('Bajó y volvió');
+
+      await priceAt(drift, nearStoreId, 100000);
+      await priceAt(drift, nearStoreId, 98500);
+      await priceAt(far, farStoreId, 100000);
+      await priceAt(far, farStoreId, 80000);
+      await priceAt(recovered, nearStoreId, 100000);
+      await priceAt(recovered, nearStoreId, 80000);
+      await priceAt(recovered, nearStoreId, 101000);
+
+      const ids = (await drops().expect(200)).body.map(
+        (drop: { productId: string }) => drop.productId,
+      );
+
+      expect(ids).not.toContain(drift);
+      expect(ids).not.toContain(far);
+      expect(ids).not.toContain(recovered);
+      expect(await intelligence.priceDrop.count({ where: { productId: recovered } })).toBe(0);
+    });
+
+    it('needs a location and authentication', async () => {
+      await drops({ latitude: CENTRO.latitude }).expect(400);
+      await http().get('/v1/price-drops').query(CENTRO).expect(401);
+    });
+  });
+
   describe('the pipeline end to end', () => {
     it('turns a reported price into a shown price', async () => {
       const productId = await newProduct('Manteca 200g');
