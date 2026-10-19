@@ -209,10 +209,11 @@ Notation: [`README.md`](README.md).
 - **Revisit when:** Deploying behind a proxy — this is a setting that must be checked, not assumed. It is in the operations doc for that reason.
 
 ### CON-032 — No load testing has been done
-- **Phase:** 8 · **Area:** whole system · **Status:** deferred
+- **Phase:** 8 · **Area:** whole system · **Status:** resolved
 - **What:** The plan asks for performance verification of search, comparison, submission, import, aggregation and optimization under realistic workloads. Query paths have been indexed by inspection; none has been measured under load.
 - **Why:** There is no realistic workload to generate yet — no production traffic, no seeded catalog of representative size.
 - **Revisit when:** Before the first real users, with a seeded dataset. The metrics to watch are already exposed; what is missing is the load and a baseline to compare against.
+- **Resolved:** `load/` seeds a city-sized dataset and drives it with k6 and a job benchmark; the baseline is in `docs/performance.md`. It found BUG-015, BUG-016 and the import throughput fixed by CON-039. What it leaves open is CON-040.
 
 
 ### CON-033 — CI does not check formatting
@@ -256,3 +257,15 @@ Notation: [`README.md`](README.md).
 - **What:** An import offers its prices for confirmation a thousand at a time: one query finds the source's last observation of every pair, one update confirms the unchanged ones. Only new and moved prices go through `ingest` one by one. A confirmation runs the plausibility check but not the catalog checks or trust evaluation, and every confirmation still publishes `PriceObservationConfirmed`, so each queues a recompute.
 - **Why:** Measured on the load dataset, the per-price pipeline cost about 10 ms a price — roughly 85 minutes a day per feed for a 10,000-product, 50-store chain, nearly all of it spent rediscovering that a price had not changed. In bulk the same feed of ~30,000 prices imports in under a minute. The skipped checks were already passed by the row being confirmed, which is ACCEPTED and carries the same product, store and price.
 - **Revisit when:** The recompute every confirmation queues becomes the bottleneck — at ~13 ms each, ~90,000 a day is about 20 minutes of worker time. A confirmation changes a price's freshness, not its value, so recomputes could then be batched per store or folded into the daily aggregation.
+
+### CON-040 — One process serves HTTP and runs every worker
+- **Phase:** post-plan · **Area:** whole system · **Status:** accepted
+- **What:** At ~90 requests a second on the reference laptop, medians stay under 20 ms but p95 reaches 200–750 ms, because HTTP handlers, queue workers, Postgres and the load generator share four cores and one pool of ten connections per database. Background work scales linearly: aggregation is ~5 ms a pair (~40 minutes a day at 500,000 pairs) and every feed confirmation queues a recompute (~6 ms each at 170 a second).
+- **Why:** One process is the simplest thing to deploy and is fast enough for a launch-sized catalog. Nothing measured points at a code hotspot — the profile is flat, and a bigger pool did not move the tail — so the next gain is structural rather than an optimization.
+- **Revisit when:** p95 matters to users, or a day's background work stops fitting in the day. In order: run the workers as their own process (the BullMQ processors already are separable), give Postgres its own machine, then aggregate and recompute per store in batches instead of per pair. `DATABASE_POOL_MAX` sizes the pools once processes are split.
+
+### CON-041 — The daily aggregation first runs when its scheduler is created
+- **Phase:** post-plan · **Area:** price-intelligence · **Status:** accepted
+- **What:** The aggregation is a BullMQ scheduler that repeats every 24 hours from when it was created, and its first run is immediate. On a fresh Redis — a first deploy, a flushed cache — the whole previous day is aggregated at boot, and the daily run thereafter happens at that time of day rather than at a chosen hour.
+- **Why:** Re-running a day is idempotent, so an extra run is wasted work, never wrong data. The cost showed up only in load testing, where a boot-time aggregation ran alongside the measurement.
+- **Revisit when:** The aggregation's timing matters — it competes with peak traffic, or downstream consumers expect yesterday's history by a set hour. A cron pattern (`pattern: '30 3 * * *'`) instead of `every` fixes both.

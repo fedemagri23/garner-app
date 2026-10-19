@@ -5,6 +5,8 @@ PostgreSQL databases, with Redis, BullMQ workers and internal domain events.
 
 Running it in anger is documented in [`docs/operations.md`](docs/operations.md):
 health, metrics, runbooks, backup and the rebuild procedure for derived data.
+How it behaves under a city-sized load, and how to measure that again, is in
+[`docs/performance.md`](docs/performance.md).
 
 Two running notebooks record how it got this way: [`journeys/bugs.md`](journeys/bugs.md)
 for defects found and repaired, and [`journeys/considerations.md`](journeys/considerations.md)

@@ -34,6 +34,7 @@ operationally:
 | `LOG_FORMAT` | `json` outside development. Defaults correctly; set it explicitly if a platform captures stdout differently. |
 | `MAX_REQUEST_BODY_KB` | Bounds request bodies. Evidence uploads have their own 5 MB limit. |
 | `EVIDENCE_STORAGE_DRIVER` | `local` or `s3`. More than one instance needs `s3` and `EVIDENCE_S3_BUCKET`; credentials come from `EVIDENCE_S3_ACCESS_KEY_ID`/`_SECRET_ACCESS_KEY` or, when unset, the AWS default chain (an instance or task role). `EVIDENCE_S3_ENDPOINT` and `EVIDENCE_S3_FORCE_PATH_STYLE=true` are for non-AWS providers. |
+| `DATABASE_POOL_MAX` | Connections per database per process (default 10; three databases, so three pools). HTTP and the in-process workers share them. Size against Postgres's `max_connections` across every instance. |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Where spans are exported (OTLP/HTTP). Unset, tracing is ids and propagation only. `OTEL_SERVICE_NAME` and `OTEL_TRACES_SAMPLE_RATIO` tune it. |
 | `SMTP_URL`, `EMAIL_FROM`, `PUBLIC_BASE_URL` | Email notifications. Unset `SMTP_URL` and email is not offered. `PUBLIC_BASE_URL` is what unsubscribe links point at — wrong, and nobody can unsubscribe. |
 | `EXTERNAL_SOURCE_TOKENS` | Supermarket credentials, as `{"source-slug":"token"}`. Never in the database. |
@@ -201,5 +202,5 @@ The plan's criteria, and where each is met:
 - [x] **Derived intelligence rebuildable** — within the retention window, as above.
 - [x] **Docker deployment reproducible** — `docker compose up -d` plus `pnpm run prisma:migrate:deploy`.
 
-Known gaps are recorded as considerations rather than hidden here: no load
-testing yet (CON-032).
+Load testing and its baseline are in [`performance.md`](performance.md); what
+it leaves open is CON-040.

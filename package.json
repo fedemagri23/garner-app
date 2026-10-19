@@ -27,7 +27,11 @@
     "prisma:migrate:pricing": "prisma migrate dev --config prisma/pricing/prisma.config.ts",
     "prisma:migrate:intelligence": "prisma migrate dev --config prisma/intelligence/prisma.config.ts",
     "prisma:migrate:deploy": "prisma migrate deploy --config prisma/core/prisma.config.ts && prisma migrate deploy --config prisma/pricing/prisma.config.ts && prisma migrate deploy --config prisma/intelligence/prisma.config.ts",
-    "postinstall": "pnpm run prisma:generate"
+    "postinstall": "pnpm run prisma:generate",
+    "load:prepare": "node load/prepare.mjs",
+    "load:api": "node --env-file=load/load.env dist/main",
+    "load:jobs": "node --env-file=load/load.env load/bench-jobs.mjs",
+    "load:http": "docker run --rm --network host -v ./load/k6:/scripts -e BASE_URL=http://localhost:3100 grafana/k6:0.54.0 run /scripts/mixed.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1152.0",
