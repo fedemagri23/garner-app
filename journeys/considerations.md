@@ -211,3 +211,9 @@ Notation: [`README.md`](README.md).
 - **Why:** There is no realistic workload to generate yet — no production traffic, no seeded catalog of representative size.
 - **Revisit when:** Before the first real users, with a seeded dataset. The metrics to watch are already exposed; what is missing is the load and a baseline to compare against.
 
+
+### CON-033 — CI does not check formatting
+- **Phase:** post-plan · **Area:** tooling/ci · **Status:** accepted
+- **What:** CI runs lint, typecheck, build, unit and integration tests on every push to `master` and every pull request. It does not run `prettier --check`.
+- **Why:** 122 files currently differ from Prettier's output. Gating on it would mean a reformat commit touching most of the codebase, which buries history for no behavioural gain.
+- **Revisit when:** Someone wants the gate — run `pnpm run format` once, commit it alone, add the check, and list that commit in `.git-blame-ignore-revs`.
