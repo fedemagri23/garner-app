@@ -120,7 +120,7 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Fix:** One `applyVersioning` used by both the app and the export, and an integration test comparing the committed file with the document the fully configured app builds.
 
 ### BUG-018 — Nullable fields were described as bare objects in the contract
-- **Phase:** post-plan · **Area:** api contract · **Scope:** production code · **Found by:** mobile client generation (checkpoint 2) · **Fixed in:** this commit
+- **Phase:** post-plan · **Area:** api contract · **Scope:** production code · **Found by:** mobile client generation (checkpoint 2) · **Fixed in:** b23c522
 - **Symptom:** 81 response and request fields — `imageUrl`, `packageLabel`, a saved `latitude`, every nullable date — came out of `openapi.json` as `type: object`, so the generated client typed them `Record<string, never> | null` and the app could not read a product's package label or a saved location.
 - **Cause:** `@ApiProperty({ nullable: true })` on a `string | null` property. TypeScript emits `Object` as the design type of a union, and Swagger reads that as an object schema unless the decorator names the type.
 - **Fix:** Every nullable property names its type (`type: String` / `Number`, with `format: 'date-time'` for timestamps). The OpenAPI integration test now fails on any free-form object field other than a price source's adapter `config`.
