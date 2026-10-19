@@ -16,7 +16,10 @@ export class IntelligencePrismaService
 
   constructor(config: AppConfigService) {
     super({
-      adapter: new PrismaPg({ connectionString: config.intelligenceDbUrl }),
+      adapter: new PrismaPg({
+        connectionString: config.intelligenceDbUrl,
+        max: config.databasePoolMax,
+      }),
     });
   }
 

@@ -18,6 +18,11 @@ export const configSchema = z.object({
 
   REDIS_URL: z.url(),
 
+  // Connections each process keeps per database (three databases, so three
+  // pools). The HTTP handlers and the in-process workers share them; size
+  // against Postgres's max_connections across every instance.
+  DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(200).default(10),
+
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
   // Seconds rather than a duration string: unambiguous to read, and it drops
   // straight into `expiresIn` without a units-parsing step.

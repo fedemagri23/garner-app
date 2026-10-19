@@ -31,6 +31,10 @@ export class AppConfigService {
     return this.get('PORT');
   }
 
+  get databasePoolMax(): number {
+    return this.get('DATABASE_POOL_MAX');
+  }
+
   get coreDbUrl(): string {
     return this.get('CORE_DB_URL');
   }

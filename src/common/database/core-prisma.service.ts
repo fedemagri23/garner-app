@@ -16,7 +16,12 @@ export class CorePrismaService
   private readonly logger = new Logger(CorePrismaService.name);
 
   constructor(config: AppConfigService) {
-    super({ adapter: new PrismaPg({ connectionString: config.coreDbUrl }) });
+    super({
+      adapter: new PrismaPg({
+        connectionString: config.coreDbUrl,
+        max: config.databasePoolMax,
+      }),
+    });
   }
 
   async onModuleInit(): Promise<void> {

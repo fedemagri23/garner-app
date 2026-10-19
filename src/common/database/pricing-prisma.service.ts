@@ -16,7 +16,12 @@ export class PricingPrismaService
   private readonly logger = new Logger(PricingPrismaService.name);
 
   constructor(config: AppConfigService) {
-    super({ adapter: new PrismaPg({ connectionString: config.pricingDbUrl }) });
+    super({
+      adapter: new PrismaPg({
+        connectionString: config.pricingDbUrl,
+        max: config.databasePoolMax,
+      }),
+    });
   }
 
   async onModuleInit(): Promise<void> {
