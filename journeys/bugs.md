@@ -114,7 +114,7 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Fix:** `bullConnectionFrom` builds the connection from the whole URL: database index, TLS for `rediss://`, decoded credentials, and a refusal of an index that is not a number.
 
 ### BUG-017 — The committed API contract left out the /v1 prefix
-- **Phase:** post-plan · **Area:** api contract · **Scope:** production code · **Found by:** mobile client generation · **Fixed in:** (this commit)
+- **Phase:** post-plan · **Area:** api contract · **Scope:** production code · **Found by:** mobile client generation · **Fixed in:** 9cabb49
 - **Symptom:** The mobile app's generated client had no `/v1/auth/login`, only `/auth/login`; every path in `openapi.json` lacked the prefix the running API serves.
 - **Cause:** The export script enabled versioning with the raw enum value `1`, which is header versioning, not URI. CI's drift check compared the file against that same script, so it agreed with itself.
 - **Fix:** One `applyVersioning` used by both the app and the export, and an integration test comparing the committed file with the document the fully configured app builds.
