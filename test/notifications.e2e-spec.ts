@@ -1,10 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
+import { getQueueToken } from '@nestjs/bullmq';
+import type { Queue } from 'bullmq';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 import { CorePrismaService } from '../src/common/database/core-prisma.service.js';
 import { EvaluatePriceAlertsUseCase } from '../src/notifications/application/evaluate-price-alerts.use-case.js';
 import { DeliverNotificationUseCase } from '../src/notifications/application/deliver-notification.use-case.js';
+import { NOTIFICATIONS_QUEUE } from '../src/notifications/infrastructure/notifications.queue.js';
 import {
   createTestApp,
   registerWithRole,
@@ -375,6 +378,20 @@ describe('Price alerts and notifications (e2e)', () => {
   });
 
   describe('delivery', () => {
+    // The app's own worker would otherwise race these tests for every
+    // delivery job the evaluation enqueues, and win on a fast machine.
+    let queue: Queue;
+
+    beforeAll(async () => {
+      queue = app.get<Queue>(getQueueToken(NOTIFICATIONS_QUEUE));
+      await queue.pause();
+    });
+
+    afterAll(async () => {
+      await queue.drain();
+      await queue.resume();
+    });
+
     it('delivers a message and records that it was sent', async () => {
       await createAlert({ type: 'BELOW_THRESHOLD', thresholdCents: 100 });
       await priceChanges(90, 120);
