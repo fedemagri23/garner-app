@@ -257,12 +257,23 @@ async function main() {
     }),
   ]);
 
-  // A scannable barcode on the milk, for the barcode lookup endpoint.
-  await core.productBarcode.upsert({
-    where: { code: '7790070410122' },
-    create: { code: '7790070410122', productId: products[0].id, isPrimary: true },
-    update: { productId: products[0].id },
-  });
+  // A scannable EAN-13 on every product, for the app's scanner. garner-mobile's
+  // docs/barcodes.svg draws these same codes, to scan from a screen.
+  const barcodes = [
+    '7790070410122', // milk
+    '7791234000012', // bread
+    '7791234000029', // rice
+    '7791234000036', // oil
+    '7790767000049', // biscuits
+    '7791234000050', // water
+  ];
+  for (const [index, code] of barcodes.entries()) {
+    await core.productBarcode.upsert({
+      where: { code },
+      create: { code, productId: products[index].id, isPrimary: true },
+      update: { productId: products[index].id, isPrimary: true },
+    });
+  }
 
   const chains = {};
   for (const [name, slug] of [
@@ -422,7 +433,7 @@ async function main() {
 Seeded:
   users        admin@garner.test (ADMIN), shopper@garner.test (USER)
   password     ${PASSWORD}
-  catalog      ${products.length} products, 4 categories, 2 brands, 1 barcode
+  catalog      ${products.length} products, 4 categories, 2 brands, ${barcodes.length} barcodes
   stores       ${storeOrder.length} around the Obelisco (Coto, Carrefour, Día, in ARS)
                ${viennaStores.length} around Stephansplatz, Vienna (Billa, Spar, Hofer, in EUR)
   prices       current price + 14 days of history per product/store
