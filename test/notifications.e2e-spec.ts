@@ -397,11 +397,13 @@ describe('Price alerts and notifications (e2e)', () => {
     it('holds a message through quiet hours instead of dropping it', async () => {
       await createAlert({ type: 'BELOW_THRESHOLD', thresholdCents: 100 });
 
-      // Quiet for the whole day, so whenever this runs the message waits.
+      // Quiet from this hour for two hours (wrapping midnight when need be),
+      // so whenever this runs the message waits.
+      const hour = new Date().getUTCHours();
       await http()
         .patch('/v1/notification-preferences')
         .set(auth(shopper))
-        .send({ quietHoursStartUtc: 0, quietHoursEndUtc: 23 })
+        .send({ quietHoursStartUtc: hour, quietHoursEndUtc: (hour + 2) % 24 })
         .expect(200);
 
       await priceChanges(90, 120);
