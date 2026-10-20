@@ -15,7 +15,9 @@ export interface PriceChange {
   priceCents: number;
   /** Null when this is the first derived price for the product at the store. */
   previousPriceCents: number | null;
-  /** Distance from the alert's point, for CHEAPER_NEARBY. */
+  /** What the price is in; unknown for changes queued before it was carried. */
+  currency?: string;
+  /** Distance from the alert's point, when it has one. */
   distanceKm?: number;
   /**
    * The cheapest price known nearby *other than* this store, for judging
@@ -42,6 +44,20 @@ export function evaluateAlert(
 
   // An alert naming a store only cares about that store.
   if (alert.storeId !== null && alert.storeId !== change.storeId) {
+    return { triggered: false, reason: 'NOT_MATCHED' };
+  }
+
+  // Its figures are in one currency; a price in another is not comparable.
+  if (alert.currency && change.currency && alert.currency !== change.currency) {
+    return { triggered: false, reason: 'NOT_MATCHED' };
+  }
+
+  // An alert with a place only hears about stores inside its radius.
+  if (
+    alert.radiusKm !== null &&
+    change.distanceKm !== undefined &&
+    change.distanceKm > alert.radiusKm
+  ) {
     return { triggered: false, reason: 'NOT_MATCHED' };
   }
 

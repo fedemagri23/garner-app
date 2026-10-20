@@ -19,6 +19,7 @@ const alert = (overrides: Partial<PriceAlert> = {}): PriceAlert => ({
   latitude: null,
   longitude: null,
   radiusKm: null,
+  currency: null,
   isEnabled: true,
   lastTriggeredAt: null,
   lastNotifiedPriceCents: null,
@@ -47,6 +48,27 @@ describe('evaluateAlert', () => {
     expect(
       evaluateAlert(alert({ storeId: 'store-2' }), change()).triggered,
     ).toBe(false);
+  });
+
+  it('ignores a price in another currency than the alert\'s figures', () => {
+    // 115 euro cents is below 140000 peso cents — and means nothing to it.
+    const pesos = alert({ thresholdCents: 140000, currency: 'ARS' });
+
+    expect(evaluateAlert(pesos, change({ priceCents: 115, currency: 'EUR' })).triggered).toBe(false);
+    expect(evaluateAlert(pesos, change({ priceCents: 132000, currency: 'ARS' })).triggered).toBe(true);
+  });
+
+  it('still matches any currency for an alert made before one was recorded', () => {
+    expect(evaluateAlert(alert({ currency: null }), change({ currency: 'EUR' })).triggered).toBe(true);
+  });
+
+  it('only hears about stores inside the radius, for any kind of alert', () => {
+    const near = alert({ latitude: -34.6, longitude: -58.38, radiusKm: 5 });
+
+    expect(evaluateAlert(near, change({ distanceKm: 3 })).triggered).toBe(true);
+    expect(evaluateAlert(near, change({ distanceKm: 11000 })).triggered).toBe(false);
+    // Without a distance to judge by, the radius cannot rule it out.
+    expect(evaluateAlert(near, change()).triggered).toBe(true);
   });
 
   describe('below a threshold', () => {

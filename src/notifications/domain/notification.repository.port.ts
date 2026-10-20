@@ -17,6 +17,7 @@ export interface CreatePriceAlertInput {
   latitude: number | null;
   longitude: number | null;
   radiusKm: number | null;
+  currency: string | null;
 }
 
 export interface PriceAlertRepository {

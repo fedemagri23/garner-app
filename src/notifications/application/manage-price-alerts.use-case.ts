@@ -31,6 +31,7 @@ export interface CreatePriceAlertCommand {
   latitude?: number;
   longitude?: number;
   radiusKm?: number;
+  currency?: string;
 }
 
 /**
@@ -71,6 +72,7 @@ export class ManagePriceAlertsUseCase {
       latitude: command.latitude ?? null,
       longitude: command.longitude ?? null,
       radiusKm: command.radiusKm ?? null,
+      currency: command.currency ?? null,
     });
   }
 
@@ -130,17 +132,20 @@ export class ManagePriceAlertsUseCase {
       );
     }
 
-    if (command.type === 'CHEAPER_NEARBY') {
-      const located =
-        command.latitude !== undefined &&
-        command.longitude !== undefined &&
-        command.radiusKm !== undefined;
+    const place = [command.latitude, command.longitude, command.radiusKm];
+    const located = place.every((part) => part !== undefined);
 
-      if (!located) {
-        throw new BadRequestException(
-          'A cheaper-nearby alert needs latitude, longitude and radiusKm',
-        );
-      }
+    if (command.type === 'CHEAPER_NEARBY' && !located) {
+      throw new BadRequestException(
+        'A cheaper-nearby alert needs latitude, longitude and radiusKm',
+      );
+    }
+
+    // A place is all three or none: half of one cannot be measured from.
+    if (!located && place.some((part) => part !== undefined)) {
+      throw new BadRequestException(
+        'latitude, longitude and radiusKm must be given together',
+      );
     }
   }
 }

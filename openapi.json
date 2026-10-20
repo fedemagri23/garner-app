@@ -6245,6 +6245,11 @@
           "radiusKm": {
             "type": "number",
             "maximum": 50
+          },
+          "currency": {
+            "type": "string",
+            "example": "ARS",
+            "description": "What thresholdCents is in. Prices in another currency never match; omitted, any does"
           }
         },
         "required": [
@@ -6301,6 +6306,12 @@
             "type": "number",
             "nullable": true
           },
+          "currency": {
+            "type": "string",
+            "nullable": true,
+            "example": "ARS",
+            "description": "What thresholdCents is in; null on alerts made before it was recorded"
+          },
           "isEnabled": {
             "type": "boolean"
           },
@@ -6325,6 +6336,7 @@
           "thresholdCents",
           "dropPercent",
           "radiusKm",
+          "currency",
           "isEnabled",
           "lastTriggeredAt",
           "createdAt"

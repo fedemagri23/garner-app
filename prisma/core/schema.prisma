@@ -507,10 +507,15 @@ model PriceAlert {
   thresholdCents Int?
   /// PRICE_DROP: how much of a fall is worth a message, in percent.
   dropPercent    Int?
-  /// CHEAPER_NEARBY: where "nearby" is measured from.
+  /// Where "nearby" is measured from. Required for CHEAPER_NEARBY; any alert
+  /// that has a place and a radius only hears about stores inside it.
   latitude       Float?
   longitude      Float?
   radiusKm       Float?
+  /// What the figures are in. Prices in another currency never match, since
+  /// 1.150 pesos and 1,15 euros are both "115" cents to a comparison. Null on
+  /// alerts made before this existed: they match any currency, as they did.
+  currency       String?        @db.Char(3)
 
   isEnabled              Boolean   @default(true)
   /// When this alert last produced a notification, for throttling.

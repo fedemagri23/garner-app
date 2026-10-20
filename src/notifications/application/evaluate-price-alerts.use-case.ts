@@ -98,15 +98,21 @@ export class EvaluatePriceAlertsUseCase {
       return { examined: alerts.length, raised: 0 };
     }
 
-    // Everywhere else this product is priced, for judging "cheapest nearby".
+    // Everywhere else this product is priced, for judging "cheapest nearby" —
+    // with where each store is, since nearby is measured per alert.
     const elsewhere = (
       await this.prices.findForProduct(input.productId)
     ).filter((price) => price.storeId !== input.storeId);
+    const places = new Map(
+      (await this.stores.findManyByIds(elsewhere.map((price) => price.storeId))).map(
+        (place) => [place.id, place],
+      ),
+    );
 
     let raised = 0;
 
     for (const alert of alerts) {
-      if (await this.considerAlert(alert, input, store, product.name, elsewhere, now)) {
+      if (await this.considerAlert(alert, input, store, product.name, elsewhere, places, now)) {
         raised += 1;
       }
     }
@@ -125,7 +131,8 @@ export class EvaluatePriceAlertsUseCase {
     },
     store: { id: string; name: string; latitude: number; longitude: number; supermarket: { name: string } },
     productName: string,
-    elsewhere: { storeId: string; priceCents: number }[],
+    elsewhere: { storeId: string; priceCents: number; currency: string }[],
+    places: Map<string, { latitude: number; longitude: number }>,
     now: Date,
   ): Promise<boolean> {
     const preferences = await this.preferences.get(alert.ownerId);
@@ -140,7 +147,7 @@ export class EvaluatePriceAlertsUseCase {
 
     const change: PriceChange = {
       ...input,
-      ...this.nearbyContext(alert, store, elsewhere),
+      ...this.nearbyContext(alert, store, elsewhere, places, input.currency),
     };
 
     const decision = evaluateAlert(alert, change);
@@ -197,25 +204,37 @@ export class EvaluatePriceAlertsUseCase {
     return true;
   }
 
-  /** Distance and the best price elsewhere, for a CHEAPER_NEARBY alert. */
+  /**
+   * How far this store is from the alert's point, and the best price at the
+   * other stores that count as near it — inside the radius, and in the same
+   * currency, since a euro price says nothing about a peso one.
+   */
   private nearbyContext(
     alert: PriceAlert,
     store: { latitude: number; longitude: number },
-    elsewhere: { storeId: string; priceCents: number }[],
+    elsewhere: { storeId: string; priceCents: number; currency: string }[],
+    places: Map<string, { latitude: number; longitude: number }>,
+    currency: string | undefined,
   ): Pick<PriceChange, 'distanceKm' | 'bestOtherNearbyPriceCents'> {
     if (alert.latitude === null || alert.longitude === null) {
       return {};
     }
 
+    const point = { latitude: alert.latitude, longitude: alert.longitude };
+    const near = elsewhere.filter((price) => {
+      const place = places.get(price.storeId);
+
+      return (
+        place !== undefined &&
+        (currency === undefined || price.currency === currency) &&
+        (alert.radiusKm === null || haversineKm(point, place) <= alert.radiusKm)
+      );
+    });
+
     return {
-      distanceKm: haversineKm(
-        { latitude: alert.latitude, longitude: alert.longitude },
-        { latitude: store.latitude, longitude: store.longitude },
-      ),
+      distanceKm: haversineKm(point, store),
       bestOtherNearbyPriceCents:
-        elsewhere.length === 0
-          ? null
-          : Math.min(...elsewhere.map((price) => price.priceCents)),
+        near.length === 0 ? null : Math.min(...near.map((price) => price.priceCents)),
     };
   }
 }

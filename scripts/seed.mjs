@@ -460,12 +460,21 @@ async function main() {
     oil: '33333333-3333-4333-8333-333333333303',
   };
   const alerts = [
-    // Milk below $ 1.400 anywhere nearby.
-    { id: alertIds.milk, productId: products[0].id, type: 'BELOW_THRESHOLD', storeId: null, thresholdCents: 140000 },
+    // Milk below $ 1.400 within 5 km of the Obelisco.
+    {
+      id: alertIds.milk,
+      productId: products[0].id,
+      type: 'BELOW_THRESHOLD',
+      storeId: null,
+      thresholdCents: 140000,
+      currency: 'ARS',
+      ...HOME,
+      radiusKm: 5,
+    },
     // Water falling by 5% or more at Coto.
-    { id: alertIds.water, productId: products[5].id, type: 'PRICE_DROP', storeId: storeOrder[0].id, dropPercent: 5 },
+    { id: alertIds.water, productId: products[5].id, type: 'PRICE_DROP', storeId: storeOrder[0].id, dropPercent: 5, currency: 'ARS' },
     // Oil: whenever somewhere near the Obelisco becomes the cheapest.
-    { id: alertIds.oil, productId: products[3].id, type: 'CHEAPER_NEARBY', storeId: null, ...HOME, radiusKm: 5 },
+    { id: alertIds.oil, productId: products[3].id, type: 'CHEAPER_NEARBY', storeId: null, currency: 'ARS', ...HOME, radiusKm: 5 },
   ];
   for (const alert of alerts) {
     await core.priceAlert.upsert({

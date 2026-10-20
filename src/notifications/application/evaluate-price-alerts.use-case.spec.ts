@@ -24,6 +24,7 @@ const alert = (overrides: Partial<PriceAlert> = {}): PriceAlert => ({
   latitude: null,
   longitude: null,
   radiusKm: null,
+  currency: null,
   isEnabled: true,
   lastTriggeredAt: null,
   lastNotifiedPriceCents: null,
@@ -46,7 +47,7 @@ describe('EvaluatePriceAlertsUseCase', () => {
   let notifications: { create: jest.Mock };
   let jobs: jest.Mocked<NotificationJobs>;
   let prices: { findForProduct: jest.Mock };
-  let stores: { findById: jest.Mock };
+  let stores: { findById: jest.Mock; findManyByIds: jest.Mock };
   let products: { findById: jest.Mock };
   let preferences: { get: jest.Mock };
   let events: { publish: jest.Mock };
@@ -75,6 +76,10 @@ describe('EvaluatePriceAlertsUseCase', () => {
         longitude: -58.38,
         supermarket: { name: 'Coto' },
       }),
+      // Where the other stores are, for judging "nearby": all close by.
+      findManyByIds: jest.fn(async (ids: string[]) =>
+        ids.map((id) => ({ id, latitude: -34.61, longitude: -58.38 })),
+      ),
     };
     products = {
       findById: jest.fn().mockResolvedValue({ id: 'milk', name: 'Leche Entera 1L' }),
@@ -207,8 +212,8 @@ describe('EvaluatePriceAlertsUseCase', () => {
       }),
     ]);
     prices.findForProduct.mockResolvedValue([
-      { storeId: 'store-1', priceCents: 90 },
-      { storeId: 'store-2', priceCents: 150 },
+      { storeId: 'store-1', priceCents: 90, currency: 'ARS' },
+      { storeId: 'store-2', priceCents: 150, currency: 'ARS' },
     ]);
 
     await expect(useCase.execute(change, now)).resolves.toMatchObject({ raised: 1 });
@@ -226,9 +231,39 @@ describe('EvaluatePriceAlertsUseCase', () => {
       }),
     ]);
     prices.findForProduct.mockResolvedValue([
-      { storeId: 'store-2', priceCents: 50 },
+      { storeId: 'store-2', priceCents: 50, currency: 'ARS' },
     ]);
 
     await expect(useCase.execute(change, now)).resolves.toMatchObject({ raised: 0 });
+  });
+
+  it('does not count a cheaper price in another currency, nor one beyond the radius', async () => {
+    alerts.findEnabledForProduct.mockResolvedValue([
+      alert({
+        type: 'CHEAPER_NEARBY',
+        thresholdCents: null,
+        latitude: -34.6,
+        longitude: -58.38,
+        radiusKm: 5,
+      }),
+    ]);
+    prices.findForProduct.mockResolvedValue([
+      // 50 euro cents is not cheaper than 90 pesos, whatever the numbers say.
+      { storeId: 'store-vienna', priceCents: 50, currency: 'EUR' },
+      { storeId: 'store-far', priceCents: 60, currency: 'ARS' },
+      // The only comparable one: same currency, inside the radius.
+      { storeId: 'store-2', priceCents: 150, currency: 'ARS' },
+    ]);
+    stores.findManyByIds.mockImplementation(async (ids: string[]) =>
+      ids.map((id) =>
+        id === 'store-far'
+          ? { id, latitude: -34.9, longitude: -57.95 }
+          : { id, latitude: -34.61, longitude: -58.38 },
+      ),
+    );
+
+    await expect(
+      useCase.execute({ ...change, currency: 'ARS' }, now),
+    ).resolves.toMatchObject({ raised: 1 });
   });
 });

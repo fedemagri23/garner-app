@@ -142,3 +142,9 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Symptom:** For "Compra semanal" near the Obelisco with a 5 km limit, `rejectedCheaperAlternatives` held the same Día-only plan three times.
 - **Cause:** Every combination containing Día — {Día}, {Día, Coto}, {Día, Carrefour} — assigns all products to Día and drops the unused store, so they produce identical plans, and the rejected list kept them all.
 - **Fix:** Rejected plans are de-duplicated by the stores they actually visit, keeping the cheapest; a regression test covers it.
+
+### BUG-022 — Alerts compared prices across currencies and across the world
+- **Phase:** post-plan (mobile phase 6) · **Area:** notifications · **Scope:** production code · **Found by:** reading the alert rules before building the app's alert screens, with the Vienna demo stores in the data · **Fixed in:** pending
+- **Symptom:** Not reported by anyone, but a "below $ 1.400" alert (140000 cents) not tied to a store would have fired on a Vienna price of € 1,15 (115 cents) — and on any store anywhere, since only CHEAPER_NEARBY alerts had a place. "Cheapest nearby" also compared against the cheapest price at every other store in the system, so a 115-cent euro price meant no peso price could ever be the cheapest.
+- **Cause:** An alert stored its figures without a currency, and only CHEAPER_NEARBY used its place; the comparison for "nearby" took the minimum over all other stores, with no regard for distance or currency. Every store had been in Argentina until the Vienna demo data.
+- **Fix:** Alerts carry a `currency` (optional; absent means any, as before), and any alert with a place and radius only hears about stores inside it; "cheapest nearby" looks only at other stores in the same currency and inside the radius. A place is all of latitude, longitude and radius, or none. Unit and e2e tests cover a euro price against a peso alert, and a store outside the radius.

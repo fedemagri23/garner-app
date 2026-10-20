@@ -35,6 +35,8 @@ export interface PriceAlert {
   latitude: number | null;
   longitude: number | null;
   radiusKm: number | null;
+  /** What the figures are in; null on alerts made before it was recorded. */
+  currency: string | null;
   isEnabled: boolean;
   lastTriggeredAt: Date | null;
   lastNotifiedPriceCents: number | null;

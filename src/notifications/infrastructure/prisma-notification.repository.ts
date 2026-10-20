@@ -112,6 +112,7 @@ export class PrismaPriceAlertRepository implements PriceAlertRepository {
       latitude: row.latitude,
       longitude: row.longitude,
       radiusKm: row.radiusKm,
+      currency: row.currency,
       isEnabled: row.isEnabled,
       lastTriggeredAt: row.lastTriggeredAt,
       lastNotifiedPriceCents: row.lastNotifiedPriceCents,

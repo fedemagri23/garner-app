@@ -171,6 +171,34 @@ describe('Price alerts and notifications (e2e)', () => {
         .expect(400);
     });
 
+    it('refuses half a place: latitude, longitude and radius come together', async () => {
+      await http()
+        .post('/v1/price-alerts')
+        .set(auth(shopper))
+        .send({ productId: milkId, type: 'BELOW_THRESHOLD', thresholdCents: 100, latitude: -34.6 })
+        .expect(400);
+    });
+
+    it('never fires on a price in another currency, nor on a store outside its radius', async () => {
+      // "Below $ 1.400" near the Obelisco, in pesos.
+      await createAlert({
+        type: 'BELOW_THRESHOLD',
+        thresholdCents: 140000,
+        currency: 'ARS',
+        latitude: -34.6037,
+        longitude: -58.3816,
+        radiusKm: 5,
+      });
+
+      // 115 euro cents is "below" 140000 — and is no news to a peso alert.
+      await evaluate.execute({ productId: milkId, storeId, priceCents: 115, previousPriceCents: 129, currency: 'EUR' });
+      expect((await inbox(shopper)).data).toHaveLength(0);
+
+      // A peso price at a store in range does fire.
+      await evaluate.execute({ productId: milkId, storeId, priceCents: 132000, previousPriceCents: 150000, currency: 'ARS' });
+      expect((await inbox(shopper)).data).toHaveLength(1);
+    });
+
     it('refuses an alert on a product that does not exist', async () => {
       await http()
         .post('/v1/price-alerts')

@@ -8,6 +8,7 @@ import {
   IsLongitude,
   IsNumber,
   IsOptional,
+  Matches,
   IsPositive,
   IsUUID,
   Max,
@@ -44,6 +45,13 @@ export class PriceAlertResponse {
   @ApiProperty({ type: Number, nullable: true }) thresholdCents!: number | null;
   @ApiProperty({ type: Number, nullable: true }) dropPercent!: number | null;
   @ApiProperty({ type: Number, nullable: true }) radiusKm!: number | null;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    example: 'ARS',
+    description: 'What thresholdCents is in; null on alerts made before it was recorded',
+  })
+  currency!: string | null;
   @ApiProperty() isEnabled!: boolean;
   @ApiProperty({ type: String, format: 'date-time', nullable: true })
   lastTriggeredAt!: string | null;
@@ -61,6 +69,7 @@ export class PriceAlertResponse {
       thresholdCents: alert.thresholdCents,
       dropPercent: alert.dropPercent,
       radiusKm: alert.radiusKm,
+      currency: alert.currency,
       isEnabled: alert.isEnabled,
       lastTriggeredAt: alert.lastTriggeredAt?.toISOString() ?? null,
       createdAt: alert.createdAt.toISOString(),
@@ -177,6 +186,15 @@ export class CreatePriceAlertRequest {
   @IsPositive()
   @Max(50)
   radiusKm?: number;
+
+  @ApiPropertyOptional({
+    example: 'ARS',
+    description:
+      'What thresholdCents is in. Prices in another currency never match; omitted, any does',
+  })
+  @IsOptional()
+  @Matches(/^[A-Z]{3}$/, { message: 'currency must be an ISO 4217 code' })
+  currency?: string;
 }
 
 export class UpdatePriceAlertRequest {
