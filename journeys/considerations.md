@@ -300,3 +300,9 @@ Notation: [`README.md`](README.md).
 - **What:** `POST /v1/shopping-sessions` takes an optional `optimizationId` (and `mode`, else the plan's recommendation). Each line then takes the store and unit price that plan chose, and lines are ordered by stop; products the plan could not place keep the list's store and price and come last. The plan must be the shopper's, finished, and for the same list; `storeId` and `optimizationId` together are refused.
 - **Why:** A trip already had a store per line, but the only ways to fill it were one store for everything or what each list item had been pencilled in for. Copying the plan into the trip keeps the trip a record of what was planned when the shopper walked in, even if the plan or prices change afterwards, and avoids writing a plan's choices back into the list.
 - **Revisit when:** Shoppers want to move a line to another store mid-trip — `RecordItemProgressRequest` has no store field yet.
+
+### CON-047 — A contribution names its product and store when read
+- **Phase:** post-plan (mobile phase 5) · **Area:** contributions · **Status:** accepted
+- **What:** `GET /v1/price-observations/mine` and `POST /v1/price-observations` now return `productName`, `storeName` and `supermarketName` with each contribution, looked up when the answer is built (two queries for a whole page). Nothing about the stored report changes.
+- **Why:** A history screen needs to say what was reported where; ids alone would cost the app two requests per row. Reading names live follows the rule plans already use: a renamed store reads correctly, and the price stays as it was reported. A deleted product or store reads "Unknown …".
+- **Revisit when:** Names need to be as they were when the price was reported — then snapshot them on the observation.

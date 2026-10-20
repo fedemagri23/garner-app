@@ -5790,6 +5790,15 @@
             "type": "string",
             "format": "uuid"
           },
+          "productName": {
+            "type": "string"
+          },
+          "storeName": {
+            "type": "string"
+          },
+          "supermarketName": {
+            "type": "string"
+          },
           "priceCents": {
             "type": "number",
             "description": "Price of one unit, in minor units (cents)"
@@ -5836,6 +5845,9 @@
           "id",
           "productId",
           "storeId",
+          "productName",
+          "storeName",
+          "supermarketName",
           "priceCents",
           "currency",
           "observedAt",

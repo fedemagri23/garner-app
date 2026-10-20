@@ -25,6 +25,7 @@ import type { Request } from 'express';
 import { paginate } from '../../common/http/pagination.js';
 import type { AuthenticatedUser } from '../../security/domain/authenticated-user.js';
 import { CurrentUser } from '../../security/presentation/current-user.decorator.js';
+import { ContributionNamesLoader } from '../application/contribution-names.js';
 import { ListMyContributionsUseCase } from '../application/list-my-contributions.use-case.js';
 import { ReportPriceUseCase } from '../application/report-price.use-case.js';
 import { MAX_EVIDENCE_BYTES } from '../domain/evidence.js';
@@ -49,6 +50,7 @@ export class ContributionsController {
   constructor(
     private readonly reportPrice: ReportPriceUseCase,
     private readonly listContributions: ListMyContributionsUseCase,
+    private readonly names: ContributionNamesLoader,
   ) {}
 
   @Post('price-observations')
@@ -70,7 +72,8 @@ export class ContributionsController {
       request.ip ?? null,
     );
 
-    return ContributionResponse.from(observation);
+    const namesOf = await this.names.forObservations([observation]);
+    return ContributionResponse.from(observation, namesOf(observation));
   }
 
   @Get('price-observations/mine')
@@ -85,8 +88,12 @@ export class ContributionsController {
       { skip: query.skip, take: query.take },
     );
 
+    const namesOf = await this.names.forObservations(observations);
+
     return paginate(
-      observations.map(ContributionResponse.from),
+      observations.map((observation) =>
+        ContributionResponse.from(observation, namesOf(observation)),
+      ),
       totalItems,
       query,
     );

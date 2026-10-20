@@ -360,6 +360,22 @@ describe('Price contributions (e2e)', () => {
       const times = mine.body.data.map((row: { receivedAt: string }) => Date.parse(row.receivedAt));
       expect([...times].sort((a, b) => b - a)).toEqual(times);
     });
+
+    it('names the product, store and chain on each row, and on a new report', async () => {
+      const mine = await http()
+        .get('/v1/price-observations/mine?pageSize=100')
+        .set(auth(newcomer))
+        .expect(200);
+
+      expect(mine.body.data[0]).toMatchObject({
+        productName: expect.any(String),
+        storeName: expect.any(String),
+        supermarketName: 'Jumbo',
+      });
+      const aguaRows = mine.body.data.filter((row: { productId: string }) => row.productId === productId);
+      expect(aguaRows.length).toBeGreaterThan(0);
+      expect(aguaRows[0]).toMatchObject({ productName: 'Agua Mineral 2L', storeName: 'Jumbo Belgrano' });
+    });
   });
 
   describe('shopping-trip contributions', () => {

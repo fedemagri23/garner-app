@@ -13,6 +13,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
+import type { ContributionNames } from '../application/contribution-names.js';
 import type {
   PriceObservation,
   PriceObservationStatus,
@@ -44,6 +45,9 @@ export class ContributionResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) productId!: string;
   @ApiProperty({ format: 'uuid' }) storeId!: string;
+  @ApiProperty() productName!: string;
+  @ApiProperty() storeName!: string;
+  @ApiProperty() supermarketName!: string;
   @ApiProperty({ description: 'Price of one unit, in minor units (cents)' })
   priceCents!: number;
   @ApiProperty({ example: 'ARS' }) currency!: string;
@@ -59,11 +63,15 @@ export class ContributionResponse {
   @ApiProperty() hasPhotoEvidence!: boolean;
   @ApiProperty({ type: String, nullable: true }) note!: string | null;
 
-  static from(observation: PriceObservation): ContributionResponse {
+  static from(
+    observation: PriceObservation,
+    names: ContributionNames,
+  ): ContributionResponse {
     return {
       id: observation.id,
       productId: observation.productId,
       storeId: observation.storeId,
+      ...names,
       priceCents: observation.priceCents,
       currency: observation.currency,
       observedAt: observation.observedAt.toISOString(),

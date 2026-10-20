@@ -2,6 +2,9 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { AppConfigService } from '../common/config/app-config.service.js';
 import { PricingModule } from '../pricing/pricing.module.js';
+import { ProductsModule } from '../products/products.module.js';
+import { SupermarketsModule } from '../supermarkets/supermarkets.module.js';
+import { ContributionNamesLoader } from './application/contribution-names.js';
 import { ShoppingSessionsModule } from '../shopping-sessions/shopping-sessions.module.js';
 import { ListMyContributionsUseCase } from './application/list-my-contributions.use-case.js';
 import { ReconcileSessionContributionsUseCase } from './application/reconcile-session-contributions.use-case.js';
@@ -35,6 +38,8 @@ import { ContributionsController } from './presentation/contributions.controller
 @Module({
   imports: [
     PricingModule,
+    ProductsModule,
+    SupermarketsModule,
     ShoppingSessionsModule,
     BullModule.registerQueue({ name: CONTRIBUTIONS_QUEUE }),
   ],
@@ -42,6 +47,7 @@ import { ContributionsController } from './presentation/contributions.controller
   providers: [
     ReportPriceUseCase,
     ListMyContributionsUseCase,
+    ContributionNamesLoader,
     RecordSessionPurchasesUseCase,
     ReconcileSessionContributionsUseCase,
     SessionCompletedListener,
