@@ -358,7 +358,9 @@ async function main() {
       // product index, [Coto, Carrefour, Día]
       [0, [149000, 139000, 132000]],
       [1, [128000, 119000, 115000]],
-      [2, [185000, 179000, 168000]],
+      // Rice is cheapest at Coto, so the cheapest plan nearby splits the list
+      // between Coto and Carrefour: a trip with two stops.
+      [2, [165000, 179000, 168000]],
       [3, [242000, 235000, 219000]],
       [4, [162000, 158000, 149000]],
       [5, [98000, 94000, 89000]],
