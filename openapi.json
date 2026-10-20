@@ -5705,6 +5705,21 @@
           "longitude"
         ]
       },
+      "OriginResponse": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ]
+      },
       "PlanAssignmentResponse": {
         "type": "object",
         "properties": {
@@ -5751,6 +5766,19 @@
           "supermarketName": {
             "type": "string"
           },
+          "addressLine": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null if the store was deleted"
+          },
+          "latitude": {
+            "type": "number",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "nullable": true
+          },
           "items": {
             "type": "array",
             "items": {
@@ -5767,6 +5795,9 @@
           "storeId",
           "storeName",
           "supermarketName",
+          "addressLine",
+          "latitude",
+          "longitude",
           "items",
           "subtotalCents"
         ]
@@ -5897,6 +5928,12 @@
           },
           "consideredCombinationCount": {
             "type": "number"
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true,
+            "example": "ARS",
+            "description": "What every amount is in: the list's currency. Null on old results"
           }
         },
         "required": [
@@ -5907,7 +5944,8 @@
           "rejectedCheaperAlternatives",
           "unavailableProducts",
           "consideredStoreCount",
-          "consideredCombinationCount"
+          "consideredCombinationCount",
+          "currency"
         ]
       },
       "OptimizationResponse": {
@@ -5952,6 +5990,14 @@
             "type": "string",
             "nullable": true
           },
+          "origin": {
+            "description": "Where the trip starts and ends: the point the plans were computed from",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OriginResponse"
+              }
+            ]
+          },
           "result": {
             "nullable": true,
             "type": "object",
@@ -5970,6 +6016,7 @@
           "requestedAt",
           "completedAt",
           "error",
+          "origin",
           "result"
         ]
       },

@@ -134,9 +134,13 @@ export class RunOptimizationUseCase {
       quantity: item.quantity,
     }));
 
-    const stores = await this.candidateStores(request, items.map((item) => item.productId));
+    const stores = await this.candidateStores(
+      request,
+      items.map((item) => item.productId),
+      list.currency,
+    );
 
-    const result = optimize({
+    const computed = optimize({
       items,
       stores,
       home: {
@@ -145,6 +149,7 @@ export class RunOptimizationUseCase {
       },
       constraints: request.settings,
     });
+    const result = { ...computed, currency: list.currency };
 
     const recommended = result[modeKey(request)];
 
@@ -159,10 +164,15 @@ export class RunOptimizationUseCase {
    * The stores within reach, each with what it charges for the list. A store
    * with no price for anything on the list is dropped here rather than
    * multiplying the combinations the optimizer walks.
+   *
+   * Only prices in the list's currency count: a peso list optimized in Vienna
+   * must not add up euro cents as if they were pesos — there, it finds
+   * nothing to buy.
    */
   private async candidateStores(
     request: OptimizationRequest,
     productIds: string[],
+    currency: string,
   ): Promise<CandidateStore[]> {
     const home = {
       latitude: request.settings.latitude,
@@ -192,6 +202,10 @@ export class RunOptimizationUseCase {
     const pricesByStore = new Map<string, Map<string, number>>();
 
     for (const price of prices) {
+      if (price.currency !== currency) {
+        continue;
+      }
+
       const forStore = pricesByStore.get(price.storeId) ?? new Map();
       forStore.set(price.productId, price.priceCents);
       pricesByStore.set(price.storeId, forStore);

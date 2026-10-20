@@ -71,6 +71,7 @@ describe('RunOptimizationUseCase', () => {
   const list: ShoppingList = {
     id: 'list-1',
     ownerId: 'user-1',
+    currency: 'ARS',
     items: [
       { productId: 'milk', quantity: 1 },
       { productId: 'bread', quantity: 2 },
@@ -134,6 +135,24 @@ describe('RunOptimizationUseCase', () => {
     // Milk at 100 from a, two bread at 100 from b.
     expect(stored.recommendedTotalCents).toBe(300);
     expect(stored.result.cheapest.stores).toHaveLength(2);
+  });
+
+  it('only counts prices in the list\'s currency, and records it', async () => {
+    lists.findById.mockResolvedValue({ ...list, currency: 'ARS' });
+    prices.findForProductsAtStores.mockResolvedValue([
+      price('milk', 'a', 100),
+      price('bread', 'a', 300),
+      // Store b prices in euros: cents, but not peso cents.
+      { productId: 'milk', storeId: 'b', priceCents: 1, currency: 'EUR' } as DerivedPrice,
+      { productId: 'bread', storeId: 'b', priceCents: 1, currency: 'EUR' } as DerivedPrice,
+    ]);
+
+    await useCase.execute('request-1');
+
+    const stored = requests.complete.mock.calls[0][1];
+    expect(stored.result.currency).toBe('ARS');
+    expect(stored.result.cheapest.stores.map((s: { storeId: string }) => s.storeId)).toEqual(['a']);
+    expect(stored.recommendedTotalCents).toBe(700);
   });
 
   it('reads prices in one query for the whole list', async () => {

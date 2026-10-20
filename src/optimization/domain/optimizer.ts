@@ -50,6 +50,11 @@ export interface OptimizationResult {
   unavailableProductIds: string[];
   consideredStoreCount: number;
   consideredCombinationCount: number;
+  /**
+   * What every amount is in — the list's currency, the only one whose prices
+   * were considered. Absent on results stored before it was recorded.
+   */
+  currency?: string;
 }
 
 /**

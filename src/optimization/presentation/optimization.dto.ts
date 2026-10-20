@@ -37,12 +37,21 @@ class Names {
     private readonly products: Map<string, Product>,
   ) {}
 
-  store(id: string): { name: string; supermarketName: string } {
+  store(id: string): {
+    name: string;
+    supermarketName: string;
+    addressLine: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  } {
     const store = this.stores.get(id);
 
     return {
       name: store?.name ?? 'Unknown store',
       supermarketName: store?.supermarket.name ?? 'Unknown supermarket',
+      addressLine: store?.addressLine ?? null,
+      latitude: store?.latitude ?? null,
+      longitude: store?.longitude ?? null,
     };
   }
 
@@ -65,6 +74,10 @@ export class PlanStoreResponse {
   @ApiProperty({ format: 'uuid' }) storeId!: string;
   @ApiProperty() storeName!: string;
   @ApiProperty() supermarketName!: string;
+  @ApiProperty({ type: String, nullable: true, description: 'Null if the store was deleted' })
+  addressLine!: string | null;
+  @ApiProperty({ type: Number, nullable: true }) latitude!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) longitude!: number | null;
   @ApiProperty({ type: [PlanAssignmentResponse] })
   items!: PlanAssignmentResponse[];
   @ApiProperty({ description: 'Expected spending at this store' })
@@ -99,13 +112,18 @@ export class PlanResponse {
   }
 
   private static storeFrom(store: StorePlan, names: Names): PlanStoreResponse {
-    const { name, supermarketName } = names.store(store.storeId);
+    const { name, supermarketName, addressLine, latitude, longitude } = names.store(
+      store.storeId,
+    );
 
     return {
       order: store.order,
       storeId: store.storeId,
       storeName: name,
       supermarketName,
+      addressLine,
+      latitude,
+      longitude,
       subtotalCents: store.subtotalCents,
       items: store.assignments.map((assignment) => ({
         productId: assignment.productId,
@@ -148,6 +166,18 @@ export class OptimizationResultResponse {
   unavailableProducts!: string[];
   @ApiProperty() consideredStoreCount!: number;
   @ApiProperty() consideredCombinationCount!: number;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    example: 'ARS',
+    description: "What every amount is in: the list's currency. Null on old results",
+  })
+  currency!: string | null;
+}
+
+export class OriginResponse {
+  @ApiProperty() latitude!: number;
+  @ApiProperty() longitude!: number;
 }
 
 export class OptimizationResponse {
@@ -159,6 +189,11 @@ export class OptimizationResponse {
   @ApiProperty({ type: String, format: 'date-time', nullable: true })
   completedAt!: string | null;
   @ApiProperty({ type: String, nullable: true }) error!: string | null;
+  @ApiProperty({
+    type: OriginResponse,
+    description: 'Where the trip starts and ends: the point the plans were computed from',
+  })
+  origin!: OriginResponse;
   @ApiProperty({ type: OptimizationResultResponse, nullable: true })
   result!: OptimizationResultResponse | null;
 
@@ -174,6 +209,10 @@ export class OptimizationResponse {
       requestedAt: request.requestedAt.toISOString(),
       completedAt: request.completedAt?.toISOString() ?? null,
       error: request.error,
+      origin: {
+        latitude: request.settings.latitude,
+        longitude: request.settings.longitude,
+      },
       result: request.result
         ? {
             cheapest: plan(request.result.cheapest, names),
@@ -193,6 +232,7 @@ export class OptimizationResponse {
             consideredStoreCount: request.result.consideredStoreCount,
             consideredCombinationCount:
               request.result.consideredCombinationCount,
+            currency: request.result.currency ?? null,
           }
         : null,
     };

@@ -429,6 +429,28 @@ async function main() {
     ],
   });
 
+  // The same idea in euros, for planning a shop around Stephansplatz.
+  const viennaList = await core.shoppingList.upsert({
+    where: { id: '22222222-2222-4222-8222-222222222222' },
+    create: {
+      id: '22222222-2222-4222-8222-222222222222',
+      ownerId: shopper.id,
+      name: 'Compra en Viena',
+      currency: 'EUR',
+    },
+    update: { ownerId: shopper.id, name: 'Compra en Viena', currency: 'EUR' },
+  });
+
+  await core.shoppingListItem.deleteMany({ where: { listId: viennaList.id } });
+  await core.shoppingListItem.createMany({
+    data: [
+      { listId: viennaList.id, productId: products[0].id, quantity: 2, expectedUnitPriceCents: 115, position: 1000 },
+      { listId: viennaList.id, productId: products[1].id, quantity: 1, expectedUnitPriceCents: 199, position: 2000 },
+      { listId: viennaList.id, productId: products[3].id, quantity: 1, expectedUnitPriceCents: 279, position: 3000 },
+      { listId: viennaList.id, productId: products[5].id, quantity: 3, expectedUnitPriceCents: 59, position: 4000 },
+    ],
+  });
+
   console.log(`
 Seeded:
   users        admin@garner.test (ADMIN), shopper@garner.test (USER)
@@ -438,7 +460,7 @@ Seeded:
                ${viennaStores.length} around Stephansplatz, Vienna (Billa, Spar, Hofer, in EUR)
   prices       current price + 14 days of history per product/store
   price drops  ${drops.length} near the Obelisco, ${viennaDrops.length} near Stephansplatz
-  list         "Compra semanal" (4 items) owned by the shopper
+  lists        "Compra semanal" (4 items, ARS) and "Compra en Viena" (4 items, EUR), the shopper's
   home point   ${HOME.latitude}, ${HOME.longitude} (the shopper's saved location, "Centro")
   vienna point ${VIENNA.latitude}, ${VIENNA.longitude} (Stephansplatz)
 `);

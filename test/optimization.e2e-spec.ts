@@ -258,6 +258,40 @@ describe('Shopping optimization (e2e)', () => {
       expect(plan.travelMinutes).toBeGreaterThan(0);
     });
 
+    it('places each stop on the map, from where the trip starts, in the list\'s currency', async () => {
+      const result = await optimize(listId, { mode: 'CHEAPEST', maxStores: 3 });
+
+      expect(result.origin).toEqual(HOME);
+      expect(result.result.currency).toBe('ARS');
+      for (const stop of result.result.cheapest.stores) {
+        expect(typeof stop.latitude).toBe('number');
+        expect(typeof stop.longitude).toBe('number');
+        expect(typeof stop.addressLine).toBe('string');
+      }
+    });
+
+    it('never prices a list with another currency\'s prices', async () => {
+      const euros = await http()
+        .post('/v1/shopping-lists')
+        .set(auth(shopper))
+        .send({ name: `Einkauf ${randomUUID()}`, currency: 'EUR' })
+        .expect(201);
+      for (const productId of [milkId, breadId]) {
+        await http()
+          .post(`/v1/shopping-lists/${euros.body.id}/items`)
+          .set(auth(shopper))
+          .send({ productId, quantity: 1 })
+          .expect(201);
+      }
+
+      // Every store here prices in pesos: a euro list finds nothing to buy.
+      const result = await optimize(euros.body.id, { mode: 'CHEAPEST', maxStores: 3 });
+
+      expect(result.result.currency).toBe('EUR');
+      expect(result.result.cheapest).toBeNull();
+      expect(result.result.unavailableProducts).toHaveLength(2);
+    });
+
     it('offers all three alternatives, simplest being one store', async () => {
       const { result } = await optimize(listId, { maxStores: 3 });
 

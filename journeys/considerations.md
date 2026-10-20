@@ -283,7 +283,14 @@ Notation: [`README.md`](README.md).
 - **Revisit when:** A neighbourhood has more than 500 drops in a week, so the cap starts cutting real ones — rank in SQL by `(previous - price) / previous` instead; or the home screen's traffic makes the read worth caching like the comparison is.
 
 ### CON-044 — Optimization does not look at currencies yet
-- **Phase:** post-plan · **Area:** optimization · **Status:** deferred
+- **Phase:** post-plan · **Area:** optimization · **Status:** resolved
 - **What:** A shopping list has one currency, fixed at creation, and optimization sums the derived prices of the candidate stores near the shopper without checking theirs. Near the Obelisco every store is in pesos and near Stephansplatz every store is in euros, so a run is consistent within a city — but a peso list optimized in Vienna reports euro cents as pesos.
 - **Why:** Until now every store was in Argentina. The seed now has a Vienna neighbourhood for the developer, and fixing lists belongs with the app's lists phase rather than ahead of it.
 - **Revisit when:** The app's phase 3 (lists and where to buy). Candidate stores should be those pricing in the list's currency, and creating a list should default its currency from where the shopper is.
+- **Resolved:** in the commit that introduced it, for the app's checkpoint 5 — candidate stores only count prices in the list's currency, and every result records that currency. A peso list in Vienna now finds nothing to buy instead of a wrong total. Defaulting a new list's currency to where the shopper is lives in the app (garner-mobile MBUG-007).
+
+### CON-045 — An optimization answer carries what a map needs
+- **Phase:** post-plan (mobile checkpoint 5) · **Area:** optimization · **Status:** accepted
+- **What:** `GET /v1/optimizations/{id}` now returns the `origin` the plans were computed from, each stop's coordinates and address, and the result's `currency`. Coordinates and addresses are read when the answer is read, like names; prices and assignments stay as computed.
+- **Why:** The app draws the trip on a map and needs the stops' positions; reading them live keeps a moved or renamed store correct, the same rule names already follow. A stop whose store was deleted has null coordinates and is left off the map.
+- **Revisit when:** Stores move often enough that a plan's route no longer matches its stored travel times — then snapshot the coordinates with the plan.
