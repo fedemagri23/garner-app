@@ -202,6 +202,24 @@ describe('optimize', () => {
       expect(result.rejectedCheaperAlternatives[0].violations).toContain('TOO_FAR');
     });
 
+    it('lists a refused plan once, however many combinations lead to it', () => {
+      // Distant is cheapest for everything, so {distant}, {distant, near} and
+      // {distant, other} all come down to shopping at distant alone.
+      const result = run({
+        stores: [
+          storeAt('near', 'chain-a', 0.5, { milk: 200, bread: 200 }),
+          storeAt('other', 'chain-c', 0.8, { milk: 210, bread: 210 }),
+          storeAt('distant', 'chain-b', 30, { milk: 10, bread: 10 }),
+        ],
+        constraints: constraints({ maxAdditionalDistanceKm: 2 }),
+      });
+
+      const visited = result.rejectedCheaperAlternatives.map((rejected) =>
+        rejected.plan.stores.map((store) => store.storeId).join(','),
+      );
+      expect(visited.filter((stores) => stores === 'distant')).toHaveLength(1);
+    });
+
     it('will not add a stop that does not save enough to be worth it', () => {
       const result = run({
         // Splitting saves 10 cents: real, but not worth a second shop.

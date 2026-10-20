@@ -199,11 +199,25 @@ function collectRejected(
         !satisfies(plan, constraints, baseline),
     )
     .sort(comparePlans(OptimizationMode.Cheapest))
+    // Combinations that end up using the same stores are the same plan: a
+    // pair whose second store gets nothing is the single-store plan again.
+    .filter(
+      (plan, index, sorted) =>
+        sorted.findIndex((other) => visitKey(other) === visitKey(plan)) === index,
+    )
     .slice(0, 3)
     .map((plan) => ({
       plan,
       violations: violationsOf(plan, constraints, baseline),
     }));
+}
+
+/** The stores a plan actually visits, as one comparable key. */
+function visitKey(plan: Plan): string {
+  return plan.stores
+    .map((store) => store.storeId)
+    .sort()
+    .join(',');
 }
 
 /** Every combination of `size` stores, in a stable order. */

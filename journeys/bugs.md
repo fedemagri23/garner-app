@@ -136,3 +136,9 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Symptom:** The product-wide history of a product priced in Buenos Aires and Vienna merged 1.390 pesos (139000 cents) and 1,39 euros (139 cents) into one daily "average" in neither currency.
 - **Cause:** `mergeByDate` weighed every store's day together, and history points did not carry their currency.
 - **Fix:** Points carry their currency; the history keeps one — the requested `currency`, else the one with the most observations — and says which in the response.
+
+### BUG-021 — A refused cheaper plan was listed once per combination that led to it
+- **Phase:** post-plan (mobile checkpoint 5) · **Area:** optimization · **Scope:** production code · **Found by:** checking the app's plan screen against the API · **Fixed in:** this commit
+- **Symptom:** For "Compra semanal" near the Obelisco with a 5 km limit, `rejectedCheaperAlternatives` held the same Día-only plan three times.
+- **Cause:** Every combination containing Día — {Día}, {Día, Coto}, {Día, Carrefour} — assigns all products to Día and drops the unused store, so they produce identical plans, and the rejected list kept them all.
+- **Fix:** Rejected plans are de-duplicated by the stores they actually visit, keeping the cheapest; a regression test covers it.
