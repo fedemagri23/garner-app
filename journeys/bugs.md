@@ -126,13 +126,13 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Fix:** Every nullable property names its type (`type: String` / `Number`, with `format: 'date-time'` for timestamps). The OpenAPI integration test now fails on any free-form object field other than a price source's adapter `config`.
 
 ### BUG-019 — "Open now" was read on the server's clock
-- **Phase:** post-plan · **Area:** supermarkets · **Scope:** production code · **Found by:** adding Vienna stores to the seed · **Fixed in:** this commit
+- **Phase:** post-plan · **Area:** supermarkets · **Scope:** production code · **Found by:** adding Vienna stores to the seed · **Fixed in:** f8d1c01
 - **Symptom:** A Vienna store open 07:30–20:00 would read as open at 21:30 Vienna time, because 21:30 there is 16:30 in Buenos Aires. Buenos Aires stores were wrong too on any server not running on Argentine time — 3 hours off on a UTC container, which is what CI and most deploys use.
 - **Cause:** `isOpenAt` read `Date#getDay` and `getHours` in the runtime's local zone. The per-store zone the code comment promised for phase 6 was never added.
 - **Fix:** Stores have a `timeZone` (IANA, default `America/Argentina/Buenos_Aires`, validated on create and returned by the API), and `isOpenAt` reads the weekday and time on that zone's clock with `Intl.DateTimeFormat`.
 
 ### BUG-020 — A product's history averaged pesos with euros
-- **Phase:** post-plan · **Area:** price-intelligence · **Scope:** production code · **Found by:** adding Vienna stores to the seed · **Fixed in:** this commit
+- **Phase:** post-plan · **Area:** price-intelligence · **Scope:** production code · **Found by:** adding Vienna stores to the seed · **Fixed in:** f8d1c01
 - **Symptom:** The product-wide history of a product priced in Buenos Aires and Vienna merged 1.390 pesos (139000 cents) and 1,39 euros (139 cents) into one daily "average" in neither currency.
 - **Cause:** `mergeByDate` weighed every store's day together, and history points did not carry their currency.
 - **Fix:** Points carry their currency; the history keeps one — the requested `currency`, else the one with the most observations — and says which in the response.
