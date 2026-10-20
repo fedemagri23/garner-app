@@ -7,6 +7,33 @@ datasource db {
   provider = "postgresql"
 }
 
+/// Who an entry in the catalog comes from. The team's are the reference;
+/// shoppers' are visible but ranked by how much other people stand behind them.
+enum CatalogOrigin {
+  VERIFIED
+  COMMUNITY
+}
+
+/// Where an entry stands in moderation. Only ACTIVE ones show in search.
+enum ModerationStatus {
+  ACTIVE
+  UNDER_REVIEW
+  HIDDEN
+  MERGED
+}
+
+enum FlagTarget {
+  PRODUCT
+  STORE
+}
+
+enum FlagReason {
+  DUPLICATE
+  WRONG_INFO
+  NOT_EXIST
+  INAPPROPRIATE
+}
+
 enum UserRole {
   USER
   MODERATOR
@@ -35,6 +62,12 @@ model User {
   notificationPreferences NotificationPreferences?
   notifications           Notification[]
   deviceTokens            DeviceToken[]
+  createdProducts         Product[]                @relation("ProductCreator")
+  createdStores           StoreLocation[]          @relation("StoreCreator")
+  createdChains           Supermarket[]            @relation("ChainCreator")
+  productConfirmations    ProductConfirmation[]
+  contentFlags            ContentFlag[]
+  storePriceContributions StorePriceContributor[]
 
   @@map("users")
 }
@@ -140,26 +173,40 @@ model Brand {
 ///    separately purchasable and separately priced. That keeps every price
 ///    observation a plain reference to a product id.
 model Product {
-  id             String        @id @default(uuid()) @db.Uuid
-  name           String
+  id                String           @id @default(uuid()) @db.Uuid
+  name              String
   /// Lower-cased, accent-stripped, space-collapsed `name`. Written by the
   /// domain, matched against by search, and the key product matching will use
   /// when external sources are imported in phase 6.
-  normalizedName String
-  description    String?
-  brandId        String?       @db.Uuid
-  categoryId     String        @db.Uuid
+  normalizedName    String
+  description       String?
+  brandId           String?          @db.Uuid
+  categoryId        String           @db.Uuid
   /// Package size in `unit`, e.g. 1 with LITER, or 500 with GRAM.
-  packageSize    Decimal?      @db.Decimal(12, 3)
-  unit           UnitOfMeasure @default(UNIT)
-  imageUrl       String?
-  isActive       Boolean       @default(true)
-  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
-  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+  packageSize       Decimal?         @db.Decimal(12, 3)
+  unit              UnitOfMeasure    @default(UNIT)
+  imageUrl          String?
+  isActive          Boolean          @default(true)
+  /// Who it comes from; every entry that predates shoppers adding their own is the team's.
+  origin            CatalogOrigin    @default(VERIFIED)
+  /// The shopper who added it; null for the team's. Dropped if the account is deleted, the entry stays.
+  createdById       String?          @db.Uuid
+  moderationStatus  ModerationStatus @default(ACTIVE)
+  /// For a MERGED entry, the one it became, so old ids still resolve.
+  mergedIntoId      String?          @db.Uuid
+  /// Ranking among equal text matches, derived from confirmations, price updates and flags (`rankingWeight`).
+  weight            Int              @default(0)
+  confirmationCount Int              @default(0)
+  flagCount         Int              @default(0)
+  lastActivityAt    DateTime?        @db.Timestamptz(3)
+  createdAt         DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime         @updatedAt @db.Timestamptz(3)
 
-  brand    Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
-  category Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  barcodes ProductBarcode[]
+  createdBy     User?                 @relation("ProductCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  confirmations ProductConfirmation[]
+  brand         Brand?                @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  category      Category              @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  barcodes      ProductBarcode[]
 
   shoppingListItems    ShoppingListItem[]
   shoppingSessionItems ShoppingSessionItem[]
@@ -168,6 +215,8 @@ model Product {
   @@index([categoryId])
   @@index([brandId])
   @@index([isActive])
+  @@index([origin, moderationStatus, weight])
+  @@index([createdById, createdAt])
   @@map("products")
 }
 
@@ -190,16 +239,20 @@ model ProductBarcode {
 
 /// A chain or merchant — "Carrefour", not a particular branch of it.
 model Supermarket {
-  id         String   @id @default(uuid()) @db.Uuid
-  name       String
-  slug       String   @unique
-  logoUrl    String?
-  websiteUrl String?
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt  DateTime @updatedAt @db.Timestamptz(3)
+  id               String           @id @default(uuid()) @db.Uuid
+  name             String
+  slug             String           @unique
+  logoUrl          String?
+  websiteUrl       String?
+  isActive         Boolean          @default(true)
+  origin           CatalogOrigin    @default(VERIFIED)
+  createdById      String?          @db.Uuid
+  moderationStatus ModerationStatus @default(ACTIVE)
+  createdAt        DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime         @updatedAt @db.Timestamptz(3)
 
-  stores StoreLocation[]
+  createdBy User?           @relation("ChainCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  stores    StoreLocation[]
 
   @@map("supermarkets")
 }
@@ -207,26 +260,40 @@ model Supermarket {
 /// A physical branch of a supermarket: where a price is actually paid, and the
 /// unit optimization routes a shopper between.
 model StoreLocation {
-  id            String   @id @default(uuid()) @db.Uuid
-  supermarketId String   @db.Uuid
-  name          String
-  addressLine   String
-  city          String
-  province      String?
-  postalCode    String?
-  country       String
-  latitude      Float
-  longitude     Float
-  phone         String?
+  id                 String           @id @default(uuid()) @db.Uuid
+  supermarketId      String           @db.Uuid
+  name               String
+  addressLine        String
+  city               String
+  province           String?
+  postalCode         String?
+  country            String
+  latitude           Float
+  longitude          Float
+  phone              String?
   /// IANA zone the opening hours are written in: 21:00 is a wall-clock time
   /// in a place, and "open now" has to read the clock of that place.
-  timeZone      String   @default("America/Argentina/Buenos_Aires")
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt     DateTime @updatedAt @db.Timestamptz(3)
+  timeZone           String           @default("America/Argentina/Buenos_Aires")
+  isActive           Boolean          @default(true)
+  origin             CatalogOrigin    @default(VERIFIED)
+  createdById        String?          @db.Uuid
+  moderationStatus   ModerationStatus @default(ACTIVE)
+  /// Distinct products, and distinct people other than the creator, with an accepted
+  /// price here. Kept in step with `StorePriceContributor`, and recounted nightly
+  /// because prices live in another database.
+  pricedProductCount Int              @default(0)
+  contributorCount   Int              @default(0)
+  /// When a shopper-added shop became visible to everyone; null while private.
+  /// The team's shops are published from the start.
+  publishedAt        DateTime?        @db.Timestamptz(3)
+  flagCount          Int              @default(0)
+  createdAt          DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime         @updatedAt @db.Timestamptz(3)
 
-  supermarket  Supermarket         @relation(fields: [supermarketId], references: [id], onDelete: Cascade)
-  openingHours StoreOpeningHours[]
+  supermarket       Supermarket             @relation(fields: [supermarketId], references: [id], onDelete: Cascade)
+  createdBy         User?                   @relation("StoreCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  openingHours      StoreOpeningHours[]
+  priceContributors StorePriceContributor[]
 
   shoppingListItems    ShoppingListItem[]
   shoppingSessions     ShoppingSession[]
@@ -237,6 +304,8 @@ model StoreLocation {
   /// computing exact distances, so the composite index is the one that matters.
   @@index([latitude, longitude])
   @@index([city])
+  @@index([origin, publishedAt])
+  @@index([createdById, createdAt])
   @@map("store_locations")
 }
 
@@ -516,7 +585,7 @@ model PriceAlert {
   /// What the figures are in. Prices in another currency never match, since
   /// 1.150 pesos and 1,15 euros are both "115" cents to a comparison. Null on
   /// alerts made before this existed: they match any currency, as they did.
-  currency       String?        @db.Char(3)
+  currency       String? @db.Char(3)
 
   isEnabled              Boolean   @default(true)
   /// When this alert last produced a notification, for throttling.
@@ -640,4 +709,73 @@ model DeviceToken {
 
   @@index([userId])
   @@map("device_tokens")
+}
+
+/// A shopper vouching that a product exists and is described right. One per person.
+model ProductConfirmation {
+  id        String   @id @default(uuid()) @db.Uuid
+  productId String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, userId])
+  @@index([userId])
+  @@map("product_confirmations")
+}
+
+/// A shopper saying an entry is wrong, a duplicate, or does not exist. One per
+/// person per entry; the target is a plain id because it is a product or a store.
+model ContentFlag {
+  id         String     @id @default(uuid()) @db.Uuid
+  targetType FlagTarget
+  targetId   String     @db.Uuid
+  userId     String     @db.Uuid
+  reason     FlagReason
+  createdAt  DateTime   @default(now()) @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([targetType, targetId, userId])
+  @@index([targetType, targetId])
+  @@index([userId])
+  @@map("content_flags")
+}
+
+/// That a person had an accepted price for a product at a shop. Rows are what
+/// the shop's counters count (distinct products, distinct people) and make
+/// recording the same fact twice a no-op. Prices live in another database.
+model StorePriceContributor {
+  id              String   @id @default(uuid()) @db.Uuid
+  storeLocationId String   @db.Uuid
+  productId       String   @db.Uuid
+  userId          String   @db.Uuid
+  firstAcceptedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  storeLocation StoreLocation @relation(fields: [storeLocationId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([storeLocationId, productId, userId])
+  @@index([storeLocationId])
+  @@index([userId])
+  @@map("store_price_contributors")
+}
+
+/// Who did what to the catalog: every entry added and every moderator decision.
+/// Never shown to the person it is about.
+model CatalogAuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  /// Null when the actor's account was later deleted.
+  actorId    String?  @db.Uuid
+  action     String
+  targetType String
+  targetId   String   @db.Uuid
+  note       String?
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([targetType, targetId])
+  @@index([actorId, createdAt])
+  @@map("catalog_audit_log")
 }
