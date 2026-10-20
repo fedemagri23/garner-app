@@ -294,3 +294,9 @@ Notation: [`README.md`](README.md).
 - **What:** `GET /v1/optimizations/{id}` now returns the `origin` the plans were computed from, each stop's coordinates and address, and the result's `currency`. Coordinates and addresses are read when the answer is read, like names; prices and assignments stay as computed.
 - **Why:** The app draws the trip on a map and needs the stops' positions; reading them live keeps a moved or renamed store correct, the same rule names already follow. A stop whose store was deleted has null coordinates and is left off the map.
 - **Revisit when:** Stores move often enough that a plan's route no longer matches its stored travel times — then snapshot the coordinates with the plan.
+
+### CON-046 — A trip can follow a plan, line by line
+- **Phase:** post-plan (mobile checkpoint 6) · **Area:** shopping-sessions · **Status:** accepted
+- **What:** `POST /v1/shopping-sessions` takes an optional `optimizationId` (and `mode`, else the plan's recommendation). Each line then takes the store and unit price that plan chose, and lines are ordered by stop; products the plan could not place keep the list's store and price and come last. The plan must be the shopper's, finished, and for the same list; `storeId` and `optimizationId` together are refused.
+- **Why:** A trip already had a store per line, but the only ways to fill it were one store for everything or what each list item had been pencilled in for. Copying the plan into the trip keeps the trip a record of what was planned when the shopper walked in, even if the plan or prices change afterwards, and avoids writing a plan's choices back into the list.
+- **Revisit when:** Shoppers want to move a line to another store mid-trip — `RecordItemProgressRequest` has no store field yet.

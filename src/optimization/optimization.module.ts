@@ -56,5 +56,7 @@ import { OptimizationController } from './presentation/optimization.controller.j
       useClass: PrismaOptimizationRequestRepository,
     },
   ],
+  // Shopping sessions start a trip from a finished plan.
+  exports: [OPTIMIZATION_REQUEST_REPOSITORY],
 })
 export class OptimizationModule {}

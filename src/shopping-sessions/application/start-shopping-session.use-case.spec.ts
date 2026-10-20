@@ -6,6 +6,7 @@ import type { ShoppingListAccess } from '../../shopping-lists/application/shoppi
 import type { ShoppingList } from '../../shopping-lists/domain/shopping-list.entity.js';
 import type { ShoppingSession } from '../domain/shopping-session.entity.js';
 import type { ShoppingSessionRepository } from '../domain/shopping-session.repository.port.js';
+import type { OptimizationRequestRepository } from '../../optimization/domain/optimization.repository.port.js';
 import { StartShoppingSessionUseCase } from './start-shopping-session.use-case.js';
 
 const actor: AuthenticatedUser = { id: 'user-1', email: 'a@b.c', role: 'USER' };
@@ -53,6 +54,7 @@ describe('StartShoppingSessionUseCase', () => {
   let sessions: { findById: jest.Mock; start: jest.Mock };
   let lists: { loadOwned: jest.Mock };
   let catalog: { requireStore: jest.Mock };
+  let optimizations: { findById: jest.Mock };
   let events: { publish: jest.Mock };
   let useCase: StartShoppingSessionUseCase;
 
@@ -63,12 +65,14 @@ describe('StartShoppingSessionUseCase', () => {
     };
     lists = { loadOwned: jest.fn().mockResolvedValue(list) };
     catalog = { requireStore: jest.fn() };
+    optimizations = { findById: jest.fn().mockResolvedValue(null) };
     events = { publish: jest.fn() };
 
     useCase = new StartShoppingSessionUseCase(
       sessions as unknown as ShoppingSessionRepository,
       lists as unknown as ShoppingListAccess,
       catalog as unknown as CatalogReferences,
+      optimizations as unknown as OptimizationRequestRepository,
       events as unknown as EventBus,
     );
   });
@@ -145,5 +149,79 @@ describe('StartShoppingSessionUseCase', () => {
     await expect(useCase.execute(actor, { listId: 'list-1' })).rejects.toThrow(
       /empty list/,
     );
+  });
+
+  describe('from a plan', () => {
+    const stop = (order: number, storeId: string, products: [string, number][]) => ({
+      order,
+      storeId,
+      subtotalCents: 0,
+      assignments: products.map(([productId, unitPriceCents]) => ({
+        productId,
+        quantity: 1,
+        unitPriceCents,
+        lineTotalCents: unitPriceCents,
+      })),
+    });
+
+    const optimization = (overrides: Record<string, unknown> = {}) => ({
+      id: 'opt-1',
+      ownerId: 'user-1',
+      listId: 'list-1',
+      status: 'COMPLETED',
+      settings: { mode: 'BEST_BALANCE' },
+      result: {
+        cheapest: { stores: [stop(1, 'store-x', [['bread', 70]]), stop(2, 'store-y', [['milk', 99]])] },
+        bestBalance: { stores: [stop(1, 'store-x', [['bread', 80], ['milk', 110]])] },
+        simplest: null,
+      },
+      ...overrides,
+    });
+
+    it('sends each line to its stop, at the plan\'s price, in route order', async () => {
+      optimizations.findById.mockResolvedValue(optimization());
+
+      await useCase.execute(actor, { listId: 'list-1', optimizationId: 'opt-1', mode: 'CHEAPEST' });
+
+      const lines = sessions.start.mock.calls[0][0].items;
+      expect(lines.map((line: { productId: string; storeId: string; expectedUnitPriceCents: number }) => [
+        line.productId,
+        line.storeId,
+        line.expectedUnitPriceCents,
+      ])).toEqual([
+        ['bread', 'store-x', 70],
+        ['milk', 'store-y', 99],
+      ]);
+    });
+
+    it('follows the plan\'s recommendation when no alternative is named', async () => {
+      optimizations.findById.mockResolvedValue(optimization());
+
+      await useCase.execute(actor, { listId: 'list-1', optimizationId: 'opt-1' });
+
+      const lines = sessions.start.mock.calls[0][0].items;
+      expect(lines.every((line: { storeId: string }) => line.storeId === 'store-x')).toBe(true);
+    });
+
+    it('refuses someone else\'s plan, a plan for another list, or one not finished', async () => {
+      optimizations.findById.mockResolvedValue(optimization({ ownerId: 'user-2' }));
+      await expect(useCase.execute(actor, { listId: 'list-1', optimizationId: 'opt-1' })).rejects.toThrow('not found');
+
+      optimizations.findById.mockResolvedValue(optimization({ listId: 'list-2' }));
+      await expect(useCase.execute(actor, { listId: 'list-1', optimizationId: 'opt-1' })).rejects.toThrow(ConflictException);
+
+      optimizations.findById.mockResolvedValue(optimization({ status: 'RUNNING', result: null }));
+      await expect(useCase.execute(actor, { listId: 'list-1', optimizationId: 'opt-1' })).rejects.toThrow(ConflictException);
+    });
+
+    it('refuses an alternative with nothing to buy, and a plan together with a single store', async () => {
+      optimizations.findById.mockResolvedValue(optimization());
+      await expect(
+        useCase.execute(actor, { listId: 'list-1', optimizationId: 'opt-1', mode: 'SIMPLEST' }),
+      ).rejects.toThrow('nothing to buy');
+      await expect(
+        useCase.execute(actor, { listId: 'list-1', optimizationId: 'opt-1', storeId: 'store-x' }),
+      ).rejects.toThrow('not both');
+    });
   });
 });

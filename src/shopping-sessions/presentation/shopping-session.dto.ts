@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsDate,
   IsEnum,
+  IsIn,
   IsInt,
   IsNumber,
   IsOptional,
@@ -173,6 +174,24 @@ export class StartShoppingSessionRequest {
   @IsOptional()
   @IsUUID()
   storeId?: string;
+
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description:
+      "A finished optimization of this list: each line goes to its plan's " +
+      'store, at its price, in route order. Not with storeId.',
+  })
+  @IsOptional()
+  @IsUUID()
+  optimizationId?: string;
+
+  @ApiPropertyOptional({
+    enum: ['CHEAPEST', 'BEST_BALANCE', 'SIMPLEST'],
+    description: "Which of the plan's alternatives; its recommendation when omitted",
+  })
+  @IsOptional()
+  @IsIn(['CHEAPEST', 'BEST_BALANCE', 'SIMPLEST'])
+  mode?: 'CHEAPEST' | 'BEST_BALANCE' | 'SIMPLEST';
 }
 
 export class RecordItemProgressRequest {

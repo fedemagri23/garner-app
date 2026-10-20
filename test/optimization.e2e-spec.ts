@@ -292,6 +292,56 @@ describe('Shopping optimization (e2e)', () => {
       expect(result.result.unavailableProducts).toHaveLength(2);
     });
 
+    it('starts a trip that follows the plan, stop by stop', async () => {
+      const result = await optimize(listId, { mode: 'CHEAPEST', maxStores: 3 });
+
+      const trip = await http()
+        .post('/v1/shopping-sessions')
+        .set(auth(shopper))
+        .send({ listId, optimizationId: result.id, mode: 'CHEAPEST' })
+        .expect(201);
+
+      // Milk 100 at Día, bread 100 at Jumbo, as the cheapest plan assigned.
+      const lines = trip.body.items.map(
+        (item: { product: { name: string }; store: { name: string } | null; expectedUnitPriceCents: number }) => [
+          item.product.name,
+          item.store?.name,
+          item.expectedUnitPriceCents,
+        ],
+      );
+      expect(lines).toEqual(
+        expect.arrayContaining([
+          ['Leche Entera 1L', 'Día Sur', 100],
+          ['Pan Lactal 500g', 'Jumbo Oeste', 100],
+        ]),
+      );
+
+      // Route order: the first stop's lines come first.
+      const firstStop = result.result.cheapest.stores[0].storeName;
+      expect(trip.body.items[0].store.name).toBe(firstStop);
+
+      await http()
+        .post(`/v1/shopping-sessions/${trip.body.id}/abandon`)
+        .set(auth(shopper))
+        .expect(200);
+    });
+
+    it('will not follow another list\'s plan, nor a plan and a single store at once', async () => {
+      const result = await optimize(listId, { mode: 'CHEAPEST', maxStores: 3 });
+      const other = await createList([{ productId: milkId, quantity: 1 }]);
+
+      await http()
+        .post('/v1/shopping-sessions')
+        .set(auth(shopper))
+        .send({ listId: other, optimizationId: result.id })
+        .expect(409);
+      await http()
+        .post('/v1/shopping-sessions')
+        .set(auth(shopper))
+        .send({ listId, optimizationId: result.id, storeId: nearStore })
+        .expect(400);
+    });
+
     it('offers all three alternatives, simplest being one store', async () => {
       const { result } = await optimize(listId, { maxStores: 3 });
 

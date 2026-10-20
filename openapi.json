@@ -1832,39 +1832,42 @@
         ]
       }
     },
-    "/v1/price-observations": {
+    "/v1/shopping-lists/{id}/optimize": {
       "post": {
-        "operationId": "contributionsReport",
-        "parameters": [],
+        "operationId": "optimizationOptimize",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReportPriceRequest"
+                "$ref": "#/components/schemas/OptimizeListRequest"
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "",
+          "202": {
+            "description": "202 while it is computed; 200 when a recent answer is reused",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContributionResponse"
+                  "$ref": "#/components/schemas/OptimizationResponse"
                 }
               }
             }
           },
-          "400": {
-            "description": "Not a plausible price"
-          },
-          "422": {
-            "description": "Retired product, inactive store, or evidence not found"
-          },
-          "429": {
-            "description": "Too many reports"
+          "409": {
+            "description": "The list is empty"
           }
         },
         "security": [
@@ -1872,15 +1875,15 @@
             "bearer": []
           }
         ],
-        "summary": "Report a price seen at a store",
+        "summary": "Work out where to buy this list",
         "tags": [
-          "contributions"
+          "optimization"
         ]
       }
     },
-    "/v1/price-observations/mine": {
+    "/v1/optimizations": {
       "get": {
-        "operationId": "contributionsMine",
+        "operationId": "optimizationList",
         "parameters": [
           {
             "name": "page",
@@ -1902,6 +1905,15 @@
               "default": 20,
               "type": "number"
             }
+          },
+          {
+            "name": "listId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1910,7 +1922,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContributionPageResponse"
+                  "$ref": "#/components/schemas/OptimizationPageResponse"
                 }
               }
             }
@@ -1921,48 +1933,100 @@
             "bearer": []
           }
         ],
-        "summary": "List the prices I have contributed",
+        "summary": "My optimizations, newest first",
         "tags": [
-          "contributions"
+          "optimization"
         ]
       }
     },
-    "/v1/price-evidence": {
-      "post": {
-        "operationId": "contributionsUploadEvidence",
+    "/v1/optimizations/{id}": {
+      "get": {
+        "operationId": "optimizationGet",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimizationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Optimization not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "One optimization, with its plans once computed",
+        "tags": [
+          "optimization"
+        ]
+      }
+    },
+    "/v1/optimization-preferences": {
+      "get": {
+        "operationId": "optimizationMyPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimizationPreferencesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "My standing optimization preferences",
+        "tags": [
+          "optimization"
+        ]
+      },
+      "patch": {
+        "operationId": "optimizationUpdatePreferences",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
-                "type": "object",
-                "required": [
-                  "photo"
-                ],
-                "properties": {
-                  "photo": {
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
+                "$ref": "#/components/schemas/UpdateOptimizationPreferencesRequest"
               }
             }
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EvidenceUploadResponse"
+                  "$ref": "#/components/schemas/OptimizationPreferencesResponse"
                 }
               }
             }
-          },
-          "422": {
-            "description": "Not a JPEG, PNG or WebP image"
           }
         },
         "security": [
@@ -1970,9 +2034,9 @@
             "bearer": []
           }
         ],
-        "summary": "Upload a photo to attach to a price report",
+        "summary": "Change how far I will go to save money",
         "tags": [
-          "contributions"
+          "optimization"
         ]
       }
     },
@@ -2194,6 +2258,150 @@
         "summary": "Products whose price fell this week near a point, biggest fall first",
         "tags": [
           "prices"
+        ]
+      }
+    },
+    "/v1/price-observations": {
+      "post": {
+        "operationId": "contributionsReport",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportPriceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContributionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not a plausible price"
+          },
+          "422": {
+            "description": "Retired product, inactive store, or evidence not found"
+          },
+          "429": {
+            "description": "Too many reports"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Report a price seen at a store",
+        "tags": [
+          "contributions"
+        ]
+      }
+    },
+    "/v1/price-observations/mine": {
+      "get": {
+        "operationId": "contributionsMine",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContributionPageResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the prices I have contributed",
+        "tags": [
+          "contributions"
+        ]
+      }
+    },
+    "/v1/price-evidence": {
+      "post": {
+        "operationId": "contributionsUploadEvidence",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "photo"
+                ],
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceUploadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Not a JPEG, PNG or WebP image"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload a photo to attach to a price report",
+        "tags": [
+          "contributions"
         ]
       }
     },
@@ -2687,214 +2895,6 @@
         "summary": "Remove a branch mapping",
         "tags": [
           "price-sources"
-        ]
-      }
-    },
-    "/v1/shopping-lists/{id}/optimize": {
-      "post": {
-        "operationId": "optimizationOptimize",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OptimizeListRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "202 while it is computed; 200 when a recent answer is reused",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OptimizationResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "The list is empty"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Work out where to buy this list",
-        "tags": [
-          "optimization"
-        ]
-      }
-    },
-    "/v1/optimizations": {
-      "get": {
-        "operationId": "optimizationList",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "default": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "maximum": 100,
-              "default": 20,
-              "type": "number"
-            }
-          },
-          {
-            "name": "listId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OptimizationPageResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "My optimizations, newest first",
-        "tags": [
-          "optimization"
-        ]
-      }
-    },
-    "/v1/optimizations/{id}": {
-      "get": {
-        "operationId": "optimizationGet",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OptimizationResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Optimization not found"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "One optimization, with its plans once computed",
-        "tags": [
-          "optimization"
-        ]
-      }
-    },
-    "/v1/optimization-preferences": {
-      "get": {
-        "operationId": "optimizationMyPreferences",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OptimizationPreferencesResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "My standing optimization preferences",
-        "tags": [
-          "optimization"
-        ]
-      },
-      "patch": {
-        "operationId": "optimizationUpdatePreferences",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateOptimizationPreferencesRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OptimizationPreferencesResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Change how far I will go to save money",
-        "tags": [
-          "optimization"
         ]
       }
     },
@@ -4567,6 +4567,20 @@
             "type": "string",
             "format": "uuid",
             "description": "The store being shopped; applies to every line of the trip"
+          },
+          "optimizationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "A finished optimization of this list: each line goes to its plan's store, at its price, in route order. Not with storeId."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "CHEAPEST",
+              "BEST_BALANCE",
+              "SIMPLEST"
+            ],
+            "description": "Which of the plan's alternatives; its recommendation when omitted"
           }
         },
         "required": [
@@ -4878,767 +4892,6 @@
             "description": "When the shopper marked the item, from the device clock. Lets an offline client report the real moment rather than the sync time."
           }
         }
-      },
-      "PriceEvidenceRequest": {
-        "type": "object",
-        "properties": {
-          "photoKey": {
-            "type": "string",
-            "description": "Key returned by POST /v1/price-evidence for a photo you uploaded"
-          },
-          "note": {
-            "type": "string",
-            "maxLength": 500
-          }
-        }
-      },
-      "ReportPriceRequest": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Optional client-generated id. Retrying with the same id returns the report already stored."
-          },
-          "productId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "storeId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "priceCents": {
-            "type": "number",
-            "description": "Price of one unit, in minor units (cents)",
-            "example": 125
-          },
-          "currency": {
-            "type": "string",
-            "example": "ARS"
-          },
-          "observedAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "When the price was seen; defaults to now. At most 7 days old."
-          },
-          "evidence": {
-            "$ref": "#/components/schemas/PriceEvidenceRequest"
-          }
-        },
-        "required": [
-          "productId",
-          "storeId",
-          "priceCents",
-          "currency"
-        ]
-      },
-      "ContributionResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "productId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "storeId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "priceCents": {
-            "type": "number",
-            "description": "Price of one unit, in minor units (cents)"
-          },
-          "currency": {
-            "type": "string",
-            "example": "ARS"
-          },
-          "observedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "receivedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "sourceType": {
-            "type": "string",
-            "enum": [
-              "USER_REPORTED",
-              "USER_WITH_EVIDENCE",
-              "PURCHASE_CONFIRMED",
-              "EXTERNAL_API"
-            ]
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "ACCEPTED",
-              "UNDER_REVIEW",
-              "REJECTED"
-            ],
-            "description": "UNDER_REVIEW prices are kept but do not affect shown prices until confirmed"
-          },
-          "hasPhotoEvidence": {
-            "type": "boolean"
-          },
-          "note": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "required": [
-          "id",
-          "productId",
-          "storeId",
-          "priceCents",
-          "currency",
-          "observedAt",
-          "receivedAt",
-          "sourceType",
-          "status",
-          "hasPhotoEvidence",
-          "note"
-        ]
-      },
-      "ContributionPageResponse": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ContributionResponse"
-            }
-          },
-          "meta": {
-            "$ref": "#/components/schemas/PaginationMeta"
-          }
-        },
-        "required": [
-          "data",
-          "meta"
-        ]
-      },
-      "EvidenceUploadResponse": {
-        "type": "object",
-        "properties": {
-          "photoKey": {
-            "type": "string",
-            "description": "Pass as evidence.photoKey when reporting a price"
-          }
-        },
-        "required": [
-          "photoKey"
-        ]
-      },
-      "StorePriceResponse": {
-        "type": "object",
-        "properties": {
-          "storeId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "storeName": {
-            "type": "string"
-          },
-          "supermarketName": {
-            "type": "string"
-          },
-          "priceCents": {
-            "type": "number",
-            "description": "Derived current price, in minor units (cents)"
-          },
-          "currency": {
-            "type": "string",
-            "example": "ARS"
-          },
-          "confidence": {
-            "type": "string",
-            "enum": [
-              "VERY_RECENT",
-              "RECENTLY_VERIFIED",
-              "LIKELY_CURRENT",
-              "POSSIBLY_OUTDATED"
-            ],
-            "description": "How far the price can be relied on"
-          },
-          "observationCount": {
-            "type": "number",
-            "description": "Observations behind the price"
-          },
-          "lastObservedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "distanceKm": {
-            "type": "number",
-            "nullable": true,
-            "description": "Null when no location was given"
-          },
-          "isOpenNow": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "storeId",
-          "storeName",
-          "supermarketName",
-          "priceCents",
-          "currency",
-          "confidence",
-          "observationCount",
-          "lastObservedAt",
-          "distanceKm",
-          "isOpenNow"
-        ]
-      },
-      "PriceComparisonResponse": {
-        "type": "object",
-        "properties": {
-          "productId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "productName": {
-            "type": "string"
-          },
-          "prices": {
-            "description": "Cheapest first",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/StorePriceResponse"
-            }
-          },
-          "lowestPriceCents": {
-            "type": "number",
-            "nullable": true,
-            "description": "Cheapest price found, in cents"
-          }
-        },
-        "required": [
-          "productId",
-          "productName",
-          "prices",
-          "lowestPriceCents"
-        ]
-      },
-      "DailyPricePointResponse": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "example": "2026-09-22"
-          },
-          "averageCents": {
-            "type": "number"
-          },
-          "minPriceCents": {
-            "type": "number"
-          },
-          "maxPriceCents": {
-            "type": "number"
-          },
-          "observationCount": {
-            "type": "number"
-          },
-          "isAnomalous": {
-            "type": "boolean",
-            "description": "The day moved sharply against the one before it"
-          }
-        },
-        "required": [
-          "date",
-          "averageCents",
-          "minPriceCents",
-          "maxPriceCents",
-          "observationCount",
-          "isAnomalous"
-        ]
-      },
-      "PriceTrendResponse": {
-        "type": "object",
-        "properties": {
-          "averageCents": {
-            "type": "number"
-          },
-          "lowestCents": {
-            "type": "number"
-          },
-          "highestCents": {
-            "type": "number"
-          },
-          "changePercent": {
-            "type": "number",
-            "description": "Percent change across the range"
-          },
-          "direction": {
-            "type": "string",
-            "enum": [
-              "up",
-              "down",
-              "stable"
-            ]
-          }
-        },
-        "required": [
-          "averageCents",
-          "lowestCents",
-          "highestCents",
-          "changePercent",
-          "direction"
-        ]
-      },
-      "PriceHistoryResponse": {
-        "type": "object",
-        "properties": {
-          "productId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "storeId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "range": {
-            "type": "string",
-            "enum": [
-              "30d",
-              "90d",
-              "6m",
-              "1y"
-            ]
-          },
-          "currency": {
-            "type": "string",
-            "nullable": true,
-            "example": "ARS",
-            "description": "What every amount is in; null when there are no points"
-          },
-          "points": {
-            "description": "Oldest first",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DailyPricePointResponse"
-            }
-          },
-          "trend": {
-            "nullable": true,
-            "type": "object",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PriceTrendResponse"
-              }
-            ]
-          },
-          "currentPriceCents": {
-            "type": "number",
-            "nullable": true,
-            "description": "Current derived price; only when a store was named"
-          }
-        },
-        "required": [
-          "productId",
-          "storeId",
-          "range",
-          "currency",
-          "points",
-          "trend",
-          "currentPriceCents"
-        ]
-      },
-      "PriceDropResponse": {
-        "type": "object",
-        "properties": {
-          "productId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "productName": {
-            "type": "string"
-          },
-          "brandName": {
-            "type": "string",
-            "nullable": true
-          },
-          "imageUrl": {
-            "type": "string",
-            "nullable": true
-          },
-          "storeId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "storeName": {
-            "type": "string"
-          },
-          "supermarketName": {
-            "type": "string"
-          },
-          "currency": {
-            "type": "string",
-            "example": "ARS"
-          },
-          "priceCents": {
-            "type": "number",
-            "description": "Current derived price, in cents"
-          },
-          "previousPriceCents": {
-            "type": "number",
-            "description": "The price before the drop began, in cents"
-          },
-          "dropPercent": {
-            "type": "number",
-            "description": "Whole percent below the previous price",
-            "example": 12
-          },
-          "droppedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When it last fell"
-          },
-          "distanceKm": {
-            "type": "number",
-            "description": "Great-circle distance from the searched point"
-          }
-        },
-        "required": [
-          "productId",
-          "productName",
-          "brandName",
-          "imageUrl",
-          "storeId",
-          "storeName",
-          "supermarketName",
-          "currency",
-          "priceCents",
-          "previousPriceCents",
-          "dropPercent",
-          "droppedAt",
-          "distanceKm"
-        ]
-      },
-      "PriceSourceResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "supermarketId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "adapterKey": {
-            "type": "string",
-            "example": "json-http"
-          },
-          "isEnabled": {
-            "type": "boolean"
-          },
-          "scheduleHourUtc": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 23
-          },
-          "config": {
-            "type": "object",
-            "description": "Adapter configuration; credentials are never stored here"
-          },
-          "lastRunAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "lastSuccessfulRunAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "lastStatus": {
-            "type": "string",
-            "enum": [
-              "STARTED",
-              "COMPLETED",
-              "PARTIAL",
-              "FAILED"
-            ],
-            "nullable": true
-          },
-          "consecutiveFailures": {
-            "type": "number",
-            "description": "Runs that failed outright since the last good one"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "slug",
-          "supermarketId",
-          "adapterKey",
-          "isEnabled",
-          "scheduleHourUtc",
-          "config",
-          "lastRunAt",
-          "lastSuccessfulRunAt",
-          "lastStatus",
-          "consecutiveFailures"
-        ]
-      },
-      "AdaptersResponse": {
-        "type": "object",
-        "properties": {
-          "adapters": {
-            "description": "Adapter keys this deployment can run",
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "adapters"
-        ]
-      },
-      "CreatePriceSourceRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 120,
-            "example": "Coto API"
-          },
-          "supermarketId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The supermarket this source prices"
-          },
-          "adapterKey": {
-            "type": "string",
-            "example": "json-http"
-          },
-          "scheduleHourUtc": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 23,
-            "default": 8
-          },
-          "config": {
-            "type": "object",
-            "description": "Adapter configuration. Never put credentials here."
-          }
-        },
-        "required": [
-          "name",
-          "supermarketId",
-          "adapterKey"
-        ]
-      },
-      "UpdatePriceSourceRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 120
-          },
-          "isEnabled": {
-            "type": "boolean"
-          },
-          "scheduleHourUtc": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 23
-          },
-          "config": {
-            "type": "object"
-          }
-        }
-      },
-      "ImportRunResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "runKey": {
-            "type": "string",
-            "example": "2026-09-24",
-            "description": "The daily slot this run served"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "STARTED",
-              "COMPLETED",
-              "PARTIAL",
-              "FAILED"
-            ]
-          },
-          "startedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "finishedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "productsSeen": {
-            "type": "number"
-          },
-          "pricesSeen": {
-            "type": "number"
-          },
-          "observationsCreated": {
-            "type": "number"
-          },
-          "observationsConfirmed": {
-            "type": "number",
-            "description": "Unchanged prices that confirmed an earlier observation instead of adding one"
-          },
-          "matchedProducts": {
-            "type": "number"
-          },
-          "unmatchedProducts": {
-            "type": "number",
-            "description": "Products awaiting a person’s decision"
-          },
-          "skippedPrices": {
-            "type": "number",
-            "description": "Prices that could not be placed or failed validation"
-          },
-          "error": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "required": [
-          "id",
-          "runKey",
-          "status",
-          "startedAt",
-          "finishedAt",
-          "productsSeen",
-          "pricesSeen",
-          "observationsCreated",
-          "observationsConfirmed",
-          "matchedProducts",
-          "unmatchedProducts",
-          "skippedPrices",
-          "error"
-        ]
-      },
-      "ExternalProductLinkResponse": {
-        "type": "object",
-        "properties": {
-          "externalProductId": {
-            "type": "string"
-          },
-          "externalName": {
-            "type": "string"
-          },
-          "externalBarcode": {
-            "type": "string",
-            "nullable": true
-          },
-          "productId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "matchMethod": {
-            "type": "string",
-            "enum": [
-              "BARCODE",
-              "EXTERNAL_ID",
-              "NORMALIZED_IDENTITY",
-              "MANUAL"
-            ],
-            "nullable": true
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "MATCHED",
-              "UNMATCHED",
-              "IGNORED"
-            ]
-          },
-          "lastSeenAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "externalProductId",
-          "externalName",
-          "externalBarcode",
-          "productId",
-          "matchMethod",
-          "status",
-          "lastSeenAt"
-        ]
-      },
-      "ExternalProductLinkPageResponse": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ExternalProductLinkResponse"
-            }
-          },
-          "meta": {
-            "$ref": "#/components/schemas/PaginationMeta"
-          }
-        },
-        "required": [
-          "data",
-          "meta"
-        ]
-      },
-      "ResolveLinkRequest": {
-        "type": "object",
-        "properties": {
-          "productId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The canonical product this is. Omit with ignore: true."
-          },
-          "ignore": {
-            "type": "boolean",
-            "description": "Mark as having no canonical counterpart"
-          }
-        }
-      },
-      "LinkStoreRequest": {
-        "type": "object",
-        "properties": {
-          "externalStoreId": {
-            "type": "string",
-            "description": "What the source calls the branch"
-          },
-          "storeId": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "externalStoreId",
-          "storeId"
-        ]
       },
       "OptimizeListRequest": {
         "type": "object",
@@ -6180,6 +5433,767 @@
             }
           }
         }
+      },
+      "StorePriceResponse": {
+        "type": "object",
+        "properties": {
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeName": {
+            "type": "string"
+          },
+          "supermarketName": {
+            "type": "string"
+          },
+          "priceCents": {
+            "type": "number",
+            "description": "Derived current price, in minor units (cents)"
+          },
+          "currency": {
+            "type": "string",
+            "example": "ARS"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "VERY_RECENT",
+              "RECENTLY_VERIFIED",
+              "LIKELY_CURRENT",
+              "POSSIBLY_OUTDATED"
+            ],
+            "description": "How far the price can be relied on"
+          },
+          "observationCount": {
+            "type": "number",
+            "description": "Observations behind the price"
+          },
+          "lastObservedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "distanceKm": {
+            "type": "number",
+            "nullable": true,
+            "description": "Null when no location was given"
+          },
+          "isOpenNow": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "storeId",
+          "storeName",
+          "supermarketName",
+          "priceCents",
+          "currency",
+          "confidence",
+          "observationCount",
+          "lastObservedAt",
+          "distanceKm",
+          "isOpenNow"
+        ]
+      },
+      "PriceComparisonResponse": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "prices": {
+            "description": "Cheapest first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorePriceResponse"
+            }
+          },
+          "lowestPriceCents": {
+            "type": "number",
+            "nullable": true,
+            "description": "Cheapest price found, in cents"
+          }
+        },
+        "required": [
+          "productId",
+          "productName",
+          "prices",
+          "lowestPriceCents"
+        ]
+      },
+      "DailyPricePointResponse": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-09-22"
+          },
+          "averageCents": {
+            "type": "number"
+          },
+          "minPriceCents": {
+            "type": "number"
+          },
+          "maxPriceCents": {
+            "type": "number"
+          },
+          "observationCount": {
+            "type": "number"
+          },
+          "isAnomalous": {
+            "type": "boolean",
+            "description": "The day moved sharply against the one before it"
+          }
+        },
+        "required": [
+          "date",
+          "averageCents",
+          "minPriceCents",
+          "maxPriceCents",
+          "observationCount",
+          "isAnomalous"
+        ]
+      },
+      "PriceTrendResponse": {
+        "type": "object",
+        "properties": {
+          "averageCents": {
+            "type": "number"
+          },
+          "lowestCents": {
+            "type": "number"
+          },
+          "highestCents": {
+            "type": "number"
+          },
+          "changePercent": {
+            "type": "number",
+            "description": "Percent change across the range"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down",
+              "stable"
+            ]
+          }
+        },
+        "required": [
+          "averageCents",
+          "lowestCents",
+          "highestCents",
+          "changePercent",
+          "direction"
+        ]
+      },
+      "PriceHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "range": {
+            "type": "string",
+            "enum": [
+              "30d",
+              "90d",
+              "6m",
+              "1y"
+            ]
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true,
+            "example": "ARS",
+            "description": "What every amount is in; null when there are no points"
+          },
+          "points": {
+            "description": "Oldest first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DailyPricePointResponse"
+            }
+          },
+          "trend": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PriceTrendResponse"
+              }
+            ]
+          },
+          "currentPriceCents": {
+            "type": "number",
+            "nullable": true,
+            "description": "Current derived price; only when a store was named"
+          }
+        },
+        "required": [
+          "productId",
+          "storeId",
+          "range",
+          "currency",
+          "points",
+          "trend",
+          "currentPriceCents"
+        ]
+      },
+      "PriceDropResponse": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "brandName": {
+            "type": "string",
+            "nullable": true
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeName": {
+            "type": "string"
+          },
+          "supermarketName": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string",
+            "example": "ARS"
+          },
+          "priceCents": {
+            "type": "number",
+            "description": "Current derived price, in cents"
+          },
+          "previousPriceCents": {
+            "type": "number",
+            "description": "The price before the drop began, in cents"
+          },
+          "dropPercent": {
+            "type": "number",
+            "description": "Whole percent below the previous price",
+            "example": 12
+          },
+          "droppedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When it last fell"
+          },
+          "distanceKm": {
+            "type": "number",
+            "description": "Great-circle distance from the searched point"
+          }
+        },
+        "required": [
+          "productId",
+          "productName",
+          "brandName",
+          "imageUrl",
+          "storeId",
+          "storeName",
+          "supermarketName",
+          "currency",
+          "priceCents",
+          "previousPriceCents",
+          "dropPercent",
+          "droppedAt",
+          "distanceKm"
+        ]
+      },
+      "PriceEvidenceRequest": {
+        "type": "object",
+        "properties": {
+          "photoKey": {
+            "type": "string",
+            "description": "Key returned by POST /v1/price-evidence for a photo you uploaded"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      },
+      "ReportPriceRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional client-generated id. Retrying with the same id returns the report already stored."
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "priceCents": {
+            "type": "number",
+            "description": "Price of one unit, in minor units (cents)",
+            "example": 125
+          },
+          "currency": {
+            "type": "string",
+            "example": "ARS"
+          },
+          "observedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When the price was seen; defaults to now. At most 7 days old."
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/PriceEvidenceRequest"
+          }
+        },
+        "required": [
+          "productId",
+          "storeId",
+          "priceCents",
+          "currency"
+        ]
+      },
+      "ContributionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "priceCents": {
+            "type": "number",
+            "description": "Price of one unit, in minor units (cents)"
+          },
+          "currency": {
+            "type": "string",
+            "example": "ARS"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": [
+              "USER_REPORTED",
+              "USER_WITH_EVIDENCE",
+              "PURCHASE_CONFIRMED",
+              "EXTERNAL_API"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "UNDER_REVIEW",
+              "REJECTED"
+            ],
+            "description": "UNDER_REVIEW prices are kept but do not affect shown prices until confirmed"
+          },
+          "hasPhotoEvidence": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "storeId",
+          "priceCents",
+          "currency",
+          "observedAt",
+          "receivedAt",
+          "sourceType",
+          "status",
+          "hasPhotoEvidence",
+          "note"
+        ]
+      },
+      "ContributionPageResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContributionResponse"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "EvidenceUploadResponse": {
+        "type": "object",
+        "properties": {
+          "photoKey": {
+            "type": "string",
+            "description": "Pass as evidence.photoKey when reporting a price"
+          }
+        },
+        "required": [
+          "photoKey"
+        ]
+      },
+      "PriceSourceResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "supermarketId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "adapterKey": {
+            "type": "string",
+            "example": "json-http"
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "scheduleHourUtc": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 23
+          },
+          "config": {
+            "type": "object",
+            "description": "Adapter configuration; credentials are never stored here"
+          },
+          "lastRunAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastSuccessfulRunAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastStatus": {
+            "type": "string",
+            "enum": [
+              "STARTED",
+              "COMPLETED",
+              "PARTIAL",
+              "FAILED"
+            ],
+            "nullable": true
+          },
+          "consecutiveFailures": {
+            "type": "number",
+            "description": "Runs that failed outright since the last good one"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "supermarketId",
+          "adapterKey",
+          "isEnabled",
+          "scheduleHourUtc",
+          "config",
+          "lastRunAt",
+          "lastSuccessfulRunAt",
+          "lastStatus",
+          "consecutiveFailures"
+        ]
+      },
+      "AdaptersResponse": {
+        "type": "object",
+        "properties": {
+          "adapters": {
+            "description": "Adapter keys this deployment can run",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "adapters"
+        ]
+      },
+      "CreatePriceSourceRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120,
+            "example": "Coto API"
+          },
+          "supermarketId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The supermarket this source prices"
+          },
+          "adapterKey": {
+            "type": "string",
+            "example": "json-http"
+          },
+          "scheduleHourUtc": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 23,
+            "default": 8
+          },
+          "config": {
+            "type": "object",
+            "description": "Adapter configuration. Never put credentials here."
+          }
+        },
+        "required": [
+          "name",
+          "supermarketId",
+          "adapterKey"
+        ]
+      },
+      "UpdatePriceSourceRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "scheduleHourUtc": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 23
+          },
+          "config": {
+            "type": "object"
+          }
+        }
+      },
+      "ImportRunResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "runKey": {
+            "type": "string",
+            "example": "2026-09-24",
+            "description": "The daily slot this run served"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "STARTED",
+              "COMPLETED",
+              "PARTIAL",
+              "FAILED"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "productsSeen": {
+            "type": "number"
+          },
+          "pricesSeen": {
+            "type": "number"
+          },
+          "observationsCreated": {
+            "type": "number"
+          },
+          "observationsConfirmed": {
+            "type": "number",
+            "description": "Unchanged prices that confirmed an earlier observation instead of adding one"
+          },
+          "matchedProducts": {
+            "type": "number"
+          },
+          "unmatchedProducts": {
+            "type": "number",
+            "description": "Products awaiting a person’s decision"
+          },
+          "skippedPrices": {
+            "type": "number",
+            "description": "Prices that could not be placed or failed validation"
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "runKey",
+          "status",
+          "startedAt",
+          "finishedAt",
+          "productsSeen",
+          "pricesSeen",
+          "observationsCreated",
+          "observationsConfirmed",
+          "matchedProducts",
+          "unmatchedProducts",
+          "skippedPrices",
+          "error"
+        ]
+      },
+      "ExternalProductLinkResponse": {
+        "type": "object",
+        "properties": {
+          "externalProductId": {
+            "type": "string"
+          },
+          "externalName": {
+            "type": "string"
+          },
+          "externalBarcode": {
+            "type": "string",
+            "nullable": true
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "matchMethod": {
+            "type": "string",
+            "enum": [
+              "BARCODE",
+              "EXTERNAL_ID",
+              "NORMALIZED_IDENTITY",
+              "MANUAL"
+            ],
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "MATCHED",
+              "UNMATCHED",
+              "IGNORED"
+            ]
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "externalProductId",
+          "externalName",
+          "externalBarcode",
+          "productId",
+          "matchMethod",
+          "status",
+          "lastSeenAt"
+        ]
+      },
+      "ExternalProductLinkPageResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExternalProductLinkResponse"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "ResolveLinkRequest": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The canonical product this is. Omit with ignore: true."
+          },
+          "ignore": {
+            "type": "boolean",
+            "description": "Mark as having no canonical counterpart"
+          }
+        }
+      },
+      "LinkStoreRequest": {
+        "type": "object",
+        "properties": {
+          "externalStoreId": {
+            "type": "string",
+            "description": "What the source calls the branch"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "externalStoreId",
+          "storeId"
+        ]
       },
       "CreatePriceAlertRequest": {
         "type": "object",

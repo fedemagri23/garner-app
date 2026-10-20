@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { OptimizationModule } from '../optimization/optimization.module.js';
 import { ShoppingListsModule } from '../shopping-lists/shopping-lists.module.js';
 import { ChangeSessionStatusUseCase } from './application/change-session-status.use-case.js';
 import { ListShoppingSessionsUseCase } from './application/list-shopping-sessions.use-case.js';
@@ -12,11 +13,12 @@ import { ShoppingSessionsController } from './presentation/shopping-sessions.con
 
 /**
  * Owns shopping trips and the purchases recorded during them. Reads lists
- * through ShoppingListsModule's exports, and publishes ShoppingSessionCompleted
+ * through ShoppingListsModule's exports and finished plans through
+ * OptimizationModule's, and publishes ShoppingSessionCompleted
  * for the pricing work phase 4 hangs off it.
  */
 @Module({
-  imports: [ShoppingListsModule],
+  imports: [ShoppingListsModule, OptimizationModule],
   controllers: [ShoppingSessionsController],
   providers: [
     StartShoppingSessionUseCase,
