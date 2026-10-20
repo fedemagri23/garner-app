@@ -138,7 +138,7 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Fix:** Points carry their currency; the history keeps one — the requested `currency`, else the one with the most observations — and says which in the response.
 
 ### BUG-021 — A refused cheaper plan was listed once per combination that led to it
-- **Phase:** post-plan (mobile checkpoint 5) · **Area:** optimization · **Scope:** production code · **Found by:** checking the app's plan screen against the API · **Fixed in:** this commit
+- **Phase:** post-plan (mobile checkpoint 5) · **Area:** optimization · **Scope:** production code · **Found by:** checking the app's plan screen against the API · **Fixed in:** 5f7944d
 - **Symptom:** For "Compra semanal" near the Obelisco with a 5 km limit, `rejectedCheaperAlternatives` held the same Día-only plan three times.
 - **Cause:** Every combination containing Día — {Día}, {Día, Coto}, {Día, Carrefour} — assigns all products to Día and drops the unused store, so they produce identical plans, and the rejected list kept them all.
 - **Fix:** Rejected plans are de-duplicated by the stores they actually visit, keeping the cheapest; a regression test covers it.
