@@ -566,6 +566,15 @@ model Notification {
   listId    String?              @db.Uuid
   alertId   String?              @db.Uuid
 
+  /// For a price alert, the facts behind the words, so a client can say them
+  /// in its own language: why it fired, and the price and the one before it
+  /// in minor units. `title` and `body` stay for email and push, where the
+  /// server has to write the message itself.
+  reason             PriceAlertType?
+  priceCents         Int?
+  previousPriceCents Int?
+  currency           String?         @db.Char(3)
+
   status    NotificationStatus @default(PENDING)
   /// Identifies the news, so the same message is never raised twice.
   dedupeKey String             @unique

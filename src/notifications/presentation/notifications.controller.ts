@@ -25,6 +25,7 @@ import {
 import { paginate } from '../../common/http/pagination.js';
 import type { AuthenticatedUser } from '../../security/domain/authenticated-user.js';
 import { CurrentUser } from '../../security/presentation/current-user.decorator.js';
+import { SubjectNamesLoader } from '../application/notification-names.js';
 import { ManagePriceAlertsUseCase } from '../application/manage-price-alerts.use-case.js';
 import { NotificationPreferencesUseCase } from '../application/notification-preferences.use-case.js';
 import { ReadNotificationsUseCase } from '../application/read-notifications.use-case.js';
@@ -53,6 +54,7 @@ export class NotificationsController {
     private readonly alerts: ManagePriceAlertsUseCase,
     private readonly preferences: NotificationPreferencesUseCase,
     private readonly inbox: ReadNotificationsUseCase,
+    private readonly names: SubjectNamesLoader,
   ) {}
 
   @Post('price-alerts')
@@ -63,7 +65,8 @@ export class NotificationsController {
     @CurrentUser() actor: AuthenticatedUser,
     @Body() body: CreatePriceAlertRequest,
   ): Promise<PriceAlertResponse> {
-    return PriceAlertResponse.from(await this.alerts.create(actor, body));
+    const alert = await this.alerts.create(actor, body);
+    return PriceAlertResponse.from(alert, (await this.names.forSubjects([alert]))(alert));
   }
 
   @Get('price-alerts')
@@ -78,7 +81,13 @@ export class NotificationsController {
       take: query.take,
     });
 
-    return paginate(alerts.map(PriceAlertResponse.from), totalItems, query);
+    const namesOf = await this.names.forSubjects(alerts);
+
+    return paginate(
+      alerts.map((alert) => PriceAlertResponse.from(alert, namesOf(alert))),
+      totalItems,
+      query,
+    );
   }
 
   @Patch('price-alerts/:id')
@@ -90,7 +99,8 @@ export class NotificationsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdatePriceAlertRequest,
   ): Promise<PriceAlertResponse> {
-    return PriceAlertResponse.from(await this.alerts.update(actor, id, body));
+    const alert = await this.alerts.update(actor, id, body);
+    return PriceAlertResponse.from(alert, (await this.names.forSubjects([alert]))(alert));
   }
 
   @Delete('price-alerts/:id')
@@ -120,8 +130,14 @@ export class NotificationsController {
       },
     );
 
+    const namesOf = await this.names.forSubjects(notifications);
+
     return {
-      ...paginate(notifications.map(NotificationResponse.from), totalItems, query),
+      ...paginate(
+        notifications.map((notification) => NotificationResponse.from(notification, namesOf(notification))),
+        totalItems,
+        query,
+      ),
       unreadCount,
     };
   }
@@ -134,7 +150,8 @@ export class NotificationsController {
     @CurrentUser() actor: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<NotificationResponse> {
-    return NotificationResponse.from(await this.inbox.markRead(actor, id));
+    const notification = await this.inbox.markRead(actor, id);
+    return NotificationResponse.from(notification, (await this.names.forSubjects([notification]))(notification));
   }
 
   @Get('notification-preferences')

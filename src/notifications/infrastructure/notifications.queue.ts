@@ -27,6 +27,7 @@ interface EvaluateAlertsData {
   storeId: string;
   priceCents: number;
   previousPriceCents: number | null;
+  currency?: string;
 }
 
 interface DeliverData {

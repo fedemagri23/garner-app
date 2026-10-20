@@ -76,6 +76,7 @@ export class EvaluatePriceAlertsUseCase {
       storeId: string;
       priceCents: number;
       previousPriceCents: number | null;
+      currency?: string;
     },
     now: Date = new Date(),
   ): Promise<EvaluationSummary> {
@@ -120,6 +121,7 @@ export class EvaluatePriceAlertsUseCase {
       storeId: string;
       priceCents: number;
       previousPriceCents: number | null;
+      currency?: string;
     },
     store: { id: string; name: string; latitude: number; longitude: number; supermarket: { name: string } },
     productName: string,
@@ -156,6 +158,10 @@ export class EvaluatePriceAlertsUseCase {
       storeId: input.storeId,
       listId: null,
       alertId: alert.id,
+      reason: decision.reason,
+      priceCents: input.priceCents,
+      previousPriceCents: input.previousPriceCents,
+      currency: input.currency ?? null,
       dedupeKey: alertDedupeKey(alert, input),
       // Held rather than dropped when the shopper asked for quiet.
       deliverAt: deliveryTime(preferences, now),

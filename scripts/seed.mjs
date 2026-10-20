@@ -453,6 +453,96 @@ async function main() {
     ],
   });
 
+  // Alerts the shopper has set, and what they have already been told.
+  const alertIds = {
+    milk: '33333333-3333-4333-8333-333333333301',
+    water: '33333333-3333-4333-8333-333333333302',
+    oil: '33333333-3333-4333-8333-333333333303',
+  };
+  const alerts = [
+    // Milk below $ 1.400 anywhere nearby.
+    { id: alertIds.milk, productId: products[0].id, type: 'BELOW_THRESHOLD', storeId: null, thresholdCents: 140000 },
+    // Water falling by 5% or more at Coto.
+    { id: alertIds.water, productId: products[5].id, type: 'PRICE_DROP', storeId: storeOrder[0].id, dropPercent: 5 },
+    // Oil: whenever somewhere near the Obelisco becomes the cheapest.
+    { id: alertIds.oil, productId: products[3].id, type: 'CHEAPER_NEARBY', storeId: null, ...HOME, radiusKm: 5 },
+  ];
+  for (const alert of alerts) {
+    await core.priceAlert.upsert({
+      where: { id: alert.id },
+      create: { ownerId: shopper.id, isEnabled: true, ...alert },
+      update: { ownerId: shopper.id, isEnabled: true, ...alert },
+    });
+  }
+
+  const hoursAgo = (hours) => new Date(Date.now() - hours * 60 * 60 * 1000);
+  const messages = [
+    {
+      key: 'milk-dia',
+      productId: products[0].id,
+      storeId: storeOrder[2].id,
+      alertId: alertIds.milk,
+      reason: 'BELOW_THRESHOLD',
+      priceCents: 132000,
+      previousPriceCents: 150000,
+      currency: 'ARS',
+      createdAt: hoursAgo(2),
+      readAt: null,
+    },
+    {
+      key: 'water-coto',
+      productId: products[5].id,
+      storeId: storeOrder[0].id,
+      alertId: alertIds.water,
+      reason: 'PRICE_DROP',
+      priceCents: 98000,
+      previousPriceCents: 106000,
+      currency: 'ARS',
+      createdAt: hoursAgo(5),
+      readAt: null,
+    },
+    {
+      key: 'oil-carrefour',
+      productId: products[3].id,
+      storeId: storeOrder[1].id,
+      alertId: alertIds.oil,
+      reason: 'CHEAPER_NEARBY',
+      priceCents: 235000,
+      previousPriceCents: 250000,
+      currency: 'ARS',
+      createdAt: hoursAgo(72),
+      readAt: hoursAgo(70),
+    },
+    {
+      key: 'milk-hofer',
+      productId: products[0].id,
+      storeId: viennaStores[2].id,
+      alertId: null,
+      reason: 'PRICE_DROP',
+      priceCents: 115,
+      previousPriceCents: 129,
+      currency: 'EUR',
+      createdAt: hoursAgo(26),
+      readAt: null,
+    },
+  ];
+  for (const { key, ...message } of messages) {
+    // The server writes these two in English, for email and push; the app
+    // composes its own from the facts beside them.
+    const data = {
+      userId: shopper.id,
+      category: 'PRICE_ALERT',
+      title: 'Price alert',
+      body: 'A price you are watching changed.',
+      status: 'SENT',
+      sentAt: message.createdAt,
+      deliverAt: message.createdAt,
+      dedupeKey: `seed:${key}`,
+      ...message,
+    };
+    await core.notification.upsert({ where: { dedupeKey: data.dedupeKey }, create: data, update: data });
+  }
+
   console.log(`
 Seeded:
   users        admin@garner.test (ADMIN), shopper@garner.test (USER)
@@ -462,6 +552,7 @@ Seeded:
                ${viennaStores.length} around Stephansplatz, Vienna (Billa, Spar, Hofer, in EUR)
   prices       current price + 14 days of history per product/store
   price drops  ${drops.length} near the Obelisco, ${viennaDrops.length} near Stephansplatz
+  alerts       3 price alerts and 4 messages (3 unread), the shopper's
   lists        "Compra semanal" (4 items, ARS) and "Compra en Viena" (4 items, EUR), the shopper's
   home point   ${HOME.latitude}, ${HOME.longitude} (the shopper's saved location, "Centro")
   vienna point ${VIENNA.latitude}, ${VIENNA.longitude} (Stephansplatz)

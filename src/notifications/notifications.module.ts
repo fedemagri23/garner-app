@@ -1,3 +1,4 @@
+import { SubjectNamesLoader } from './application/notification-names.js';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { AppConfigService } from '../common/config/app-config.service.js';
@@ -58,6 +59,7 @@ import { NotificationsController } from './presentation/notifications.controller
   ],
   controllers: [NotificationsController, EmailUnsubscribeController],
   providers: [
+    SubjectNamesLoader,
     ManagePriceAlertsUseCase,
     EvaluatePriceAlertsUseCase,
     DeliverNotificationUseCase,

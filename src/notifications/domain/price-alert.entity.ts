@@ -80,6 +80,11 @@ export interface Notification {
   storeId: string | null;
   listId: string | null;
   alertId: string | null;
+  /** For a price alert: why it fired, and the price behind the words. */
+  reason: PriceAlertType | null;
+  priceCents: number | null;
+  previousPriceCents: number | null;
+  currency: string | null;
   status: NotificationStatus;
   dedupeKey: string;
   createdAt: Date;

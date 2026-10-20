@@ -15,6 +15,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
+import type { SubjectNames } from '../application/notification-names.js';
 import {
   NotificationCategory,
   NotificationStatus,
@@ -33,6 +34,10 @@ const MAX_PRICE_CENTS = 100_000_000;
 export class PriceAlertResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) productId!: string;
+  @ApiProperty() productName!: string;
+  @ApiProperty({ type: String, nullable: true, description: 'Null when the alert watches anywhere nearby' })
+  storeName!: string | null;
+  @ApiProperty({ type: String, nullable: true }) supermarketName!: string | null;
   @ApiProperty({ enum: ALERT_TYPES }) type!: PriceAlertType;
   @ApiProperty({ type: String, format: 'uuid', nullable: true, description: 'Null watches anywhere nearby' })
   storeId!: string | null;
@@ -44,10 +49,13 @@ export class PriceAlertResponse {
   lastTriggeredAt!: string | null;
   @ApiProperty({ format: 'date-time' }) createdAt!: string;
 
-  static from(alert: PriceAlert): PriceAlertResponse {
+  static from(alert: PriceAlert, names: SubjectNames): PriceAlertResponse {
     return {
       id: alert.id,
       productId: alert.productId,
+      productName: names.productName ?? 'Unknown product',
+      storeName: names.storeName,
+      supermarketName: names.supermarketName,
       type: alert.type,
       storeId: alert.storeId,
       thresholdCents: alert.thresholdCents,
@@ -73,11 +81,25 @@ export class NotificationResponse {
   @ApiProperty({ type: String, format: 'uuid', nullable: true }) productId!: string | null;
   @ApiProperty({ type: String, format: 'uuid', nullable: true }) storeId!: string | null;
   @ApiProperty({ type: String, format: 'uuid', nullable: true }) listId!: string | null;
+  @ApiProperty({ type: String, nullable: true }) productName!: string | null;
+  @ApiProperty({ type: String, nullable: true }) storeName!: string | null;
+  @ApiProperty({ type: String, nullable: true }) supermarketName!: string | null;
+  @ApiProperty({
+    enum: ALERT_TYPES,
+    nullable: true,
+    description: 'For a price alert, why it fired — so a client can say it in its own language',
+  })
+  reason!: PriceAlertType | null;
+  @ApiProperty({ type: Number, nullable: true, description: 'The price that fired it, in minor units' })
+  priceCents!: number | null;
+  @ApiProperty({ type: Number, nullable: true, description: 'The price before it, in minor units' })
+  previousPriceCents!: number | null;
+  @ApiProperty({ type: String, nullable: true, example: 'ARS' }) currency!: string | null;
   @ApiProperty({ enum: STATUSES }) status!: NotificationStatus;
   @ApiProperty({ format: 'date-time' }) createdAt!: string;
   @ApiProperty({ type: String, format: 'date-time', nullable: true }) readAt!: string | null;
 
-  static from(notification: Notification): NotificationResponse {
+  static from(notification: Notification, names: SubjectNames): NotificationResponse {
     return {
       id: notification.id,
       category: notification.category,
@@ -86,6 +108,11 @@ export class NotificationResponse {
       productId: notification.productId,
       storeId: notification.storeId,
       listId: notification.listId,
+      ...names,
+      reason: notification.reason,
+      priceCents: notification.priceCents,
+      previousPriceCents: notification.previousPriceCents,
+      currency: notification.currency,
       status: notification.status,
       createdAt: notification.createdAt.toISOString(),
       readAt: notification.readAt?.toISOString() ?? null,

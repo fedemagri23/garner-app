@@ -6263,6 +6263,18 @@
             "type": "string",
             "format": "uuid"
           },
+          "productName": {
+            "type": "string"
+          },
+          "storeName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null when the alert watches anywhere nearby"
+          },
+          "supermarketName": {
+            "type": "string",
+            "nullable": true
+          },
           "type": {
             "type": "string",
             "enum": [
@@ -6305,6 +6317,9 @@
         "required": [
           "id",
           "productId",
+          "productName",
+          "storeName",
+          "supermarketName",
           "type",
           "storeId",
           "thresholdCents",
@@ -6382,6 +6397,43 @@
             "format": "uuid",
             "nullable": true
           },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "storeName": {
+            "type": "string",
+            "nullable": true
+          },
+          "supermarketName": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "BELOW_THRESHOLD",
+              "PRICE_DROP",
+              "CHEAPER_NEARBY"
+            ],
+            "nullable": true,
+            "description": "For a price alert, why it fired — so a client can say it in its own language"
+          },
+          "priceCents": {
+            "type": "number",
+            "nullable": true,
+            "description": "The price that fired it, in minor units"
+          },
+          "previousPriceCents": {
+            "type": "number",
+            "nullable": true,
+            "description": "The price before it, in minor units"
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true,
+            "example": "ARS"
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -6408,6 +6460,13 @@
           "productId",
           "storeId",
           "listId",
+          "productName",
+          "storeName",
+          "supermarketName",
+          "reason",
+          "priceCents",
+          "previousPriceCents",
+          "currency",
           "status",
           "createdAt",
           "readAt"

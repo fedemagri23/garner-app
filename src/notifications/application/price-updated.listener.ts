@@ -32,6 +32,7 @@ export class PriceUpdatedListener implements OnModuleInit {
           storeId: event.payload.storeId,
           priceCents: event.payload.priceCents,
           previousPriceCents: event.payload.previousPriceCents,
+          currency: event.payload.currency,
         });
       },
     );

@@ -31,7 +31,7 @@ describe('Price alerts and notifications (e2e)', () => {
 
   /** A price change, as the worker would receive it from DerivedPriceUpdated. */
   const priceChanges = (priceCents: number, previousPriceCents: number | null) =>
-    evaluate.execute({ productId: milkId, storeId, priceCents, previousPriceCents });
+    evaluate.execute({ productId: milkId, storeId, priceCents, previousPriceCents, currency: 'ARS' });
 
   const inbox = async (token: string) =>
     (await http().get('/v1/notifications').set(auth(token)).expect(200)).body;
@@ -138,8 +138,23 @@ describe('Price alerts and notifications (e2e)', () => {
           thresholdCents: 100,
           isEnabled: true,
           lastTriggeredAt: null,
+          productName: 'Leche Entera 1L',
+          // Watching anywhere nearby: no store to name.
+          storeName: null,
+          supermarketName: null,
         }),
       ]);
+    });
+
+    it('names the store of an alert that watches one', async () => {
+      const id = await createAlert({ type: 'BELOW_THRESHOLD', thresholdCents: 100, storeId });
+
+      const alerts = await http().get('/v1/price-alerts').set(auth(shopper)).expect(200);
+
+      expect(alerts.body.data.find((alert: { id: string }) => alert.id === id)).toMatchObject({
+        storeName: expect.any(String),
+        supermarketName: expect.any(String),
+      });
     });
 
     it('refuses an alert missing the figures it needs', async () => {
@@ -182,6 +197,24 @@ describe('Price alerts and notifications (e2e)', () => {
         storeId,
       });
       expect(data[0].title).toContain('Leche Entera 1L');
+    });
+
+    it('carries the facts behind the words, so a client can say them in its own language', async () => {
+      await createAlert({ type: 'BELOW_THRESHOLD', thresholdCents: 100 });
+
+      await priceChanges(90, 120);
+
+      const { data } = await inbox(shopper);
+
+      expect(data[0]).toMatchObject({
+        reason: 'BELOW_THRESHOLD',
+        priceCents: 90,
+        previousPriceCents: 120,
+        currency: 'ARS',
+        productName: 'Leche Entera 1L',
+        storeName: expect.any(String),
+        supermarketName: expect.any(String),
+      });
     });
 
     it('says nothing while the price stays above the figure', async () => {

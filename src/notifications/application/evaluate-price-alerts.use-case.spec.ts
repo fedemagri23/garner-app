@@ -116,6 +116,8 @@ describe('EvaluatePriceAlertsUseCase', () => {
         productId: 'milk',
         storeId: 'store-1',
         alertId: 'alert-1',
+        reason: 'BELOW_THRESHOLD',
+        priceCents: 90,
         dedupeKey: 'alert:alert-1:store-1:90',
       }),
     );

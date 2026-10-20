@@ -306,3 +306,9 @@ Notation: [`README.md`](README.md).
 - **What:** `GET /v1/price-observations/mine` and `POST /v1/price-observations` now return `productName`, `storeName` and `supermarketName` with each contribution, looked up when the answer is built (two queries for a whole page). Nothing about the stored report changes.
 - **Why:** A history screen needs to say what was reported where; ids alone would cost the app two requests per row. Reading names live follows the rule plans already use: a renamed store reads correctly, and the price stays as it was reported. A deleted product or store reads "Unknown …".
 - **Revisit when:** Names need to be as they were when the price was reported — then snapshot them on the observation.
+
+### CON-048 — A notification carries the facts behind its words; email and push stay in English
+- **Phase:** post-plan (mobile phase 6) · **Area:** notifications · **Status:** accepted
+- **What:** A price-alert notification now stores why it fired (`reason`), the price and the one before it in minor units, and the currency; and the API returns them with the names of the product, store and chain, read when listed. Alerts return the same names. `title` and `body` are still written by the server — in English, with a bare number — for email and push.
+- **Why:** The app speaks Spanish, with pesos and euros; a server sentence like "Leche is now 13.90" cannot say "Leche bajó a $ 1.390 en Día Almagro" for a reader in either currency. Facts let each client write the message in its own words; the server keeps no language of its own.
+- **Revisit when:** Email or push reach people who are not served by an app screen — then the server needs the user's language and a template per language for `title` and `body`, which today are English only.

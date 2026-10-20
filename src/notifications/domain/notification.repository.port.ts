@@ -64,6 +64,10 @@ export interface CreateNotificationInput {
   storeId: string | null;
   listId: string | null;
   alertId: string | null;
+  reason: PriceAlertType | null;
+  priceCents: number | null;
+  previousPriceCents: number | null;
+  currency: string | null;
   dedupeKey: string;
   deliverAt: Date;
 }
@@ -177,6 +181,8 @@ export interface NotificationJobs {
     storeId: string;
     priceCents: number;
     previousPriceCents: number | null;
+    /** Absent on jobs queued before it was carried. */
+    currency?: string;
   }): Promise<void>;
   enqueueDelivery(notificationId: string, deliverAt: Date): Promise<void>;
 }
