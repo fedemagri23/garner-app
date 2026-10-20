@@ -2,6 +2,7 @@ import type { UserRepository } from '../../users/domain/user.repository.port.js'
 import type {
   ChannelDelivery,
   ChannelDeliveryLedger,
+  DeviceTokenRepository,
   NotificationChannel,
   NotificationPreferencesRepository,
   NotificationRepository,
@@ -27,6 +28,10 @@ const message = (overrides: Partial<Notification> = {}): Notification => ({
   storeId: null,
   listId: null,
   alertId: null,
+  reason: null,
+  priceCents: null,
+  previousPriceCents: null,
+  currency: null,
   status: 'PENDING',
   dedupeKey: 'k',
   createdAt: now,
@@ -53,6 +58,7 @@ describe('DeliverNotificationUseCase', () => {
   let preferences: { find: jest.Mock };
   let ledger: jest.Mocked<ChannelDeliveryLedger>;
   let users: { findById: jest.Mock };
+  let devices: { findByUser: jest.Mock };
   let inApp: ReturnType<typeof channel>;
   let email: ReturnType<typeof channel>;
 
@@ -63,6 +69,7 @@ describe('DeliverNotificationUseCase', () => {
       ledger,
       [inApp, email] as NotificationChannel[],
       users as unknown as UserRepository,
+      devices as unknown as DeviceTokenRepository,
     );
 
   const history = (deliveries: Partial<ChannelDelivery>[]) =>
@@ -95,6 +102,7 @@ describe('DeliverNotificationUseCase', () => {
       recordFailure: jest.fn().mockResolvedValue(true),
     };
     users = { findById: jest.fn().mockResolvedValue({ id: 'user-1', email: 'ana@example.com' }) };
+    devices = { findByUser: jest.fn().mockResolvedValue([]) };
     inApp = channel('in-app');
     email = channel('email');
   });

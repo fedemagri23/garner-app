@@ -9,10 +9,12 @@ import {
 } from '../domain/price-alert.entity.js';
 import {
   CHANNEL_DELIVERY_LEDGER,
+  DEVICE_TOKEN_REPOSITORY,
   NOTIFICATION_CHANNELS,
   NOTIFICATION_PREFERENCES_REPOSITORY,
   NOTIFICATION_REPOSITORY,
   type ChannelDeliveryLedger,
+  type DeviceTokenRepository,
   type NotificationChannel,
   type NotificationPreferencesRepository,
   type NotificationRecipient,
@@ -52,6 +54,7 @@ export class DeliverNotificationUseCase {
     @Inject(NOTIFICATION_CHANNELS)
     private readonly channels: NotificationChannel[],
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
+    @Inject(DEVICE_TOKEN_REPOSITORY) private readonly devices: DeviceTokenRepository,
   ) {}
 
   async execute(notificationId: string, now: Date = new Date()): Promise<boolean> {
@@ -168,15 +171,17 @@ export class DeliverNotificationUseCase {
   }
 
   private async recipientFor(userId: string): Promise<NotificationRecipient> {
-    const [user, preferences] = await Promise.all([
+    const [user, preferences, phones] = await Promise.all([
       this.users.findById(userId),
       this.preferences.find(userId),
+      this.devices.findByUser(userId),
     ]);
 
     return {
       userId,
       email: user?.email ?? null,
       preferences: preferences ?? { userId, ...DEFAULT_NOTIFICATION_PREFERENCES },
+      deviceTokens: phones.map((phone) => phone.token),
     };
   }
 }

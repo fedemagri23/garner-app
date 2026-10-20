@@ -1,5 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
+import { Test, type TestingModuleBuilder } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module.js';
 import { configureApp } from '../../src/app-setup.js';
@@ -12,11 +12,16 @@ import { RedisService } from '../../src/common/redis/redis.service.js';
  * Boots the real application graph against the test databases, through the
  * same `configureApp` the production process uses — so a pipe, guard or filter
  * can never be configured in one and missing in the other.
+ *
+ * A test that needs a stand-in for something outside the process — Expo's push
+ * service, say — replaces that provider through `customize`.
  */
-export async function createTestApp(): Promise<INestApplication> {
-  const moduleRef = await Test.createTestingModule({
-    imports: [AppModule],
-  }).compile();
+export async function createTestApp(
+  customize: (builder: TestingModuleBuilder) => TestingModuleBuilder = (builder) => builder,
+): Promise<INestApplication> {
+  const moduleRef = await customize(
+    Test.createTestingModule({ imports: [AppModule] }),
+  ).compile();
 
   const app = moduleRef.createNestApplication();
   configureApp(app);

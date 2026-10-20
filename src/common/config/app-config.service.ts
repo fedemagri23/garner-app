@@ -110,6 +110,14 @@ export class AppConfigService {
     return this.get('MAX_REQUEST_BODY_KB') * 1024;
   }
 
+  get expoPushUrl(): string {
+    return this.get('EXPO_PUSH_URL');
+  }
+
+  get expoAccessToken(): string | null {
+    return this.get('EXPO_ACCESS_TOKEN') ?? null;
+  }
+
   /** Null when no mail server is configured, which turns email off. */
   get smtpUrl(): string | null {
     return this.get('SMTP_URL') ?? null;

@@ -3261,6 +3261,103 @@
           "notifications"
         ]
       }
+    },
+    "/v1/devices": {
+      "post": {
+        "description": "Idempotent: registering the same token again refreshes it. A token another account had moves to this one.",
+        "operationId": "devicesRegister",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDeviceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register this phone for push notifications",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/v1/devices/test": {
+      "post": {
+        "operationId": "devicesTest",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestPushResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The push service could not be reached"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a test push to my registered phones",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/v1/devices/{token}": {
+      "delete": {
+        "operationId": "devicesUnregister",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stop sending push notifications to this phone",
+        "tags": [
+          "notifications"
+        ]
+      }
     }
   },
   "info": {
@@ -6595,6 +6692,69 @@
             "maximum": 10080
           }
         }
+      },
+      "RegisterDeviceRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+            "description": "The Expo push token of this phone"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android"
+            ]
+          }
+        },
+        "required": [
+          "token",
+          "platform"
+        ]
+      },
+      "DeviceResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android"
+            ]
+          },
+          "registeredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "platform",
+          "registeredAt"
+        ]
+      },
+      "TestPushResponse": {
+        "type": "object",
+        "properties": {
+          "devices": {
+            "type": "number",
+            "description": "Phones registered for this account"
+          },
+          "delivered": {
+            "type": "number",
+            "description": "Of them, how many the push service accepted the message for"
+          }
+        },
+        "required": [
+          "devices",
+          "delivered"
+        ]
       }
     }
   }

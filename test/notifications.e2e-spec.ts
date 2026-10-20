@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { createServer, type Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import type { INestApplication } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
@@ -7,6 +9,8 @@ import type { App } from 'supertest/types';
 import { CorePrismaService } from '../src/common/database/core-prisma.service.js';
 import { EvaluatePriceAlertsUseCase } from '../src/notifications/application/evaluate-price-alerts.use-case.js';
 import { DeliverNotificationUseCase } from '../src/notifications/application/deliver-notification.use-case.js';
+import { PUSH_SENDER } from '../src/notifications/domain/notification.repository.port.js';
+import { ExpoPushSender } from '../src/notifications/infrastructure/expo-push-sender.js';
 import { NOTIFICATIONS_QUEUE } from '../src/notifications/infrastructure/notifications.queue.js';
 import {
   createTestApp,
@@ -14,6 +18,24 @@ import {
   resetDatabase,
   uniqueEmail,
 } from './helpers/test-app.js';
+
+/**
+ * Stands in for Expo's push service: records what it is sent, and answers
+ * with whatever the test set up. Nothing in these tests reaches the internet.
+ */
+interface PushRequest {
+  to: string;
+  title: string;
+  body: string;
+  data: Record<string, string>;
+}
+const expo = {
+  server: undefined as Server | undefined,
+  received: [] as PushRequest[][],
+  /** One ticket per message; replaced per test. */
+  tickets: (messages: PushRequest[]): unknown[] => messages.map(() => ({ status: 'ok', id: 'x' })),
+  status: 200,
+};
 
 describe('Price alerts and notifications (e2e)', () => {
   let app: INestApplication<App>;
@@ -37,7 +59,25 @@ describe('Price alerts and notifications (e2e)', () => {
     (await http().get('/v1/notifications').set(auth(token)).expect(200)).body;
 
   beforeAll(async () => {
-    app = (await createTestApp()) as INestApplication<App>;
+    expo.server = createServer((req, res) => {
+      let raw = '';
+      req.on('data', (chunk) => (raw += chunk));
+      req.on('end', () => {
+        const messages = JSON.parse(raw) as PushRequest[];
+        expo.received.push(messages);
+        res.statusCode = expo.status;
+        res.setHeader('content-type', 'application/json');
+        res.end(JSON.stringify({ data: expo.tickets(messages) }));
+      });
+    });
+    await new Promise<void>((resolve) => expo.server!.listen(0, '127.0.0.1', resolve));
+    const pushUrl = `http://127.0.0.1:${(expo.server.address() as AddressInfo).port}/push`;
+
+    // The real sender, pointed at the stand-in: everything but the address is
+    // what runs in production.
+    app = (await createTestApp((builder) =>
+      builder.overrideProvider(PUSH_SENDER).useValue(new ExpoPushSender(pushUrl, null)),
+    )) as INestApplication<App>;
     await resetDatabase(app);
 
     core = app.get(CorePrismaService);
@@ -102,12 +142,17 @@ describe('Price alerts and notifications (e2e)', () => {
   afterAll(async () => {
     await resetDatabase(app);
     await app.close();
+    await new Promise((resolve) => expo.server?.close(resolve));
   });
 
   beforeEach(async () => {
     await core.notification.deleteMany();
     await core.priceAlert.deleteMany();
     await core.notificationPreferences.deleteMany();
+    await core.deviceToken.deleteMany();
+    expo.received = [];
+    expo.status = 200;
+    expo.tickets = (messages) => messages.map(() => ({ status: 'ok', id: 'x' }));
   });
 
   const createAlert = async (
@@ -601,6 +646,160 @@ describe('Price alerts and notifications (e2e)', () => {
 
       expect(await deliver.deliverDue()).toBe(1);
       expect(await deliver.deliverDue()).toBe(0);
+    });
+  });
+
+  describe('push to phones', () => {
+    const PHONE = 'ExponentPushToken[aaaaaaaaaaaaaaaaaaaaaa]';
+    const OTHER_PHONE = 'ExponentPushToken[bbbbbbbbbbbbbbbbbbbbbb]';
+
+    const register = (token: string, who = shopper, platform = 'ios') =>
+      http().post('/v1/devices').set(auth(who)).send({ token, platform });
+
+    let queue: Queue;
+
+    beforeAll(async () => {
+      queue = app.get<Queue>(getQueueToken(NOTIFICATIONS_QUEUE));
+      await queue.pause();
+    });
+
+    afterAll(async () => {
+      await queue.drain();
+      await queue.resume();
+    });
+
+    it('registers a phone, and registering it again is the same phone', async () => {
+      const first = await register(PHONE).expect(201);
+      const again = await register(PHONE).expect(201);
+
+      expect(again.body.id).toBe(first.body.id);
+      expect(first.body).toMatchObject({ platform: 'ios' });
+      expect(await core.deviceToken.count()).toBe(1);
+    });
+
+    it('refuses what is not an Expo push token, and needs authentication', async () => {
+      await register('not-a-token').expect(400);
+      await register(PHONE, shopper, 'windows').expect(400);
+      await http().post('/v1/devices').send({ token: PHONE, platform: 'ios' }).expect(401);
+      await http().post('/v1/devices/test').expect(401);
+    });
+
+    it('moves a phone to whoever signs in on it', async () => {
+      await register(PHONE, shopper).expect(201);
+      await register(PHONE, intruder).expect(201);
+
+      expect(await core.deviceToken.count()).toBe(1);
+
+      // The first account no longer has it: a test push finds no phone.
+      const test = await http().post('/v1/devices/test').set(auth(shopper)).expect(200);
+      expect(test.body).toEqual({ devices: 0, delivered: 0 });
+
+      // And the account that signed in on it has it.
+      const theirs = await http().post('/v1/devices/test').set(auth(intruder)).expect(200);
+      expect(theirs.body).toEqual({ devices: 1, delivered: 1 });
+    });
+
+    it('forgets a phone on request, and forgetting an unknown one is fine', async () => {
+      await register(PHONE).expect(201);
+
+      await http().delete(`/v1/devices/${encodeURIComponent(PHONE)}`).set(auth(shopper)).expect(204);
+      await http().delete(`/v1/devices/${encodeURIComponent(PHONE)}`).set(auth(shopper)).expect(204);
+
+      expect(await core.deviceToken.count()).toBe(0);
+    });
+
+    it('does not let one account forget another\'s phone', async () => {
+      await register(PHONE, intruder).expect(201);
+
+      await http().delete(`/v1/devices/${encodeURIComponent(PHONE)}`).set(auth(shopper)).expect(204);
+
+      expect(await core.deviceToken.count()).toBe(1);
+    });
+
+    it('sends a test push, in Spanish, to every phone', async () => {
+      await register(PHONE).expect(201);
+      await register(OTHER_PHONE, shopper, 'android').expect(201);
+
+      const test = await http().post('/v1/devices/test').set(auth(shopper)).expect(200);
+
+      expect(test.body).toEqual({ devices: 2, delivered: 2 });
+      expect(expo.received).toHaveLength(1);
+      expect(expo.received[0].map((m) => m.to).sort()).toEqual([PHONE, OTHER_PHONE].sort());
+      expect(expo.received[0][0]).toMatchObject({
+        title: 'Garner',
+        body: 'Si ves esto, los avisos funcionan en este teléfono.',
+      });
+    });
+
+    it('says so when there is no phone, without calling the push service', async () => {
+      const test = await http().post('/v1/devices/test').set(auth(shopper)).expect(200);
+
+      expect(test.body).toEqual({ devices: 0, delivered: 0 });
+      expect(expo.received).toHaveLength(0);
+    });
+
+    it('forgets a phone the push service says is gone', async () => {
+      await register(PHONE).expect(201);
+      expo.tickets = (messages) =>
+        messages.map(() => ({ status: 'error', message: 'gone', details: { error: 'DeviceNotRegistered' } }));
+
+      const test = await http().post('/v1/devices/test').set(auth(shopper)).expect(200);
+
+      expect(test.body).toEqual({ devices: 1, delivered: 0 });
+      expect(await core.deviceToken.count()).toBe(0);
+    });
+
+    it('answers 502 when the push service cannot be used', async () => {
+      await register(PHONE).expect(201);
+      expo.status = 503;
+
+      await http().post('/v1/devices/test').set(auth(shopper)).expect(502);
+      expect(await core.deviceToken.count()).toBe(1);
+    });
+
+    it('pushes a price alert, in Spanish, to the phones of whoever set it', async () => {
+      await register(PHONE).expect(201);
+      await register(OTHER_PHONE, intruder).expect(201);
+      await createAlert({ type: 'BELOW_THRESHOLD', thresholdCents: 100 });
+      await priceChanges(90, 120);
+
+      const stored = await core.notification.findFirstOrThrow();
+      expect(await deliver.execute(stored.id)).toBe(true);
+
+      expect(expo.received).toHaveLength(1);
+      expect(expo.received[0]).toHaveLength(1);
+      expect(expo.received[0][0]).toMatchObject({
+        to: PHONE,
+        title: 'Leche Entera 1L bajó a $ 0,90',
+        body: expect.stringContaining('Coto Centro'),
+        data: { notificationId: stored.id, productId: milkId },
+      });
+      expect((await core.notification.findUniqueOrThrow({ where: { id: stored.id } })).status).toBe('SENT');
+    });
+
+    it('retries a push when the service is down, and does not send it twice once it has gone', async () => {
+      await register(PHONE).expect(201);
+      await createAlert({ type: 'BELOW_THRESHOLD', thresholdCents: 100 });
+      await priceChanges(90, 120);
+      const stored = await core.notification.findFirstOrThrow();
+
+      expo.status = 503;
+      await expect(deliver.execute(stored.id)).rejects.toThrow();
+      expect((await core.notification.findUniqueOrThrow({ where: { id: stored.id } })).status).not.toBe('SENT');
+
+      expo.status = 200;
+      expect(await deliver.execute(stored.id)).toBe(true);
+      expect(await deliver.execute(stored.id)).toBe(false);
+      expect(expo.received.filter((batch) => batch.length > 0 && batch[0].title.includes('bajó'))).toHaveLength(2);
+    });
+
+    it('sends nothing to someone with no phone', async () => {
+      await createAlert({ type: 'BELOW_THRESHOLD', thresholdCents: 100 });
+      await priceChanges(90, 120);
+      const stored = await core.notification.findFirstOrThrow();
+
+      expect(await deliver.execute(stored.id)).toBe(true);
+      expect(expo.received).toHaveLength(0);
     });
   });
 });

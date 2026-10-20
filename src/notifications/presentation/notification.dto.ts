@@ -7,6 +7,7 @@ import {
   IsLatitude,
   IsLongitude,
   IsNumber,
+  IsIn,
   IsOptional,
   Matches,
   IsPositive,
@@ -17,6 +18,7 @@ import {
 } from 'class-validator';
 import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
 import type { SubjectNames } from '../application/notification-names.js';
+import type { DeviceToken } from '../domain/notification.repository.port.js';
 import {
   NotificationCategory,
   NotificationStatus,
@@ -309,3 +311,40 @@ export class ListNotificationsQueryDto extends PaginationQuery {
 }
 
 export class ListPriceAlertsQueryDto extends PaginationQuery {}
+
+const DEVICE_PLATFORMS = ['ios', 'android'] as const;
+
+export class RegisterDeviceRequest {
+  @ApiProperty({
+    example: 'ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]',
+    description: 'The Expo push token of this phone',
+  })
+  @Matches(/^Expo(nent)?PushToken\[[A-Za-z0-9_-]+\]$/, {
+    message: 'token must be an Expo push token',
+  })
+  token!: string;
+
+  @ApiProperty({ enum: DEVICE_PLATFORMS })
+  @IsIn(DEVICE_PLATFORMS)
+  platform!: (typeof DEVICE_PLATFORMS)[number];
+}
+
+export class DeviceResponse {
+  @ApiProperty({ format: 'uuid' }) id!: string;
+  @ApiProperty({ enum: DEVICE_PLATFORMS }) platform!: string;
+  @ApiProperty({ format: 'date-time' }) registeredAt!: string;
+
+  static from(device: DeviceToken): DeviceResponse {
+    return {
+      id: device.id,
+      platform: device.platform,
+      registeredAt: device.createdAt.toISOString(),
+    };
+  }
+}
+
+export class TestPushResponse {
+  @ApiProperty({ description: 'Phones registered for this account' }) devices!: number;
+  @ApiProperty({ description: 'Of them, how many the push service accepted the message for' })
+  delivered!: number;
+}

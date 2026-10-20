@@ -46,6 +46,12 @@ export const configSchema = z.object({
   SMTP_URL: z.url().optional(),
   EMAIL_FROM: z.string().min(3).default('Garner <alerts@garner.local>'),
 
+  // Expo's push service, which hands messages on to Apple and Google. The
+  // default is Expo's own; override it to point at a stand-in in tests. The
+  // access token is only needed if "enhanced security" is on for the project.
+  EXPO_PUSH_URL: z.url().default('https://exp.host/--/api/v2/push/send'),
+  EXPO_ACCESS_TOKEN: z.string().min(1).optional(),
+
   // Where this API is reachable from outside, for links in emails.
   PUBLIC_BASE_URL: z.url().default('http://localhost:3000'),
 

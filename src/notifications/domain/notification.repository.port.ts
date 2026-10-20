@@ -103,6 +103,8 @@ export interface NotificationRecipient {
   /** Null when the account no longer exists. */
   email: string | null;
   preferences: NotificationPreferences;
+  /** The phones registered for push; none when the shopper never turned it on. */
+  deviceTokens: string[];
 }
 
 /**
@@ -191,3 +193,51 @@ export interface NotificationJobs {
 export const NOTIFICATION_JOBS = Symbol('NOTIFICATION_JOBS');
 
 export type { NotificationStatus };
+
+/** A phone registered to be told things while the app is closed. */
+export interface DeviceToken {
+  id: string;
+  userId: string;
+  token: string;
+  platform: string;
+  createdAt: Date;
+  lastSeenAt: Date;
+}
+
+export interface DeviceTokenRepository {
+  /**
+   * Registers a token for this account, or moves it here if another account
+   * had it: a phone belongs to whoever is signed in on it.
+   */
+  upsert(userId: string, token: string, platform: string): Promise<DeviceToken>;
+  findByUser(userId: string): Promise<DeviceToken[]>;
+  /** Forgets one of this account's tokens. Forgetting an unknown one is fine. */
+  remove(userId: string, token: string): Promise<void>;
+  /** Drops tokens the push service says are no longer valid. */
+  removeMany(tokens: string[]): Promise<void>;
+}
+
+export const DEVICE_TOKEN_REPOSITORY = Symbol('DEVICE_TOKEN_REPOSITORY');
+
+export interface PushMessage {
+  to: string;
+  title: string;
+  body: string;
+  /** Delivered with the message, for the app to act on when it is tapped. */
+  data: Record<string, string>;
+}
+
+/** What the push service made of one message. */
+export type PushOutcome =
+  | { token: string; status: 'ok' }
+  /** The phone is gone (app uninstalled, token expired): forget it. */
+  | { token: string; status: 'invalid' }
+  /** Refused for a reason that may pass; worth trying again. */
+  | { token: string; status: 'error'; message: string };
+
+export interface PushSender {
+  /** Throws when the service could not be reached at all. */
+  send(messages: PushMessage[]): Promise<PushOutcome[]>;
+}
+
+export const PUSH_SENDER = Symbol('PUSH_SENDER');

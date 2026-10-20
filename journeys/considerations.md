@@ -312,3 +312,15 @@ Notation: [`README.md`](README.md).
 - **What:** A price-alert notification now stores why it fired (`reason`), the price and the one before it in minor units, and the currency; and the API returns them with the names of the product, store and chain, read when listed. Alerts return the same names. `title` and `body` are still written by the server — in English, with a bare number — for email and push.
 - **Why:** The app speaks Spanish, with pesos and euros; a server sentence like "Leche is now 13.90" cannot say "Leche bajó a $ 1.390 en Día Almagro" for a reader in either currency. Facts let each client write the message in its own words; the server keeps no language of its own.
 - **Revisit when:** Email or push reach people who are not served by an app screen — then the server needs the user's language and a template per language for `title` and `body`, which today are English only.
+
+### CON-049 — Push is on the delivery fan-out; registering a phone is the consent
+- **Phase:** post-plan (mobile phase 6, checkpoint 10) · **Area:** notifications · **Status:** accepted
+- **What:** `POST /v1/devices` registers an Expo push token (moved to whoever registers it last), `DELETE /v1/devices/:token` forgets it, `POST /v1/devices/test` sends a test message. A `push` channel sits beside in-app and email: it applies only to a shopper with at least one token, writes the title and body in Spanish from the stored facts (`pushText`), and forgets tokens Expo reports as `DeviceNotRegistered`. Expo's address is `EXPO_PUSH_URL`; `EXPO_ACCESS_TOKEN` is optional.
+- **Why:** The channel port was built for this; adding push touched neither evaluation nor retry. Writing Spanish on the server (unlike email, CON-048) is needed because a push arrives with the app closed, so no screen can compose it. Moving a token on registration stops a shared phone from sending one account's alerts to the next person.
+- **Revisit when:** A language other than Spanish is served (push text and the facts-to-words rule are duplicated in the app), or push receipts should be polled to catch errors Expo only reports later.
+
+### CON-050 — Real push is untested on a phone; Expo Go on Android cannot receive it
+- **Phase:** post-plan (mobile phase 6, checkpoint 10) · **Area:** notifications · **Status:** open
+- **What:** Everything up to Expo's service is tested against a stand-in server. Delivery by Expo to Apple or Google needs a development build, which needs EAS and, for iOS, a paid Apple Developer account; Expo's docs say remote push is unavailable in Expo Go on Android from SDK 53.
+- **Why:** Saying so now avoids calling the checkpoint verified when the last hop was never exercised.
+- **Revisit when:** A development build exists to try it on a real phone.

@@ -34,6 +34,7 @@ model User {
   priceAlerts             PriceAlert[]
   notificationPreferences NotificationPreferences?
   notifications           Notification[]
+  deviceTokens            DeviceToken[]
 
   @@map("users")
 }
@@ -619,4 +620,24 @@ model NotificationChannelDelivery {
 
   @@unique([notificationId, channel])
   @@map("notification_channel_deliveries")
+}
+
+/// A phone that wants to be told things when the app is closed: the token
+/// Expo's push service knows it by. A token belongs to one account at a time —
+/// signing in on a phone another account used moves it — and is dropped when
+/// the push service says the app is gone.
+model DeviceToken {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  /// "ExponentPushToken[…]": opaque, and unique across every account.
+  token      String   @unique
+  platform   String
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  /// Refreshed each time the app registers, so stale ones can be told apart.
+  lastSeenAt DateTime @default(now()) @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("device_tokens")
 }
