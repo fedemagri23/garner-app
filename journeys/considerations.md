@@ -287,7 +287,7 @@ Notation: [`README.md`](README.md).
 - **What:** A shopping list has one currency, fixed at creation, and optimization sums the derived prices of the candidate stores near the shopper without checking theirs. Near the Obelisco every store is in pesos and near Stephansplatz every store is in euros, so a run is consistent within a city — but a peso list optimized in Vienna reports euro cents as pesos.
 - **Why:** Until now every store was in Argentina. The seed now has a Vienna neighbourhood for the developer, and fixing lists belongs with the app's lists phase rather than ahead of it.
 - **Revisit when:** The app's phase 3 (lists and where to buy). Candidate stores should be those pricing in the list's currency, and creating a list should default its currency from where the shopper is.
-- **Resolved:** in the commit that introduced it, for the app's checkpoint 5 — candidate stores only count prices in the list's currency, and every result records that currency. A peso list in Vienna now finds nothing to buy instead of a wrong total. Defaulting a new list's currency to where the shopper is lives in the app (garner-mobile MBUG-007).
+- **Resolved:** in c4a79ad, for the app's checkpoint 5 — candidate stores only count prices in the list's currency, and every result records that currency. A peso list in Vienna now finds nothing to buy instead of a wrong total. Defaulting a new list's currency to where the shopper is lives in the app (garner-mobile MBUG-007).
 
 ### CON-045 — An optimization answer carries what a map needs
 - **Phase:** post-plan (mobile checkpoint 5) · **Area:** optimization · **Status:** accepted
