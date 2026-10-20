@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { slugify } from '../../common/text/normalize.js';
 import {
+  DEFAULT_STORE_TIME_ZONE,
   parseWallClock,
   type OpeningInterval,
 } from '../domain/opening-hours.js';
@@ -38,6 +39,8 @@ export interface CreateStoreCommand {
   latitude: number;
   longitude: number;
   phone?: string;
+  /** IANA zone; defaults to Buenos Aires, where the catalog started. */
+  timeZone?: string;
   openingHours?: OpeningInterval[];
 }
 
@@ -105,6 +108,7 @@ export class CreateStoreUseCase {
       latitude: command.latitude,
       longitude: command.longitude,
       phone: command.phone?.trim() ?? null,
+      timeZone: command.timeZone ?? DEFAULT_STORE_TIME_ZONE,
       openingHours,
     });
   }

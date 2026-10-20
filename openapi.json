@@ -2090,6 +2090,16 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "name": "currency",
+            "required": false,
+            "in": "query",
+            "description": "ISO 4217. Omitted, the currency with the most observations in the range",
+            "schema": {
+              "example": "EUR",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3902,6 +3912,10 @@
             "type": "string",
             "nullable": true
           },
+          "timeZone": {
+            "type": "string",
+            "example": "America/Argentina/Buenos_Aires"
+          },
           "isActive": {
             "type": "boolean"
           },
@@ -3925,6 +3939,7 @@
           "latitude",
           "longitude",
           "phone",
+          "timeZone",
           "isActive",
           "openingHours"
         ]
@@ -3991,6 +4006,10 @@
             "type": "string",
             "nullable": true
           },
+          "timeZone": {
+            "type": "string",
+            "example": "America/Argentina/Buenos_Aires"
+          },
           "isActive": {
             "type": "boolean"
           },
@@ -4022,6 +4041,7 @@
           "latitude",
           "longitude",
           "phone",
+          "timeZone",
           "isActive",
           "openingHours",
           "distanceKm",
@@ -4096,6 +4116,12 @@
           "phone": {
             "type": "string",
             "maxLength": 40
+          },
+          "timeZone": {
+            "type": "string",
+            "example": "Europe/Vienna",
+            "default": "America/Argentina/Buenos_Aires",
+            "description": "IANA time zone the opening hours are written in"
           },
           "openingHours": {
             "maxItems": 21,
@@ -5186,6 +5212,12 @@
               "1y"
             ]
           },
+          "currency": {
+            "type": "string",
+            "nullable": true,
+            "example": "ARS",
+            "description": "What every amount is in; null when there are no points"
+          },
           "points": {
             "description": "Oldest first",
             "type": "array",
@@ -5212,6 +5244,7 @@
           "productId",
           "storeId",
           "range",
+          "currency",
           "points",
           "trend",
           "currentPriceCents"

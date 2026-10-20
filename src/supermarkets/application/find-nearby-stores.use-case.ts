@@ -55,7 +55,7 @@ export class FindNearbyStoresUseCase {
           latitude: store.latitude,
           longitude: store.longitude,
         }),
-        isOpenNow: isOpenAt(store.openingHours, now),
+        isOpenNow: isOpenAt(store.openingHours, now, store.timeZone),
       }))
       .filter((nearby) => nearby.distanceKm <= query.radiusKm)
       .sort((a, b) => a.distanceKm - b.distanceKm)

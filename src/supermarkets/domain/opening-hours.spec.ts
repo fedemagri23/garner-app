@@ -1,12 +1,19 @@
-import { isOpenAt, parseWallClock } from './opening-hours.js';
+import {
+  isOpenAt as isOpenIn,
+  parseWallClock,
+  type OpeningInterval,
+} from './opening-hours.js';
 
-/** A local-time date, so the test reads in the same zone the rule does. */
+/** A UTC moment; the rules below are read on UTC clocks unless a test says otherwise. */
 const at = (day: number, hour: number, minute = 0): Date => {
   // 2026-09-13 is a Sunday, so adding `day` lands on that weekday.
-  const date = new Date(2026, 8, 13 + day, hour, minute);
-  expect(date.getDay()).toBe(day);
+  const date = new Date(Date.UTC(2026, 8, 13 + day, hour, minute));
+  expect(date.getUTCDay()).toBe(day);
   return date;
 };
+
+const isOpenAt = (intervals: OpeningInterval[], moment: Date) =>
+  isOpenIn(intervals, moment, 'UTC');
 
 describe('parseWallClock', () => {
   it('reads minutes since midnight', () => {
@@ -58,5 +65,25 @@ describe('isOpenAt', () => {
 
   it('treats a store with no hours on record as closed', () => {
     expect(isOpenAt([], at(1, 12))).toBe(false);
+  });
+});
+
+describe('isOpenAt in a store\'s own time zone', () => {
+  const weekday = [{ dayOfWeek: 1, opensAt: '08:00', closesAt: '20:00' }];
+  // Monday 2026-09-14, 19:30 UTC: 21:30 in Vienna (CEST), 16:30 in Buenos Aires.
+  const moment = new Date('2026-09-14T19:30:00Z');
+
+  it('reads the clock where the store is, not where the server is', () => {
+    expect(isOpenIn(weekday, moment, 'Europe/Vienna')).toBe(false);
+    expect(isOpenIn(weekday, moment, 'America/Argentina/Buenos_Aires')).toBe(true);
+  });
+
+  it('takes the weekday from that clock too', () => {
+    // Monday 23:30 UTC is already Tuesday 01:30 in Vienna.
+    const lateMonday = new Date('2026-09-14T23:30:00Z');
+    const nightOwl = [{ dayOfWeek: 2, opensAt: '00:00', closesAt: '06:00' }];
+
+    expect(isOpenIn(nightOwl, lateMonday, 'Europe/Vienna')).toBe(true);
+    expect(isOpenIn(nightOwl, lateMonday, 'America/Argentina/Buenos_Aires')).toBe(false);
   });
 });

@@ -1,4 +1,5 @@
 import {
+  historyCurrency,
   isAbruptChange,
   mergeByDate,
   summarizeTrend,
@@ -12,6 +13,7 @@ const point = (
   overrides: Partial<DailyPricePoint> = {},
 ): DailyPricePoint => ({
   date: new Date(date),
+  currency: 'ARS',
   weightedAverageCents,
   minPriceCents: weightedAverageCents - 5,
   maxPriceCents: weightedAverageCents + 5,
@@ -89,6 +91,23 @@ describe('summarizeTrend', () => {
   it('has nothing to summarize without usable days', () => {
     expect(summarizeTrend([])).toBeNull();
     expect(summarizeTrend([point('2026-09-01', 100, { isAnomalous: true })])).toBeNull();
+  });
+});
+
+describe('historyCurrency', () => {
+  it('takes the currency with the most observations behind it', () => {
+    expect(
+      historyCurrency([
+        point('2026-09-01', 139000, { observationCount: 3 }),
+        point('2026-09-01', 139, { currency: 'EUR', observationCount: 2 }),
+        point('2026-09-02', 135, { currency: 'EUR', observationCount: 2 }),
+      ]),
+    ).toBe('EUR');
+  });
+
+  it('honours a requested currency, and has none for no points', () => {
+    expect(historyCurrency([point('2026-09-01', 139000)], 'EUR')).toBe('EUR');
+    expect(historyCurrency([])).toBeNull();
   });
 });
 

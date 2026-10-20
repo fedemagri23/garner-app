@@ -77,6 +77,7 @@ export class PrismaDailyPriceHistoryRepository
 
     return rows.map((row) => ({
       date: row.date,
+      currency: row.currency,
       weightedAverageCents: row.weightedAverageCents,
       minPriceCents: row.minPriceCents,
       maxPriceCents: row.maxPriceCents,

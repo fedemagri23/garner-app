@@ -9,6 +9,7 @@ import {
   IsOptional,
   IsPositive,
   IsUUID,
+  Matches,
   Max,
   Min,
 } from 'class-validator';
@@ -125,6 +126,13 @@ export class PriceHistoryResponse {
   @ApiProperty({ format: 'uuid' }) productId!: string;
   @ApiProperty({ type: String, format: 'uuid', nullable: true }) storeId!: string | null;
   @ApiProperty({ enum: HISTORY_RANGES }) range!: HistoryRange;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    example: 'ARS',
+    description: 'What every amount is in; null when there are no points',
+  })
+  currency!: string | null;
   @ApiProperty({ type: [DailyPricePointResponse], description: 'Oldest first' })
   points!: DailyPricePointResponse[];
   @ApiProperty({ type: PriceTrendResponse, nullable: true })
@@ -141,6 +149,7 @@ export class PriceHistoryResponse {
       productId: view.productId,
       storeId: view.storeId,
       range: view.range,
+      currency: view.currency,
       points: view.points.map(DailyPricePointResponse.from),
       trend: view.trend ? PriceTrendResponse.from(view.trend) : null,
       currentPriceCents: view.currentPriceCents,
@@ -191,6 +200,15 @@ export class PriceHistoryQueryDto {
   @IsOptional()
   @IsUUID()
   storeId?: string;
+
+  @ApiPropertyOptional({
+    example: 'EUR',
+    description:
+      'ISO 4217. Omitted, the currency with the most observations in the range',
+  })
+  @IsOptional()
+  @Matches(/^[A-Z]{3}$/, { message: 'currency must be an ISO 4217 code' })
+  currency?: string;
 }
 
 export class PriceDropResponse {

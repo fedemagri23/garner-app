@@ -70,6 +70,7 @@ export class ProductPricesController {
         productId,
         storeId: query.storeId,
         range: query.range,
+        currency: query.currency,
       }),
     );
   }

@@ -30,6 +30,8 @@ export interface StoreLocation {
   latitude: number;
   longitude: number;
   phone: string | null;
+  /** IANA zone the opening hours are written in, e.g. Europe/Vienna. */
+  timeZone: string;
   isActive: boolean;
   openingHours: OpeningInterval[];
   createdAt: Date;
@@ -61,5 +63,6 @@ export interface CreateStoreLocationInput {
   latitude: number;
   longitude: number;
   phone: string | null;
+  timeZone: string;
   openingHours: OpeningInterval[];
 }

@@ -33,16 +33,41 @@ export function parseWallClock(value: string): number | null {
   return hours * 60 + minutes;
 }
 
+/** Where a store is assumed to be when nobody said otherwise. */
+export const DEFAULT_STORE_TIME_ZONE = 'America/Argentina/Buenos_Aires';
+
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** The weekday and minutes since midnight on the wall clocks of `timeZone`. */
+function wallClock(at: Date, timeZone: string): { day: number; minutes: number } {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(at);
+  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+
+  return {
+    day: WEEKDAYS.indexOf(part('weekday')),
+    minutes: Number(part('hour')) * 60 + Number(part('minute')),
+  };
+}
+
 /**
  * Whether `at` falls inside one of the store's intervals.
  *
- * `at` is read in the runtime's local time, deliberately: opening hours are
- * wall-clock facts about a place, and phase 6 adds the per-store timezone that
- * makes this exact for stores outside the server's zone.
+ * Opening hours are wall-clock facts about a place, so `at` is read on the
+ * clocks of the store's own time zone: 21:00 in Vienna is not 21:00 in
+ * Buenos Aires, whatever zone the server runs in.
  */
-export function isOpenAt(intervals: OpeningInterval[], at: Date): boolean {
-  const day = at.getDay();
-  const minutes = at.getHours() * 60 + at.getMinutes();
+export function isOpenAt(
+  intervals: OpeningInterval[],
+  at: Date,
+  timeZone: string,
+): boolean {
+  const { day, minutes } = wallClock(at, timeZone);
   const previousDay = (day + 6) % 7;
 
   return intervals.some((interval) => {

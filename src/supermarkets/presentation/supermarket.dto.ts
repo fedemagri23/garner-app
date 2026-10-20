@@ -10,6 +10,7 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  IsTimeZone,
   IsUrl,
   IsUUID,
   Matches,
@@ -69,6 +70,7 @@ export class StoreResponse {
   @ApiProperty() latitude!: number;
   @ApiProperty() longitude!: number;
   @ApiProperty({ type: String, nullable: true }) phone!: string | null;
+  @ApiProperty({ example: 'America/Argentina/Buenos_Aires' }) timeZone!: string;
   @ApiProperty() isActive!: boolean;
   @ApiProperty({ type: [OpeningHoursResponse] })
   openingHours!: OpeningHoursResponse[];
@@ -87,6 +89,7 @@ export class StoreResponse {
       latitude: store.latitude,
       longitude: store.longitude,
       phone: store.phone,
+      timeZone: store.timeZone,
       isActive: store.isActive,
       openingHours: store.openingHours,
     };
@@ -254,6 +257,15 @@ export class CreateStoreRequest {
   @IsString()
   @MaxLength(40)
   phone?: string;
+
+  @ApiPropertyOptional({
+    example: 'Europe/Vienna',
+    default: 'America/Argentina/Buenos_Aires',
+    description: 'IANA time zone the opening hours are written in',
+  })
+  @IsOptional()
+  @IsTimeZone()
+  timeZone?: string;
 
   @ApiPropertyOptional({ type: [OpeningHoursRequest], maxItems: 21 })
   @IsOptional()

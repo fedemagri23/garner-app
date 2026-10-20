@@ -325,6 +325,55 @@ describe('Price intelligence (e2e)', () => {
       });
     });
 
+    it('tells a history in one currency, never an average of two', async () => {
+      const yerba = await newProduct('Yerba en dos países');
+      const day = (ago: number) => {
+        const date = new Date(Date.now() - ago * DAY);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      };
+      const row = (storeId: string, ago: number, currency: string, cents: number, count: number) =>
+        intelligence.dailyPriceHistory.create({
+          data: {
+            productId: yerba,
+            storeId,
+            date: day(ago),
+            currency,
+            weightedAverageCents: cents,
+            minPriceCents: cents,
+            maxPriceCents: cents,
+            observationCount: count,
+            confidence: 0.8,
+          },
+        });
+
+      await row(nearStoreId, 2, 'ARS', 450000, 5);
+      await row(nearStoreId, 1, 'ARS', 460000, 5);
+      await row(farStoreId, 1, 'EUR', 499, 2);
+
+      const dominant = await http()
+        .get(`/v1/products/${yerba}/prices/history?range=30d`)
+        .set(auth(shopper))
+        .expect(200);
+      expect(dominant.body.currency).toBe('ARS');
+      expect(dominant.body.points.map((p: { averageCents: number }) => p.averageCents)).toEqual([
+        450000, 460000,
+      ]);
+
+      const euros = await http()
+        .get(`/v1/products/${yerba}/prices/history?range=30d&currency=EUR`)
+        .set(auth(shopper))
+        .expect(200);
+      expect(euros.body.currency).toBe('EUR');
+      expect(euros.body.points).toHaveLength(1);
+      expect(euros.body.points[0].averageCents).toBe(499);
+
+      await http()
+        .get(`/v1/products/${yerba}/prices/history?currency=euro`)
+        .set(auth(shopper))
+        .expect(400);
+    });
+
     it('marks the day that jumped, and keeps it out of the summary', async () => {
       const response = await http()
         .get(`/v1/products/${productId}/prices/history?range=30d&storeId=${nearStoreId}`)

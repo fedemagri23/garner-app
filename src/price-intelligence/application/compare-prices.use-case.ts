@@ -179,7 +179,7 @@ export class ComparePricesUseCase {
             store,
             distanceKm:
               distanceKm === null ? null : Math.round(distanceKm * 1000) / 1000,
-            isOpenNow: isOpenAt(store.openingHours, now),
+            isOpenNow: isOpenAt(store.openingHours, now, store.timeZone),
           },
         ];
       })

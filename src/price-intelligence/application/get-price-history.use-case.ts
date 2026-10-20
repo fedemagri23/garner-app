@@ -11,6 +11,7 @@ import {
 } from '../domain/price-intelligence.repository.port.js';
 import {
   HISTORY_RANGE_DAYS,
+  historyCurrency,
   mergeByDate,
   summarizeTrend,
   utcDay,
@@ -23,6 +24,8 @@ export interface PriceHistoryView {
   productId: string;
   storeId: string | null;
   range: HistoryRange;
+  /** What every point is in; null when there are no points. */
+  currency: string | null;
   points: DailyPricePoint[];
   trend: PriceTrend | null;
   /** The current derived price, when a single store was asked about. */
@@ -50,6 +53,8 @@ export class GetPriceHistoryUseCase {
     productId: string;
     storeId?: string;
     range: HistoryRange;
+    /** ISO 4217; omitted, the currency with the most observations. */
+    currency?: string;
     now?: Date;
   }): Promise<PriceHistoryView> {
     if (!(await this.products.findById(query.productId))) {
@@ -69,9 +74,14 @@ export class GetPriceHistoryUseCase {
       to: new Date(to.getTime() + 24 * 60 * 60 * 1000),
     });
 
+    // One currency at a time: a product sold in Buenos Aires and Vienna has
+    // a peso history and a euro history, never an average of the two.
+    const currency = historyCurrency(rows, query.currency);
+    const inCurrency = rows.filter((row) => row.currency === currency);
+
     // Without a store the range holds one row per store per day, which is a
     // series of several lines; the product-wide view wants one.
-    const points = query.storeId ? rows : mergeByDate(rows);
+    const points = query.storeId ? inCurrency : mergeByDate(inCurrency);
 
     const current = query.storeId
       ? await this.derivedPrices.find(query.productId, query.storeId)
@@ -81,6 +91,7 @@ export class GetPriceHistoryUseCase {
       productId: query.productId,
       storeId: query.storeId ?? null,
       range: query.range,
+      currency: points.length > 0 ? currency : null,
       points,
       trend: summarizeTrend(points),
       currentPriceCents: current?.priceCents ?? null,

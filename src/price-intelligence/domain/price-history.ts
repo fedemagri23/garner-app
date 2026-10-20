@@ -4,6 +4,7 @@
 
 export interface DailyPricePoint {
   date: Date;
+  currency: string;
   weightedAverageCents: number;
   minPriceCents: number;
   maxPriceCents: number;
@@ -64,6 +65,28 @@ export function isAbruptChange(
 }
 
 /**
+ * The one currency a product-wide history is told in. Stores in different
+ * countries price the same product in different money, and averaging pesos
+ * with euros produces a number in neither. A requested currency wins;
+ * otherwise the one with the most observations behind it.
+ */
+export function historyCurrency(
+  points: DailyPricePoint[],
+  requested?: string,
+): string | null {
+  if (requested) {
+    return requested;
+  }
+
+  const weight = new Map<string, number>();
+  for (const point of points) {
+    weight.set(point.currency, (weight.get(point.currency) ?? 0) + point.observationCount);
+  }
+
+  return [...weight.entries()].sort(([, a], [, b]) => b - a)[0]?.[0] ?? null;
+}
+
+/**
  * Collapses several stores' rows for the same day into one point, for a
  * product-wide history. Each store's day counts in proportion to how many
  * observations stand behind it, so a store with one report does not weigh as
@@ -97,6 +120,8 @@ export function mergeByDate(points: DailyPricePoint[]): DailyPricePoint[] {
 
       return {
         date: new Date(time),
+        // Callers merge one currency at a time (historyCurrency).
+        currency: dayPoints[0].currency,
         weightedAverageCents: Math.round(weighted),
         minPriceCents: Math.min(...dayPoints.map((point) => point.minPriceCents)),
         maxPriceCents: Math.max(...dayPoints.map((point) => point.maxPriceCents)),

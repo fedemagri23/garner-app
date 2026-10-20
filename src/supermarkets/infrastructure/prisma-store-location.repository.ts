@@ -107,6 +107,7 @@ export class PrismaStoreLocationRepository implements StoreLocationRepository {
         latitude: input.latitude,
         longitude: input.longitude,
         phone: input.phone,
+        timeZone: input.timeZone,
         openingHours: {
           create: input.openingHours.map((interval) => ({
             dayOfWeek: interval.dayOfWeek,
@@ -140,6 +141,7 @@ export class PrismaStoreLocationRepository implements StoreLocationRepository {
       latitude: row.latitude,
       longitude: row.longitude,
       phone: row.phone,
+      timeZone: row.timeZone,
       isActive: row.isActive,
       openingHours: row.openingHours.map((hours) => ({
         dayOfWeek: hours.dayOfWeek,

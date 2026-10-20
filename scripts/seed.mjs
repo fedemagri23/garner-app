@@ -1,6 +1,7 @@
 /**
  * Fills the development databases with a small, coherent world: two accounts,
- * a catalog, three chains with branches around Buenos Aires, and derived
+ * a catalog, and two neighbourhoods of stores — around the Obelisco in Buenos
+ * Aires (pesos) and around Stephansplatz in Vienna (euros) — with derived
  * prices that differ per store so comparison and optimization have something
  * to say, and a few price drops for the home screen's "Bajaron cerca tuyo".
  *
@@ -28,7 +29,31 @@ const PASSWORD = 'correct-horse-battery';
 /** Obelisco, central Buenos Aires: where the demo shopper stands. */
 const HOME = { latitude: -34.6037, longitude: -58.3816 };
 
+/** Stephansplatz, central Vienna: the second demo neighbourhood. */
+const VIENNA = { latitude: 48.2085, longitude: 16.3721 };
+
 const kmSouth = (km) => HOME.latitude - km / 111.32;
+
+const BUENOS_AIRES = {
+  city: 'Buenos Aires',
+  country: 'AR',
+  timeZone: 'America/Argentina/Buenos_Aires',
+  currency: 'ARS',
+  // Monday to Saturday, 08:00–22:00.
+  hours: [1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({ dayOfWeek, opensAt: '08:00', closesAt: '22:00' })),
+};
+
+const WIEN = {
+  city: 'Wien',
+  country: 'AT',
+  timeZone: 'Europe/Vienna',
+  currency: 'EUR',
+  // Austrian shop hours: weekdays to 20:00, Saturday to 18:00, Sunday closed.
+  hours: [
+    ...[1, 2, 3, 4, 5].map((dayOfWeek) => ({ dayOfWeek, opensAt: '07:30', closesAt: '20:00' })),
+    { dayOfWeek: 6, opensAt: '07:30', closesAt: '18:00' },
+  ],
+};
 
 async function upsertUser(email, displayName, role) {
   const passwordHash = await argon2.hash(PASSWORD, { type: argon2.argon2id });
@@ -68,7 +93,7 @@ async function upsertProduct(product) {
   return row;
 }
 
-async function upsertStore(supermarketId, store) {
+async function upsertStore(supermarketId, store, place = BUENOS_AIRES) {
   const existing = await core.storeLocation.findFirst({
     where: { supermarketId, name: store.name },
   });
@@ -76,8 +101,9 @@ async function upsertStore(supermarketId, store) {
   const data = {
     supermarketId,
     addressLine: store.addressLine,
-    city: 'Buenos Aires',
-    country: 'AR',
+    city: place.city,
+    country: place.country,
+    timeZone: place.timeZone,
     latitude: store.latitude,
     longitude: store.longitude,
     name: store.name,
@@ -87,21 +113,16 @@ async function upsertStore(supermarketId, store) {
     ? await core.storeLocation.update({ where: { id: existing.id }, data })
     : await core.storeLocation.create({ data });
 
-  // Open every weekday, so "is it open now" answers sensibly.
+  // Local hours, so "is it open now" answers sensibly in each city.
   await core.storeOpeningHours.deleteMany({ where: { storeLocationId: row.id } });
   await core.storeOpeningHours.createMany({
-    data: [1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
-      storeLocationId: row.id,
-      dayOfWeek,
-      opensAt: '08:00',
-      closesAt: '22:00',
-    })),
+    data: place.hours.map((interval) => ({ storeLocationId: row.id, ...interval })),
   });
 
   return row;
 }
 
-async function setDerivedPrice(productId, storeId, priceCents) {
+async function setDerivedPrice(productId, storeId, priceCents, currency) {
   const lastObservedAt = new Date(Date.now() - 6 * 60 * 60 * 1000);
 
   await intelligence.derivedPrice.upsert({
@@ -109,7 +130,7 @@ async function setDerivedPrice(productId, storeId, priceCents) {
     create: {
       productId,
       storeId,
-      currency: 'ARS',
+      currency,
       priceCents,
       minPriceCents: Math.round(priceCents * 0.97),
       maxPriceCents: Math.round(priceCents * 1.03),
@@ -118,12 +139,12 @@ async function setDerivedPrice(productId, storeId, priceCents) {
       observationCount: 4,
       lastObservedAt,
     },
-    update: { priceCents, lastObservedAt },
+    update: { priceCents, currency, lastObservedAt },
   });
 }
 
 /** A fortnight of daily history, drifting upward, so trends are non-trivial. */
-async function seedHistory(productId, storeId, endPriceCents) {
+async function seedHistory(productId, storeId, endPriceCents, currency) {
   const days = 14;
 
   for (let ago = days; ago >= 1; ago--) {
@@ -142,26 +163,26 @@ async function seedHistory(productId, storeId, endPriceCents) {
         productId,
         storeId,
         date,
-        currency: 'ARS',
+        currency,
         weightedAverageCents: average,
         minPriceCents: Math.round(average * 0.96),
         maxPriceCents: Math.round(average * 1.04),
         observationCount: 3,
         confidence: 0.8,
       },
-      update: { weightedAverageCents: average },
+      update: { weightedAverageCents: average, currency },
     });
   }
 }
 
 /** A recent fall to the current price, as the recompute would have recorded. */
-async function setPriceDrop(productId, storeId, priceCents, previousPriceCents) {
+async function setPriceDrop(productId, storeId, currency, priceCents, previousPriceCents) {
   const droppedAt = new Date(Date.now() - 6 * 60 * 60 * 1000);
 
   await intelligence.priceDrop.upsert({
     where: { productId_storeId: { productId, storeId } },
-    create: { productId, storeId, currency: 'ARS', priceCents, previousPriceCents, droppedAt },
-    update: { priceCents, previousPriceCents, droppedAt },
+    create: { productId, storeId, currency, priceCents, previousPriceCents, droppedAt },
+    update: { currency, priceCents, previousPriceCents, droppedAt },
   });
 }
 
@@ -248,6 +269,9 @@ async function main() {
     ['Coto', 'coto'],
     ['Carrefour', 'carrefour'],
     ['Día', 'dia'],
+    ['Billa', 'billa'],
+    ['Spar', 'spar'],
+    ['Hofer', 'hofer'],
   ]) {
     chains[slug] = await core.supermarket.upsert({
       where: { slug },
@@ -256,74 +280,121 @@ async function main() {
     });
   }
 
-  const stores = {
-    cotoCentro: await upsertStore(chains.coto.id, {
+  /**
+   * Three stores, a price per product at each, and some of those prices
+   * having just fallen: product index, store index, price before.
+   */
+  async function seedNeighbourhood(place, stores, priceTable, drops) {
+    const dropBefore = new Map(
+      drops.map(([productIndex, storeIndex, before]) => [`${productIndex}:${storeIndex}`, before]),
+    );
+
+    for (const [productIndex, prices] of priceTable) {
+      for (const [storeIndex, priceCents] of prices.entries()) {
+        const product = products[productIndex];
+        const store = stores[storeIndex];
+        const before = dropBefore.get(`${productIndex}:${storeIndex}`);
+
+        await setDerivedPrice(product.id, store.id, priceCents, place.currency);
+        // A dropped price's history runs up to where it was, so the fall shows.
+        await seedHistory(product.id, store.id, before ?? priceCents, place.currency);
+
+        if (before) {
+          await setPriceDrop(product.id, store.id, place.currency, priceCents, before);
+        } else {
+          await intelligence.priceDrop.deleteMany({
+            where: { productId: product.id, storeId: store.id },
+          });
+        }
+      }
+    }
+  }
+
+  // Buenos Aires, around the Obelisco. Prices differ per chain so every
+  // recommendation mode has a real answer: Coto is convenient but dearer,
+  // Día is cheapest and furthest.
+  const storeOrder = [
+    await upsertStore(chains.coto.id, {
       name: 'Coto Centro',
       addressLine: 'Av. Corrientes 1200',
       latitude: kmSouth(0.6),
       longitude: HOME.longitude,
     }),
-    carrefourAlmagro: await upsertStore(chains.carrefour.id, {
+    await upsertStore(chains.carrefour.id, {
       name: 'Carrefour Almagro',
       addressLine: 'Av. Rivadavia 3900',
       latitude: kmSouth(2.5),
       longitude: HOME.longitude - 0.01,
     }),
-    diaCaballito: await upsertStore(chains.dia.id, {
+    await upsertStore(chains.dia.id, {
       name: 'Día Caballito',
       addressLine: 'Av. La Plata 100',
       latitude: kmSouth(4),
       longitude: HOME.longitude - 0.02,
     }),
-  };
-
-  // Prices differ per chain so every recommendation mode has a real answer:
-  // Coto is convenient but dearer, Día is cheapest and furthest.
-  const priceTable = [
-    // product index, [Coto, Carrefour, Día]
-    [0, [149000, 139000, 132000]],
-    [1, [128000, 119000, 115000]],
-    [2, [185000, 179000, 168000]],
-    [3, [242000, 235000, 219000]],
-    [4, [162000, 158000, 149000]],
-    [5, [98000, 94000, 89000]],
   ];
 
-  const storeOrder = [
-    stores.cotoCentro,
-    stores.carrefourAlmagro,
-    stores.diaCaballito,
-  ];
-
-  // Falls from these prices to today's: product index, store index, before.
   const drops = [
     [0, 2, 150000], // milk at Día, −12%
     [5, 0, 106000], // water at Coto, −7%
     [3, 1, 250000], // oil at Carrefour, −6%
   ];
-  const dropBefore = new Map(
-    drops.map(([productIndex, storeIndex, before]) => [`${productIndex}:${storeIndex}`, before]),
+
+  await seedNeighbourhood(
+    BUENOS_AIRES,
+    storeOrder,
+    [
+      // product index, [Coto, Carrefour, Día]
+      [0, [149000, 139000, 132000]],
+      [1, [128000, 119000, 115000]],
+      [2, [185000, 179000, 168000]],
+      [3, [242000, 235000, 219000]],
+      [4, [162000, 158000, 149000]],
+      [5, [98000, 94000, 89000]],
+    ],
+    drops,
   );
 
-  for (const [productIndex, prices] of priceTable) {
-    for (const [storeIndex, priceCents] of prices.entries()) {
-      const product = products[productIndex];
-      const store = storeOrder[storeIndex];
-      const before = dropBefore.get(`${productIndex}:${storeIndex}`);
+  // Vienna, around Stephansplatz, in euros. Billa is in the centre and
+  // dearest, Hofer is the discounter a little further out.
+  const viennaStores = [
+    await upsertStore(
+      chains.billa.id,
+      { name: 'Billa Rotenturmstraße', addressLine: 'Rotenturmstraße 5', latitude: 48.2097, longitude: 16.3745 },
+      WIEN,
+    ),
+    await upsertStore(
+      chains.spar.id,
+      { name: 'Spar Mariahilfer Straße', addressLine: 'Mariahilfer Straße 77', latitude: 48.1966, longitude: 16.3487 },
+      WIEN,
+    ),
+    await upsertStore(
+      chains.hofer.id,
+      { name: 'Hofer Landstraße', addressLine: 'Landstraßer Hauptstraße 70', latitude: 48.2012, longitude: 16.392 },
+      WIEN,
+    ),
+  ];
 
-      await setDerivedPrice(product.id, store.id, priceCents);
-      // A dropped price's history runs up to where it was, so the fall shows.
-      await seedHistory(product.id, store.id, before ?? priceCents);
+  const viennaDrops = [
+    [5, 1, 79], // water at Spar, −12%
+    [0, 2, 129], // milk at Hofer, −10%
+    [2, 0, 239], // rice at Billa, −8%
+  ];
 
-      if (before) {
-        await setPriceDrop(product.id, store.id, priceCents, before);
-      } else {
-        await intelligence.priceDrop.deleteMany({
-          where: { productId: product.id, storeId: store.id },
-        });
-      }
-    }
-  }
+  await seedNeighbourhood(
+    WIEN,
+    viennaStores,
+    [
+      // product index, [Billa, Spar, Hofer]
+      [0, [139, 129, 115]],
+      [1, [249, 229, 199]],
+      [2, [219, 199, 179]],
+      [3, [329, 299, 279]],
+      [4, [289, 269, 239]],
+      [5, [79, 69, 59]],
+    ],
+    viennaDrops,
+  );
 
   // A list ready to optimize.
   const list = await core.shoppingList.upsert({
@@ -352,11 +423,13 @@ Seeded:
   users        admin@garner.test (ADMIN), shopper@garner.test (USER)
   password     ${PASSWORD}
   catalog      ${products.length} products, 4 categories, 2 brands, 1 barcode
-  stores       ${storeOrder.length} across Coto, Carrefour and Día
+  stores       ${storeOrder.length} around the Obelisco (Coto, Carrefour, Día, in ARS)
+               ${viennaStores.length} around Stephansplatz, Vienna (Billa, Spar, Hofer, in EUR)
   prices       current price + 14 days of history per product/store
-  price drops  ${drops.length} near the home point
+  price drops  ${drops.length} near the Obelisco, ${viennaDrops.length} near Stephansplatz
   list         "Compra semanal" (4 items) owned by the shopper
   home point   ${HOME.latitude}, ${HOME.longitude} (the shopper's saved location, "Centro")
+  vienna point ${VIENNA.latitude}, ${VIENNA.longitude} (Stephansplatz)
 `);
 }
 

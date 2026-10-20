@@ -170,6 +170,48 @@ describe('Supermarkets and stores (e2e)', () => {
         .expect(404);
     });
 
+    it('keeps the time zone its hours are written in, Buenos Aires unless told', async () => {
+      const vienna = await request(app.getHttpServer())
+        .post('/v1/stores')
+        .set(auth(curator))
+        .send({
+          supermarketId: chainId,
+          name: 'Coto Wien',
+          addressLine: 'Rotenturmstraße 5',
+          city: 'Wien',
+          country: 'AT',
+          latitude: 48.2097,
+          longitude: 16.3745,
+          timeZone: 'Europe/Vienna',
+        })
+        .expect(201);
+
+      expect(vienna.body.timeZone).toBe('Europe/Vienna');
+
+      const near = await request(app.getHttpServer())
+        .get(`/v1/stores/${nearStoreId}`)
+        .set(auth(shopper))
+        .expect(200);
+      expect(near.body.timeZone).toBe('America/Argentina/Buenos_Aires');
+    });
+
+    it('rejects a time zone that does not exist', async () => {
+      await request(app.getHttpServer())
+        .post('/v1/stores')
+        .set(auth(curator))
+        .send({
+          supermarketId: chainId,
+          name: 'Coto Marte',
+          addressLine: 'Olympus Mons 1',
+          city: 'Marte',
+          country: 'AR',
+          latitude: 0,
+          longitude: 0,
+          timeZone: 'Mars/Olympus_Mons',
+        })
+        .expect(400);
+    });
+
     it('rejects coordinates outside the world', async () => {
       await request(app.getHttpServer())
         .post('/v1/stores')

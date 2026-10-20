@@ -217,6 +217,9 @@ model StoreLocation {
   latitude      Float
   longitude     Float
   phone         String?
+  /// IANA zone the opening hours are written in: 21:00 is a wall-clock time
+  /// in a place, and "open now" has to read the clock of that place.
+  timeZone      String   @default("America/Argentina/Buenos_Aires")
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now()) @db.Timestamptz(3)
   updatedAt     DateTime @updatedAt @db.Timestamptz(3)
