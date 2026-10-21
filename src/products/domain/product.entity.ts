@@ -53,6 +53,8 @@ export interface Product {
 }
 
 export interface CreateProductInput {
+  /** Given when the client chose it (an offline add); generated otherwise. */
+  id?: string;
   name: string;
   normalizedName: string;
   description: string | null;

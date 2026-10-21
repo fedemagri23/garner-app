@@ -378,4 +378,74 @@ describe('Shopper-added products and shops (e2e)', () => {
       expect(read.body).toMatchObject({ origin: 'VERIFIED', visibility: 'PUBLIC' });
     });
   });
+
+  describe('what a shopper sees of their own part', () => {
+    it('adds a product sent twice with the same id once, and refuses that id to anyone else', async () => {
+      const ana = await shopper();
+      const id = '7d6c1a52-4f1e-4a8b-9a51-3c2f8e0b9d11';
+
+      const first = await addProduct(ana.token, { id, name: 'Galletitas de Agua Sin Sal' }).expect(201);
+      const again = await addProduct(ana.token, { id, name: 'Galletitas de Agua Sin Sal' }).expect(201);
+      expect(first.body.id).toBe(id);
+      expect(again.body.id).toBe(id);
+      expect(await core.product.count({ where: { id } })).toBe(1);
+
+      const other = await shopper();
+      await addProduct(other.token, { id, name: 'Otra cosa' }).expect(409);
+    });
+
+    it('adds a brand that is not listed, and reuses it the next time it is named', async () => {
+      const ana = await shopper();
+      const first = await addProduct(ana.token, { name: 'Dulce de Leche Repostero', brandName: 'Tía Nené' }).expect(201);
+      const second = await addProduct(ana.token, { name: 'Dulce de Leche Clásico', brandName: 'tia nene' }).expect(201);
+      expect(first.body.brand).toMatchObject({ name: 'Tía Nené' });
+      expect(second.body.brand.id).toBe(first.body.brand.id);
+
+      const suggestions = await http()
+        .get('/v1/product-suggestions')
+        .query({ name: 'dulce de leche' })
+        .set(auth(ana.token))
+        .expect(200);
+      expect(suggestions.body).toEqual(expect.arrayContaining([expect.objectContaining({ brandName: 'Tía Nené' })]));
+    });
+
+    it('tells each person what they already said about a product', async () => {
+      const ana = await shopper();
+      const ben = await shopper(90, true);
+      const product = (await addProduct(ana.token, { name: 'Pan Dulce Casero' }).expect(201)).body;
+      const say = (token: string) =>
+        http().get(`/v1/products/${product.id}/viewer-say`).set(auth(token)).expect(200);
+
+      expect((await say(ana.token)).body).toEqual({ addedByYou: true, confirmed: false, flagged: false });
+      await http().post(`/v1/products/${product.id}/confirmations`).set(auth(ben.token)).expect(200);
+      await http().post(`/v1/products/${product.id}/flags`).set(auth(ben.token)).send({ reason: 'WRONG_INFO' }).expect(204);
+      expect((await say(ben.token)).body).toEqual({ addedByYou: false, confirmed: true, flagged: true });
+    });
+
+    it('lists what a shopper added with where each stands, and keeps a private shop from others', async () => {
+      const ana = await shopper();
+      const other = await shopper();
+      const product = (await addProduct(ana.token, { name: 'Medialunas de Manteca' }).expect(201)).body;
+      const store = (
+        await addStore(ana.token, { name: 'Almacén Rosita', latitude: -34.62, longitude: -58.4 }).expect(201)
+      ).body;
+
+      const mine = await http().get('/v1/community/mine').set(auth(ana.token)).expect(200);
+      expect(mine.body.products).toEqual([
+        expect.objectContaining({ id: product.id, status: 'PUBLIC', confirmationCount: 0 }),
+      ]);
+      expect(mine.body.stores).toEqual([
+        expect.objectContaining({ id: store.id, status: 'PRIVATE', pricedProducts: 0, productsRemaining: 10 }),
+      ]);
+
+      expect((await http().get(`/v1/stores/${store.id}/viewer-say`).set(auth(ana.token)).expect(200)).body).toMatchObject({
+        addedByYou: true,
+      });
+      await http().get(`/v1/stores/${store.id}/viewer-say`).set(auth(other.token)).expect(404);
+      expect((await http().get('/v1/community/mine').set(auth(other.token)).expect(200)).body).toEqual({
+        products: [],
+        stores: [],
+      });
+    });
+  });
 });

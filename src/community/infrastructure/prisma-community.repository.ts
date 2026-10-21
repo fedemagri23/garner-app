@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { CorePrismaService } from '../../common/database/core-prisma.service.js';
 import type { ModerationStatus } from '../domain/catalog-origin.js';
 import type {
+  AddedProduct,
+  AddedStore,
   AuditEntry,
   CommunityRepository,
   FlagReason,
@@ -12,6 +14,7 @@ import type {
   SimilarProduct,
   Standing,
   StoreStanding,
+  ViewerSay,
 } from '../domain/community.port.js';
 
 const REMOVED: ModerationStatus[] = ['HIDDEN', 'UNDER_REVIEW'];
@@ -64,8 +67,9 @@ export class PrismaCommunityRepository implements CommunityRepository {
       where: { normalizedName: { contains: normalizedText }, isActive: true, moderationStatus: 'ACTIVE' },
       orderBy: [{ weight: 'desc' }, { normalizedName: 'asc' }],
       take: limit,
+      include: { brand: { select: { name: true } } },
     });
-    return rows.map((row) => this.similar(row));
+    return rows.map((row) => ({ ...this.similar(row), brandName: row.brand?.name ?? null }));
   }
 
   async storesWithin(box: {
@@ -126,6 +130,56 @@ export class PrismaCommunityRepository implements CommunityRepository {
       select: { userId: true },
     });
     return rows.map((row) => row.userId);
+  }
+
+  async viewerSay(target: FlagTarget, targetId: string, userId: string): Promise<ViewerSay> {
+    const [confirmation, flag] = await Promise.all([
+      target === 'PRODUCT'
+        ? this.prisma.productConfirmation.findFirst({ where: { productId: targetId, userId }, select: { userId: true } })
+        : null,
+      this.prisma.contentFlag.findFirst({ where: { targetType: target, targetId, userId }, select: { id: true } }),
+    ]);
+    return { confirmed: confirmation !== null, flagged: flag !== null };
+  }
+
+  async addedBy(userId: string, limit: number): Promise<{ products: AddedProduct[]; stores: AddedStore[] }> {
+    const [products, stores] = await Promise.all([
+      this.prisma.product.findMany({
+        where: { createdById: userId },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        include: { brand: { select: { name: true } } },
+      }),
+      this.prisma.storeLocation.findMany({
+        where: { createdById: userId },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        include: { supermarket: { select: { name: true } } },
+      }),
+    ]);
+
+    return {
+      products: products.map((row) => ({
+        id: row.id,
+        name: row.name,
+        brandName: row.brand?.name ?? null,
+        origin: row.origin,
+        moderationStatus: row.moderationStatus,
+        confirmationCount: row.confirmationCount,
+        createdAt: row.createdAt,
+      })),
+      stores: stores.map((row) => ({
+        id: row.id,
+        name: row.name,
+        supermarketName: row.supermarket.name,
+        addressLine: row.addressLine,
+        origin: row.origin,
+        moderationStatus: row.moderationStatus,
+        publishedAt: row.publishedAt,
+        pricedProductCount: row.pricedProductCount,
+        createdAt: row.createdAt,
+      })),
+    };
   }
 
   async recordContribution(storeId: string, productId: string, userId: string): Promise<boolean> {

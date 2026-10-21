@@ -97,6 +97,7 @@ export class PrismaProductRepository implements ProductRepository {
   async create(input: CreateProductInput): Promise<Product> {
     const row = await this.prisma.product.create({
       data: {
+        id: input.id,
         name: input.name,
         normalizedName: input.normalizedName,
         description: input.description,

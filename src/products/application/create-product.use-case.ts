@@ -5,9 +5,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { normalizeText, slugify } from '../../common/text/normalize.js';
 import { isValidBarcode, normalizeBarcode } from '../domain/barcode.js';
 import {
   normalizeProductName,
+  type Brand,
   type Product,
 } from '../domain/product.entity.js';
 import { CommunityPolicy } from '../../community/application/community-policy.js';
@@ -30,10 +32,14 @@ import {
 import type { UnitOfMeasure } from '../domain/unit-of-measure.js';
 
 export interface CreateProductCommand {
+  /** Chosen by the phone when it adds one offline, so sending it twice adds it once. */
+  id?: string;
   name: string;
   description?: string;
   categoryId: string;
   brandId?: string;
+  /** A brand that is not listed yet; found by name or added. */
+  brandName?: string;
   packageSize?: number;
   unit: UnitOfMeasure;
   imageUrl?: string;
@@ -49,6 +55,9 @@ export interface CreateProductCommand {
  *
  * The checks for everyone are about identity: a real category and, for
  * barcodes, well-formed and unclaimed ones.
+ *
+ * A phone that added one offline sends its own id; sending it again (the
+ * answer was lost on the way back) returns the product it already added.
  */
 @Injectable()
 export class CreateProductUseCase {
@@ -63,6 +72,17 @@ export class CreateProductUseCase {
 
   async execute(command: CreateProductCommand, actor: AuthenticatedUser): Promise<Product> {
     const fromTeam = actor.role === 'MODERATOR' || actor.role === 'ADMIN';
+
+    if (command.id) {
+      const earlier = await this.products.findById(command.id);
+      if (earlier) {
+        if (earlier.createdById !== (fromTeam ? null : actor.id)) {
+          throw new ConflictException('This id belongs to another product');
+        }
+        return earlier;
+      }
+    }
+
     if (!fromTeam) {
       await this.policy.assertMayCreate(actor.id, 'PRODUCT');
     }
@@ -75,6 +95,10 @@ export class CreateProductUseCase {
     if (command.brandId && !(await this.brands.findById(command.brandId))) {
       throw new NotFoundException('Brand not found');
     }
+    // A brand named but not listed has no products yet, so nothing can be a twin.
+    const namedBrand = command.brandId ? null : await this.listedBrand(command.brandName);
+    const brandId = command.brandId ?? namedBrand?.id ?? null;
+    const brandIsNew = Boolean(command.brandName?.trim()) && !command.brandId && !namedBrand;
 
     const codes = (command.barcodes ?? []).map(normalizeBarcode);
 
@@ -96,22 +120,25 @@ export class CreateProductUseCase {
     const normalizedName = normalizeProductName(command.name);
     const identity = {
       normalizedName,
-      brandId: command.brandId ?? null,
+      brandId,
       packageSize: command.packageSize ?? null,
       unit: command.unit,
     };
-    const twin = (await this.community.productsNamed(normalizedName, 20)).find((existing) =>
-      looksLikeSameProduct(identity, existing),
-    );
+    const twin = brandIsNew
+      ? undefined
+      : (await this.community.productsNamed(normalizedName, 20)).find((existing) =>
+          looksLikeSameProduct(identity, existing),
+        );
     if (twin && !fromTeam) {
       throw new ConflictException(`This product is already in the catalog: ${twin.name}`);
     }
 
     const product = await this.products.create({
+      id: command.id,
       name: command.name.trim(),
       normalizedName,
       description: command.description?.trim() ?? null,
-      brandId: command.brandId ?? null,
+      brandId: brandIsNew ? (await this.newBrand(command.brandName!)).id : brandId,
       categoryId: command.categoryId,
       packageSize: command.packageSize ?? null,
       unit: command.unit,
@@ -143,5 +170,15 @@ export class CreateProductUseCase {
     }
 
     return created;
+  }
+
+  private async listedBrand(name: string | undefined): Promise<Brand | null> {
+    const trimmed = name?.trim();
+    return trimmed ? this.brands.findBySlug(slugify(trimmed)) : null;
+  }
+
+  private newBrand(name: string): Promise<Brand> {
+    const trimmed = name.trim();
+    return this.brands.create({ name: trimmed, normalizedName: normalizeText(trimmed), slug: slugify(trimmed) });
   }
 }

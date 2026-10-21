@@ -660,6 +660,45 @@
         ]
       }
     },
+    "/v1/products/{id}/viewer-say": {
+      "get": {
+        "operationId": "productCommunityViewerSay",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewerSayResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Whether you added, confirmed or reported this product",
+        "tags": [
+          "community"
+        ]
+      }
+    },
     "/v1/products/{id}/confirmations": {
       "post": {
         "description": "Once per person; not for your own.",
@@ -777,6 +816,45 @@
           }
         ],
         "summary": "Report a product as a duplicate, wrong, made up or inappropriate",
+        "tags": [
+          "community"
+        ]
+      }
+    },
+    "/v1/stores/{id}/viewer-say": {
+      "get": {
+        "operationId": "storeCommunityViewerSay",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewerSayResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Store not found, or someone else’s private shop"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Whether you added or reported this shop",
         "tags": [
           "community"
         ]
@@ -912,6 +990,34 @@
         "summary": "Verify, hide or restore a product or shop",
         "tags": [
           "moderation"
+        ]
+      }
+    },
+    "/v1/community/mine": {
+      "get": {
+        "description": "Hidden and private ones included, each with a status for you to read.",
+        "operationId": "myAdditionsMine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyAdditionsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The products and shops you added, newest first",
+        "tags": [
+          "community"
         ]
       }
     },
@@ -4008,6 +4114,11 @@
       "CreateProductRequest": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Chosen by the client when it adds one offline; sending the same id again returns that product"
+          },
           "name": {
             "type": "string",
             "minLength": 2,
@@ -4024,6 +4135,12 @@
           "brandId": {
             "type": "string",
             "format": "uuid"
+          },
+          "brandName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80,
+            "description": "A brand that is not listed; ignored when `brandId` is given"
           },
           "packageSize": {
             "type": "number",
@@ -4162,6 +4279,10 @@
             "format": "uuid",
             "nullable": true
           },
+          "brandName": {
+            "type": "string",
+            "nullable": true
+          },
           "packageSize": {
             "type": "number",
             "nullable": true
@@ -4174,8 +4295,31 @@
           "id",
           "name",
           "brandId",
+          "brandName",
           "packageSize",
           "unit"
+        ]
+      },
+      "ViewerSayResponse": {
+        "type": "object",
+        "properties": {
+          "addedByYou": {
+            "type": "boolean",
+            "description": "You added it: you cannot confirm or report it"
+          },
+          "confirmed": {
+            "type": "boolean",
+            "description": "You said it exists and is right (always false for shops)"
+          },
+          "flagged": {
+            "type": "boolean",
+            "description": "You reported it"
+          }
+        },
+        "required": [
+          "addedByYou",
+          "confirmed",
+          "flagged"
         ]
       },
       "ConfirmationsResponse": {
@@ -4252,6 +4396,118 @@
           "flagCount",
           "confirmationCount",
           "createdAt"
+        ]
+      },
+      "AddedProductResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "brandName": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PRIVATE",
+              "PUBLIC",
+              "VERIFIED",
+              "UNDER_REVIEW",
+              "HIDDEN"
+            ]
+          },
+          "confirmationCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "brandName",
+          "status",
+          "confirmationCount",
+          "createdAt"
+        ]
+      },
+      "AddedStoreResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "supermarketName": {
+            "type": "string"
+          },
+          "addressLine": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PRIVATE",
+              "PUBLIC",
+              "VERIFIED",
+              "UNDER_REVIEW",
+              "HIDDEN"
+            ]
+          },
+          "pricedProducts": {
+            "type": "number",
+            "description": "Distinct products with an accepted price here"
+          },
+          "productsRemaining": {
+            "type": "number",
+            "description": "Still to price before everyone sees it; 0 once public"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "supermarketName",
+          "addressLine",
+          "status",
+          "pricedProducts",
+          "productsRemaining",
+          "createdAt"
+        ]
+      },
+      "MyAdditionsResponse": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AddedProductResponse"
+            }
+          },
+          "stores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AddedStoreResponse"
+            }
+          }
+        },
+        "required": [
+          "products",
+          "stores"
         ]
       },
       "RegisterRequest": {

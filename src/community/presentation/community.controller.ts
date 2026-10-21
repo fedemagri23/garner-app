@@ -31,13 +31,18 @@ import { RolesGuard } from '../../security/presentation/roles.guard.js';
 import { ConfirmProductUseCase } from '../application/confirm-product.use-case.js';
 import { FlagContentUseCase } from '../application/flag-content.use-case.js';
 import { ModerateUseCase, type ModerationAction } from '../application/moderate.use-case.js';
+import { MyAdditionsUseCase } from '../application/my-additions.use-case.js';
 import { SuggestProductsUseCase } from '../application/suggest-products.use-case.js';
 import {
+  AddedProductResponse,
+  AddedStoreResponse,
   ConfirmationsResponse,
   FlagRequest,
+  MyAdditionsResponse,
   ProductSuggestionResponse,
   ReviewItemResponse,
   SuggestProductsQuery,
+  ViewerSayResponse,
 } from './community.dto.js';
 
 /** What shoppers say about products others added. */
@@ -48,7 +53,19 @@ export class ProductCommunityController {
   constructor(
     private readonly confirmations: ConfirmProductUseCase,
     private readonly flags: FlagContentUseCase,
+    private readonly additions: MyAdditionsUseCase,
   ) {}
+
+  @Get(':id/viewer-say')
+  @ApiOperation({ summary: 'Whether you added, confirmed or reported this product' })
+  @ApiOkResponse({ type: ViewerSayResponse })
+  @ApiNotFoundResponse({ description: 'Product not found' })
+  viewerSay(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ViewerSayResponse> {
+    return this.additions.say(actor, 'PRODUCT', id);
+  }
 
   @Post(':id/confirmations')
   @HttpCode(HttpStatus.OK)
@@ -92,7 +109,21 @@ export class ProductCommunityController {
 @ApiBearerAuth()
 @Controller({ path: 'stores', version: '1' })
 export class StoreCommunityController {
-  constructor(private readonly flags: FlagContentUseCase) {}
+  constructor(
+    private readonly flags: FlagContentUseCase,
+    private readonly additions: MyAdditionsUseCase,
+  ) {}
+
+  @Get(':id/viewer-say')
+  @ApiOperation({ summary: 'Whether you added or reported this shop' })
+  @ApiOkResponse({ type: ViewerSayResponse })
+  @ApiNotFoundResponse({ description: 'Store not found, or someone else’s private shop' })
+  viewerSay(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ViewerSayResponse> {
+    return this.additions.say(actor, 'STORE', id);
+  }
 
   @Post(':id/flags')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -120,6 +151,25 @@ export class ProductSuggestionsController {
   @ApiOkResponse({ type: [ProductSuggestionResponse] })
   async suggest(@Query() query: SuggestProductsQuery): Promise<ProductSuggestionResponse[]> {
     return (await this.suggestions.execute(query.name, query.limit)).map(ProductSuggestionResponse.from);
+  }
+}
+
+/** What a shopper added, and where each stands. */
+@ApiTags('community')
+@ApiBearerAuth()
+@Controller({ path: 'community', version: '1' })
+export class MyAdditionsController {
+  constructor(private readonly additions: MyAdditionsUseCase) {}
+
+  @Get('mine')
+  @ApiOperation({
+    summary: 'The products and shops you added, newest first',
+    description: 'Hidden and private ones included, each with a status for you to read.',
+  })
+  @ApiOkResponse({ type: MyAdditionsResponse })
+  async mine(@CurrentUser() actor: AuthenticatedUser): Promise<MyAdditionsResponse> {
+    const { products, stores } = await this.additions.list(actor);
+    return { products: products.map(AddedProductResponse.from), stores: stores.map(AddedStoreResponse.from) };
   }
 }
 

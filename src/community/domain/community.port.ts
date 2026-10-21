@@ -30,6 +30,8 @@ export interface SimilarProduct {
   brandId: string | null;
   packageSize: number | null;
   unit: string;
+  /** Filled for "is it one of these?", where people need to tell them apart. */
+  brandName?: string | null;
 }
 
 export interface NearbyStore extends Coordinates {
@@ -57,6 +59,36 @@ export interface ReviewItem {
   flagCount: number;
   confirmationCount: number;
   createdAt: Date;
+}
+
+/** A product someone added, as they see it in their list. */
+export interface AddedProduct {
+  id: string;
+  name: string;
+  brandName: string | null;
+  origin: CatalogOrigin;
+  moderationStatus: ModerationStatus;
+  confirmationCount: number;
+  createdAt: Date;
+}
+
+/** A shop someone added, as they see it in their list. */
+export interface AddedStore {
+  id: string;
+  name: string;
+  supermarketName: string;
+  addressLine: string;
+  origin: CatalogOrigin;
+  moderationStatus: ModerationStatus;
+  publishedAt: Date | null;
+  pricedProductCount: number;
+  createdAt: Date;
+}
+
+/** What one person has already said about an entry. */
+export interface ViewerSay {
+  confirmed: boolean;
+  flagged: boolean;
 }
 
 export interface AuditEntry {
@@ -91,6 +123,10 @@ export interface CommunityRepository {
   /** False when this person had already flagged it. */
   flag(target: FlagTarget, targetId: string, userId: string, reason: FlagReason): Promise<boolean>;
   flaggers(target: FlagTarget, targetId: string): Promise<string[]>;
+  /** Whether this person confirmed (products only) or flagged the entry. */
+  viewerSay(target: FlagTarget, targetId: string, userId: string): Promise<ViewerSay>;
+  /** Everything this person added, newest first, hidden entries included. */
+  addedBy(userId: string, limit: number): Promise<{ products: AddedProduct[]; stores: AddedStore[] }>;
 
   /** False when this person's price for this product at this shop was already counted. */
   recordContribution(storeId: string, productId: string, userId: string): Promise<boolean>;

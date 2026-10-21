@@ -126,6 +126,14 @@ export class SearchProductsQueryDto extends PaginationQuery {
 }
 
 export class CreateProductRequest {
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description: 'Chosen by the client when it adds one offline; sending the same id again returns that product',
+  })
+  @IsOptional()
+  @IsUUID()
+  id?: string;
+
   @ApiProperty({ minLength: 2, maxLength: 200 })
   @IsString()
   @MinLength(2)
@@ -148,6 +156,18 @@ export class CreateProductRequest {
   @IsOptional()
   @IsUUID()
   brandId?: string;
+
+  @ApiPropertyOptional({
+    minLength: 2,
+    maxLength: 80,
+    description: 'A brand that is not listed; ignored when `brandId` is given',
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  @MaxLength(80)
+  @Matches(PLAIN_TEXT, { message: PLAIN_TEXT_MESSAGE })
+  brandName?: string;
 
   @ApiPropertyOptional({ description: 'Package size expressed in `unit`' })
   @IsOptional()

@@ -5,11 +5,13 @@ import { FlagContentUseCase } from './application/flag-content.use-case.js';
 import { ModerateUseCase } from './application/moderate.use-case.js';
 import { PriceAcceptedListener } from './application/price-accepted.listener.js';
 import { ProductStanding } from './application/product-standing.js';
+import { MyAdditionsUseCase } from './application/my-additions.use-case.js';
 import { SuggestProductsUseCase } from './application/suggest-products.use-case.js';
 import { COMMUNITY_REPOSITORY } from './domain/community.port.js';
 import { PrismaCommunityRepository } from './infrastructure/prisma-community.repository.js';
 import {
   ModerationController,
+  MyAdditionsController,
   ProductCommunityController,
   ProductSuggestionsController,
   StoreCommunityController,
@@ -28,6 +30,7 @@ import {
     ProductCommunityController,
     StoreCommunityController,
     ModerationController,
+    MyAdditionsController,
   ],
   providers: [
     CommunityPolicy,
@@ -36,6 +39,7 @@ import {
     FlagContentUseCase,
     ModerateUseCase,
     SuggestProductsUseCase,
+    MyAdditionsUseCase,
     PriceAcceptedListener,
     { provide: COMMUNITY_REPOSITORY, useClass: PrismaCommunityRepository },
   ],
