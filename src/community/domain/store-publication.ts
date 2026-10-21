@@ -1,14 +1,5 @@
 /** How many different products need an accepted price before a shop is shown to everyone. */
 export const PRODUCTS_NEEDED = 10;
-/** And how many different people those prices must come from, so no one can publish their own shop alone. */
-export const CONTRIBUTORS_NEEDED = 3;
-
-export interface PublicationCounts {
-  /** Distinct products with an accepted price at the shop, from anyone but its creator. */
-  pricedProducts: number;
-  /** Distinct users, other than the creator, behind those prices. */
-  contributors: number;
-}
 
 export interface PublicationProgress {
   published: boolean;
@@ -16,27 +7,25 @@ export interface PublicationProgress {
   productsNeeded: number;
   /** Products still to price; 0 once there are enough. */
   productsRemaining: number;
-  contributors: number;
-  contributorsNeeded: number;
-  contributorsRemaining: number;
 }
 
 /**
  * Whether a shop a shopper added is ready for everyone to see, and how far it
- * is: private to its creator until enough products have an accepted price from
- * enough different people.
+ * is: private to its creator until ten different products have an accepted
+ * price there.
+ *
+ * Those prices are, by construction, almost all the creator's own: nobody else
+ * can see the shop yet. What keeps a made-up shop out is that each price must
+ * pass the price pipeline's checks, that a new account may add one shop a day,
+ * and that once public, flags take it down again (CON-051).
  */
-export function publicationProgress(counts: PublicationCounts): PublicationProgress {
-  const productsRemaining = Math.max(0, PRODUCTS_NEEDED - counts.pricedProducts);
-  const contributorsRemaining = Math.max(0, CONTRIBUTORS_NEEDED - counts.contributors);
+export function publicationProgress(pricedProducts: number): PublicationProgress {
+  const productsRemaining = Math.max(0, PRODUCTS_NEEDED - pricedProducts);
 
   return {
-    published: productsRemaining === 0 && contributorsRemaining === 0,
-    pricedProducts: counts.pricedProducts,
+    published: productsRemaining === 0,
+    pricedProducts,
     productsNeeded: PRODUCTS_NEEDED,
     productsRemaining,
-    contributors: counts.contributors,
-    contributorsNeeded: CONTRIBUTORS_NEEDED,
-    contributorsRemaining,
   };
 }

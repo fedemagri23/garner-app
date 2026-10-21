@@ -76,7 +76,7 @@ describe('FindNearbyStoresUseCase', () => {
   it('over-fetches so the radius filter cannot leave the page short', async () => {
     await useCase.execute({ ...obelisco, radiusKm: 5, limit: 10 });
 
-    expect(stores.findWithinBox).toHaveBeenCalledWith(expect.anything(), 40);
+    expect(stores.findWithinBox).toHaveBeenCalledWith(expect.anything(), 40, { viewerId: undefined });
   });
 
   it('narrows to one chain when asked', async () => {

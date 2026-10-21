@@ -21,6 +21,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
+import { PLAIN_TEXT, PLAIN_TEXT_MESSAGE } from '../../common/text/plain-text.js';
+import { publicationProgress } from '../../community/domain/store-publication.js';
 import type { OpeningInterval } from '../domain/opening-hours.js';
 import type {
   NearbyStore,
@@ -57,6 +59,12 @@ export class OpeningHoursResponse {
   @ApiProperty({ example: '21:00' }) closesAt!: string;
 }
 
+export class PublicationResponse {
+  @ApiProperty({ description: 'Distinct products with an accepted price here' }) pricedProducts!: number;
+  @ApiProperty() productsNeeded!: number;
+  @ApiProperty() productsRemaining!: number;
+}
+
 export class StoreResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) supermarketId!: string;
@@ -74,6 +82,22 @@ export class StoreResponse {
   @ApiProperty() isActive!: boolean;
   @ApiProperty({ type: [OpeningHoursResponse] })
   openingHours!: OpeningHoursResponse[];
+  @ApiProperty({
+    enum: ['VERIFIED', 'COMMUNITY'],
+    description: 'The team’s, or added by a shopper and not yet verified',
+  })
+  origin!: 'VERIFIED' | 'COMMUNITY';
+  @ApiProperty({
+    enum: ['PUBLIC', 'PRIVATE'],
+    description: 'PRIVATE: only its creator sees it, until enough products are priced there',
+  })
+  visibility!: 'PUBLIC' | 'PRIVATE';
+  @ApiProperty({
+    type: PublicationResponse,
+    nullable: true,
+    description: 'How far a private shop is from being shown to everyone; null once public',
+  })
+  publication!: PublicationResponse | null;
 
   static from(store: StoreLocation): StoreResponse {
     return {
@@ -92,6 +116,15 @@ export class StoreResponse {
       timeZone: store.timeZone,
       isActive: store.isActive,
       openingHours: store.openingHours,
+      origin: store.origin,
+      visibility: store.isPublic ? 'PUBLIC' : 'PRIVATE',
+      publication: store.isPublic
+        ? null
+        : (({ pricedProducts, productsNeeded, productsRemaining }) => ({
+            pricedProducts,
+            productsNeeded,
+            productsRemaining,
+          }))(publicationProgress(store.pricedProductCount)),
     };
   }
 }
@@ -202,26 +235,42 @@ export class OpeningHoursRequest implements OpeningInterval {
 }
 
 export class CreateStoreRequest {
-  @ApiProperty({ format: 'uuid' })
+  @ApiPropertyOptional({ format: 'uuid', description: 'The chain; or give `supermarketName` for one not listed' })
+  @IsOptional()
   @IsUUID()
-  supermarketId!: string;
+  supermarketId?: string;
+
+  @ApiPropertyOptional({
+    minLength: 2,
+    maxLength: 80,
+    description: 'A chain not listed yet (shoppers only); reused if one by that name exists',
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  @MaxLength(80)
+  @Matches(PLAIN_TEXT, { message: PLAIN_TEXT_MESSAGE })
+  supermarketName?: string;
 
   @ApiProperty({ minLength: 2, maxLength: 120 })
   @IsString()
   @MinLength(2)
   @MaxLength(120)
+  @Matches(PLAIN_TEXT, { message: PLAIN_TEXT_MESSAGE })
   name!: string;
 
   @ApiProperty({ maxLength: 200 })
   @IsString()
   @MinLength(2)
   @MaxLength(200)
+  @Matches(PLAIN_TEXT, { message: PLAIN_TEXT_MESSAGE })
   addressLine!: string;
 
   @ApiProperty({ maxLength: 120 })
   @IsString()
   @MinLength(1)
   @MaxLength(120)
+  @Matches(PLAIN_TEXT, { message: PLAIN_TEXT_MESSAGE })
   city!: string;
 
   @ApiPropertyOptional({ maxLength: 120 })

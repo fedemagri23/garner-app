@@ -75,10 +75,12 @@ describe('EvaluatePriceAlertsUseCase', () => {
         latitude: -34.6,
         longitude: -58.38,
         supermarket: { name: 'Coto' },
+        isPublic: true,
+        createdById: null,
       }),
       // Where the other stores are, for judging "nearby": all close by.
       findManyByIds: jest.fn(async (ids: string[]) =>
-        ids.map((id) => ({ id, latitude: -34.61, longitude: -58.38 })),
+        ids.map((id) => ({ id, latitude: -34.61, longitude: -58.38, isPublic: true })),
       ),
     };
     products = {
@@ -201,6 +203,24 @@ describe('EvaluatePriceAlertsUseCase', () => {
     expect(stores.findById).not.toHaveBeenCalled();
   });
 
+  it('lets a shop that is not public yet speak only to its creator\'s alerts', async () => {
+    stores.findById.mockResolvedValue({
+      id: 'store-1',
+      name: 'Almacén de Ana',
+      latitude: -34.6,
+      longitude: -58.38,
+      supermarket: { name: 'Almacén' },
+      isPublic: false,
+      createdById: 'ana',
+    });
+    alerts.findEnabledForProduct.mockResolvedValue([alert({ id: 'a1' }), alert({ id: 'a2', ownerId: 'ana' })]);
+
+    await expect(useCase.execute(change, now)).resolves.toEqual({ examined: 2, raised: 1 });
+
+    expect(notifications.create).toHaveBeenCalledTimes(1);
+    expect(notifications.create).toHaveBeenCalledWith(expect.objectContaining({ userId: 'ana' }));
+  });
+
   it('judges "cheapest nearby" against the other stores it knows', async () => {
     alerts.findEnabledForProduct.mockResolvedValue([
       alert({
@@ -257,8 +277,8 @@ describe('EvaluatePriceAlertsUseCase', () => {
     stores.findManyByIds.mockImplementation(async (ids: string[]) =>
       ids.map((id) =>
         id === 'store-far'
-          ? { id, latitude: -34.9, longitude: -57.95 }
-          : { id, latitude: -34.61, longitude: -58.38 },
+          ? { id, latitude: -34.9, longitude: -57.95, isPublic: true }
+          : { id, latitude: -34.61, longitude: -58.38, isPublic: true },
       ),
     );
 

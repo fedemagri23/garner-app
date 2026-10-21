@@ -31,7 +31,9 @@ export class PrismaSupermarketRepository implements SupermarketRepository {
   }
 
   async create(input: CreateSupermarketInput): Promise<Supermarket> {
-    const row = await this.prisma.supermarket.create({ data: input });
+    const row = await this.prisma.supermarket.create({
+      data: { ...input, origin: input.origin ?? 'VERIFIED' },
+    });
     return this.toDomain(row);
   }
 

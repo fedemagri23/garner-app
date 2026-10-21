@@ -14,6 +14,7 @@ import { QueueModule } from './common/queue/queue.module.js';
 import { RedisModule } from './common/redis/redis.module.js';
 import { ContributionsModule } from './contributions/contributions.module.js';
 import { ExternalPriceSourcesModule } from './external-price-sources/external-price-sources.module.js';
+import { CommunityModule } from './community/community.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { OptimizationModule } from './optimization/optimization.module.js';
 import { PriceIntelligenceModule } from './price-intelligence/price-intelligence.module.js';
@@ -55,6 +56,7 @@ import { UsersModule } from './users/users.module.js';
     ExternalPriceSourcesModule,
     OptimizationModule,
     NotificationsModule,
+    CommunityModule,
   ],
   controllers: [MetricsController],
   providers: [

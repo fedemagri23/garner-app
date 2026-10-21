@@ -154,8 +154,8 @@ export class ComparePricesUseCase {
         const store = stores.get(price.storeId);
 
         // A price whose store has been deleted or deactivated is not somewhere
-        // anyone can shop.
-        if (!store || !store.isActive) {
+        // anyone can shop; one at a shop not yet public is not for everyone.
+        if (!store || !store.isActive || !store.isPublic) {
           return [];
         }
 

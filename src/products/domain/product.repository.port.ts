@@ -14,6 +14,7 @@ export interface ProductSearchCriteria {
   /** Includes the category's descendants, so browsing "Dairy" finds "Milk". */
   categoryIds?: string[];
   brandId?: string;
+  /** Also hidden, merged and under-review entries: for moderators only. */
   includeInactive?: boolean;
   skip: number;
   take: number;

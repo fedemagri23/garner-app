@@ -81,7 +81,9 @@ async function upsertBrand(name, slug, normalizedName) {
   });
 }
 
-async function upsertProduct(product) {
+async function upsertProduct(fields) {
+  // The team's, unless said otherwise, and ranked as such (VERIFIED_BONUS).
+  const product = { origin: 'VERIFIED', weight: 150, ...fields };
   const existing = await core.product.findFirst({
     where: { normalizedName: product.normalizedName },
   });
@@ -189,10 +191,17 @@ async function setPriceDrop(productId, storeId, currency, priceCents, previousPr
 async function main() {
   console.log('Seeding development data…');
 
-  const [admin, shopper] = await Promise.all([
+  const [admin, shopper, moderator, neighbour] = await Promise.all([
     upsertUser('admin@garner.test', 'Garner Admin', 'ADMIN'),
     upsertUser('shopper@garner.test', 'Fede', 'USER'),
+    upsertUser('moderator@garner.test', 'Garner Moderator', 'MODERATOR'),
+    upsertUser('vecina@garner.test', 'Vecina', 'USER'),
   ]);
+  // Established accounts: their price reports count at once and they may add
+  // a few products and shops a day (a brand-new account's are held back).
+  const DAY_MS = 86_400_000;
+  await core.user.update({ where: { id: shopper.id }, data: { createdAt: new Date(Date.now() - 90 * DAY_MS) } });
+  await core.user.update({ where: { id: neighbour.id }, data: { createdAt: new Date(Date.now() - 30 * DAY_MS) } });
 
   // A saved location, for when the app is not allowed to use the phone's.
   const savedLocation = { ...HOME, locationLabel: 'Centro' };
@@ -552,9 +561,97 @@ async function main() {
     await core.notification.upsert({ where: { dedupeKey: data.dedupeKey }, create: data, update: data });
   }
 
+  // --- Shopper-added products and shops -------------------------------------
+
+  // Team staples with no prices yet: enough products for a shop's ten.
+  const staples = [];
+  for (const [name, packageSize, unit] of [
+    ['Fideos Spaghetti 500g', 500, 'GRAM'],
+    ['Azúcar 1kg', 1, 'KILOGRAM'],
+    ['Harina 0000 1kg', 1, 'KILOGRAM'],
+    ['Yerba Mate 500g', 500, 'GRAM'],
+    ['Sal Fina 500g', 500, 'GRAM'],
+  ]) {
+    staples.push(
+      await upsertProduct({
+        name,
+        normalizedName: name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+        categoryId: almacen.id,
+        packageSize,
+        unit,
+      }),
+    );
+  }
+  const everything = [...products, ...staples];
+
+  // A product a neighbour added: visible to everyone, unverified, for the
+  // shopper to confirm or report.
+  await upsertProduct({
+    name: 'Alfajor Artesanal de Maicena',
+    normalizedName: 'alfajor artesanal de maicena',
+    categoryId: almacen.id,
+    packageSize: 1,
+    unit: 'UNIT',
+    origin: 'COMMUNITY',
+    createdById: neighbour.id,
+    weight: 0,
+    confirmationCount: 0,
+    flagCount: 0,
+    moderationStatus: 'ACTIVE',
+  });
+  const alfajor = await core.product.findFirstOrThrow({ where: { normalizedName: 'alfajor artesanal de maicena' } });
+  await core.productConfirmation.deleteMany({ where: { productId: alfajor.id } });
+  await core.contentFlag.deleteMany({ where: { targetType: 'PRODUCT', targetId: alfajor.id } });
+
+  // Shops the shopper added, not public yet: one near the Obelisco at 6 of 10
+  // products priced, one by Stephansplatz at 9, which one more price publishes.
+  // Each a little further out than the team's nearest, which stays the default.
+  async function privateShop(chainName, store, place, priced) {
+    const slug = chainName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const chain = await core.supermarket.upsert({
+      where: { slug },
+      create: { name: chainName, slug, origin: 'COMMUNITY', createdById: shopper.id },
+      update: {},
+    });
+    const row = await upsertStore(chain.id, store, place);
+    await core.storePriceContributor.deleteMany({ where: { storeLocationId: row.id } });
+    await core.storePriceContributor.createMany({
+      data: everything.slice(0, priced).map((product) => ({
+        storeLocationId: row.id,
+        productId: product.id,
+        userId: shopper.id,
+      })),
+    });
+    return core.storeLocation.update({
+      where: { id: row.id },
+      data: {
+        origin: 'COMMUNITY',
+        createdById: shopper.id,
+        moderationStatus: 'ACTIVE',
+        publishedAt: null,
+        pricedProductCount: priced,
+        contributorCount: 1,
+        flagCount: 0,
+      },
+    });
+  }
+  const donPepe = await privateShop(
+    'Almacén Don Pepe',
+    { name: 'Almacén Don Pepe', addressLine: 'Tucumán 1200', latitude: kmSouth(1.2), longitude: HOME.longitude + 0.004 },
+    BUENOS_AIRES,
+    6,
+  );
+  const nahFrisch = await privateShop(
+    'Nah&Frisch',
+    { name: 'Nah&Frisch Singerstraße', addressLine: 'Singerstraße 8', latitude: 48.205, longitude: 16.38 },
+    WIEN,
+    9,
+  );
+
   console.log(`
 Seeded:
-  users        admin@garner.test (ADMIN), shopper@garner.test (USER)
+  users        admin@garner.test (ADMIN), moderator@garner.test (MODERATOR),
+               shopper@garner.test (USER, 90 days old), vecina@garner.test (USER)
   password     ${PASSWORD}
   catalog      ${products.length} products, 4 categories, 2 brands, ${barcodes.length} barcodes
   stores       ${storeOrder.length} around the Obelisco (Coto, Carrefour, Día, in ARS)
@@ -563,6 +660,10 @@ Seeded:
   price drops  ${drops.length} near the Obelisco, ${viennaDrops.length} near Stephansplatz
   alerts       3 price alerts and 4 messages (3 unread), the shopper's
   lists        "Compra semanal" (4 items, ARS) and "Compra en Viena" (4 items, EUR), the shopper's
+  community    "Alfajor Artesanal de Maicena", added by vecina, unverified;
+               the shopper's private shops "${donPepe.name}" (6 of 10 priced) and
+               "${nahFrisch.name}" (9 of 10: one more price publishes it);
+               ${staples.length} team staples without prices
   home point   ${HOME.latitude}, ${HOME.longitude} (the shopper's saved location, "Centro")
   vienna point ${VIENNA.latitude}, ${VIENNA.longitude} (Stephansplatz)
 `);

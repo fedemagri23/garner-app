@@ -301,11 +301,18 @@ describe('Catalog (e2e)', () => {
   });
 
   describe('curation is restricted', () => {
-    it('refuses a product write from an ordinary shopper', async () => {
-      await request(app.getHttpServer())
+    it('takes a shopper\'s new product as COMMUNITY, but leaves editing to the team', async () => {
+      const created = await request(app.getHttpServer())
         .post('/v1/products')
         .set(auth(shopper))
-        .send({ name: 'Rogue Product', categoryId: milkId, unit: 'UNIT' })
+        .send({ name: 'Producto de un vecino', categoryId: milkId, unit: 'UNIT' })
+        .expect(201);
+      expect(created.body.origin).toBe('COMMUNITY');
+
+      await request(app.getHttpServer())
+        .patch(`/v1/products/${created.body.id}`)
+        .set(auth(shopper))
+        .send({ name: 'Otro nombre' })
         .expect(403);
     });
 

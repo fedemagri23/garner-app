@@ -11,6 +11,8 @@ export interface FindNearbyStoresQuery extends Coordinates {
   radiusKm: number;
   limit: number;
   supermarketId?: string;
+  /** Includes this person's own not-yet-public shops. */
+  viewerId?: string;
 }
 
 /**
@@ -40,6 +42,7 @@ export class FindNearbyStoresUseCase {
     const candidates = await this.stores.findWithinBox(
       boundingBox(centre, query.radiusKm),
       query.limit * 4,
+      { viewerId: query.viewerId },
     );
 
     const now = new Date();

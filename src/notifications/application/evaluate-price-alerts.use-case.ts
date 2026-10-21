@@ -103,15 +103,20 @@ export class EvaluatePriceAlertsUseCase {
     const elsewhere = (
       await this.prices.findForProduct(input.productId)
     ).filter((price) => price.storeId !== input.storeId);
+    // A shop not yet public is nobody's business but its creator's: it is not
+    // a place to compare against, and only its creator's alerts hear of it.
     const places = new Map(
-      (await this.stores.findManyByIds(elsewhere.map((price) => price.storeId))).map(
-        (place) => [place.id, place],
-      ),
+      (await this.stores.findManyByIds(elsewhere.map((price) => price.storeId)))
+        .filter((place) => place.isPublic)
+        .map((place) => [place.id, place]),
     );
+    const listening = store.isPublic
+      ? alerts
+      : alerts.filter((alert) => alert.ownerId === store.createdById);
 
     let raised = 0;
 
-    for (const alert of alerts) {
+    for (const alert of listening) {
       if (await this.considerAlert(alert, input, store, product.name, elsewhere, places, now)) {
         raised += 1;
       }

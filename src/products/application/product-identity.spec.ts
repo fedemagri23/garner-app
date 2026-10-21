@@ -17,6 +17,10 @@ const dairy: Category = {
 };
 
 const milk: Product = {
+  origin: 'VERIFIED',
+  createdById: null,
+  moderationStatus: 'ACTIVE',
+  confirmationCount: 0,
   id: 'prod-1',
   name: 'Leche Entera 1L',
   normalizedName: 'leche entera 1l',
@@ -42,6 +46,10 @@ describe('product identity', () => {
   let products: jest.Mocked<ProductRepository>;
   let categories: jest.Mocked<CategoryRepository>;
   let brands: jest.Mocked<BrandRepository>;
+  let community: { productsNamed: jest.Mock; audit: jest.Mock };
+  let policy: { assertMayCreate: jest.Mock };
+  const shopper = { id: 'ana', email: 'ana@example.com', role: 'USER' as const };
+  const moderator = { id: 'mod', email: 'mod@example.com', role: 'MODERATOR' as const };
 
   beforeEach(() => {
     products = {
@@ -72,6 +80,8 @@ describe('product identity', () => {
       findBySlug: jest.fn(),
       create: jest.fn(),
     };
+    community = { productsNamed: jest.fn().mockResolvedValue([]), audit: jest.fn() };
+    policy = { assertMayCreate: jest.fn() };
   });
 
   describe('UpdateProductUseCase', () => {
@@ -128,14 +138,14 @@ describe('product identity', () => {
 
   describe('CreateProductUseCase', () => {
     it('stores the normalized name alongside the display name', async () => {
-      const useCase = new CreateProductUseCase(products, categories, brands);
+      const useCase = new CreateProductUseCase(products, categories, brands, community as never, policy as never);
 
       await useCase.execute({
         name: 'Leche Entera 1L',
         categoryId: 'cat-1',
         unit: UnitOfMeasure.Liter,
         packageSize: 1,
-      });
+      }, shopper);
 
       expect(products.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -146,7 +156,7 @@ describe('product identity', () => {
     });
 
     it('rejects a barcode that fails its checksum', async () => {
-      const useCase = new CreateProductUseCase(products, categories, brands);
+      const useCase = new CreateProductUseCase(products, categories, brands, community as never, policy as never);
 
       await expect(
         useCase.execute({
@@ -154,7 +164,7 @@ describe('product identity', () => {
           categoryId: 'cat-1',
           unit: UnitOfMeasure.Liter,
           barcodes: ['7790070410129'],
-        }),
+        }, shopper),
       ).rejects.toThrow(/valid barcode/);
 
       expect(products.create).not.toHaveBeenCalled();
@@ -162,7 +172,7 @@ describe('product identity', () => {
 
     it('refuses to give one barcode to a second product', async () => {
       products.findByBarcode.mockResolvedValue(milk);
-      const useCase = new CreateProductUseCase(products, categories, brands);
+      const useCase = new CreateProductUseCase(products, categories, brands, community as never, policy as never);
 
       await expect(
         useCase.execute({
@@ -170,21 +180,21 @@ describe('product identity', () => {
           categoryId: 'cat-1',
           unit: UnitOfMeasure.Liter,
           barcodes: ['7790070410122'],
-        }),
+        }, shopper),
       ).rejects.toThrow(ConflictException);
 
       expect(products.create).not.toHaveBeenCalled();
     });
 
     it('marks the first barcode primary and the rest secondary', async () => {
-      const useCase = new CreateProductUseCase(products, categories, brands);
+      const useCase = new CreateProductUseCase(products, categories, brands, community as never, policy as never);
 
       await useCase.execute({
         name: 'Leche Entera 1L',
         categoryId: 'cat-1',
         unit: UnitOfMeasure.Liter,
         barcodes: ['7790070410122', '036000291452'],
-      });
+      }, shopper);
 
       expect(products.addBarcode).toHaveBeenNthCalledWith(
         1,
@@ -198,6 +208,58 @@ describe('product identity', () => {
         '036000291452',
         false,
       );
+    });
+  });
+
+  describe('who adds a product', () => {
+    const create = (actor: typeof shopper | typeof moderator, extra = {}) =>
+      new CreateProductUseCase(products, categories, brands, community as never, policy as never).execute(
+        { name: 'Leche Entera 1L', categoryId: 'cat-1', unit: UnitOfMeasure.Liter, packageSize: 1, imageUrl: 'https://x.test/a.png', ...extra },
+        actor,
+      );
+
+    it('makes the team\'s VERIFIED, ranked first, with their picture', async () => {
+      await create(moderator);
+
+      expect(policy.assertMayCreate).not.toHaveBeenCalled();
+      expect(products.create).toHaveBeenCalledWith(
+        expect.objectContaining({ origin: 'VERIFIED', createdById: null, weight: 150, imageUrl: 'https://x.test/a.png' }),
+      );
+    });
+
+    it('makes a shopper\'s COMMUNITY, theirs, unranked, without a stranger\'s picture, and logs it', async () => {
+      await create(shopper);
+
+      expect(policy.assertMayCreate).toHaveBeenCalledWith('ana', 'PRODUCT');
+      expect(products.create).toHaveBeenCalledWith(
+        expect.objectContaining({ origin: 'COMMUNITY', createdById: 'ana', weight: 0, imageUrl: null }),
+      );
+      expect(community.audit).toHaveBeenCalledWith(expect.objectContaining({ action: 'created', actorId: 'ana' }));
+    });
+
+    it('refuses a shopper the same product again: same name, brand and size', async () => {
+      community.productsNamed.mockResolvedValue([
+        { id: 'p0', name: 'Leche Entera 1L', normalizedName: 'leche entera 1l', brandId: null, packageSize: 1, unit: 'LITER' },
+      ]);
+
+      await expect(create(shopper)).rejects.toThrow(/already in the catalog: Leche Entera 1L/);
+      expect(products.create).not.toHaveBeenCalled();
+    });
+
+    it('lets the same name in with another size', async () => {
+      community.productsNamed.mockResolvedValue([
+        { id: 'p0', name: 'Leche Entera 1L', normalizedName: 'leche entera 1l', brandId: null, packageSize: 0.5, unit: 'LITER' },
+      ]);
+
+      await create(shopper);
+      expect(products.create).toHaveBeenCalled();
+    });
+
+    it('stops at the daily limit before touching anything', async () => {
+      policy.assertMayCreate.mockRejectedValue(new Error('limit'));
+
+      await expect(create(shopper)).rejects.toThrow('limit');
+      expect(products.create).not.toHaveBeenCalled();
     });
   });
 });

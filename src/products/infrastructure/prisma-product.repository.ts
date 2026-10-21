@@ -39,7 +39,9 @@ export class PrismaProductRepository implements ProductRepository {
       this.prisma.product.findMany({
         where,
         include: PRODUCT_INCLUDE,
-        orderBy: [{ normalizedName: 'asc' }, { id: 'asc' }],
+        // Among matches, what more people stand behind comes first: the team's
+        // products, then well-confirmed and often-priced community ones.
+        orderBy: [{ weight: 'desc' }, { normalizedName: 'asc' }, { id: 'asc' }],
         skip: criteria.skip,
         take: criteria.take,
       }),
@@ -103,6 +105,9 @@ export class PrismaProductRepository implements ProductRepository {
         packageSize: input.packageSize,
         unit: input.unit,
         imageUrl: input.imageUrl,
+        origin: input.origin,
+        createdById: input.createdById,
+        weight: input.weight,
       },
       include: PRODUCT_INCLUDE,
     });
@@ -171,6 +176,8 @@ export class PrismaProductRepository implements ProductRepository {
 
     if (!criteria.includeInactive) {
       where.isActive = true;
+      // Hidden by moderators, folded into another, or pulled by flags.
+      where.moderationStatus = 'ACTIVE';
     }
 
     if (criteria.categoryIds?.length) {
@@ -221,6 +228,10 @@ export class PrismaProductRepository implements ProductRepository {
         code: barcode.code,
         isPrimary: barcode.isPrimary,
       })),
+      origin: row.origin,
+      createdById: row.createdById,
+      moderationStatus: row.moderationStatus,
+      confirmationCount: row.confirmationCount,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

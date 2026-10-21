@@ -18,9 +18,12 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiTooManyRequestsResponse,
 } from '@nestjs/swagger';
 import { paginate } from '../../common/http/pagination.js';
 import { UserRole } from '../../security/domain/user-role.js';
+import type { AuthenticatedUser } from '../../security/domain/authenticated-user.js';
+import { CurrentUser } from '../../security/presentation/current-user.decorator.js';
 import { Roles } from '../../security/presentation/roles.decorator.js';
 import { RolesGuard } from '../../security/presentation/roles.guard.js';
 import { AddProductBarcodeUseCase } from '../application/add-product-barcode.use-case.js';
@@ -96,13 +99,20 @@ export class ProductsController {
   }
 
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.Moderator, UserRole.Admin)
-  @ApiOperation({ summary: 'Add a product to the canonical catalog' })
+  @ApiOperation({
+    summary: 'Add a product to the catalog',
+    description:
+      'Moderators and admins add VERIFIED products. Anyone else adds a COMMUNITY one: shown to ' +
+      'everyone, ranked by confirmations and prices, a few a day. Check `/v1/product-suggestions` first.',
+  })
   @ApiCreatedResponse({ type: ProductResponse })
-  @ApiConflictResponse({ description: 'A barcode already belongs elsewhere' })
-  async create(@Body() body: CreateProductRequest): Promise<ProductResponse> {
-    return ProductResponse.from(await this.createProduct.execute(body));
+  @ApiConflictResponse({ description: 'A barcode already belongs elsewhere, or the same product is already there' })
+  @ApiTooManyRequestsResponse({ description: 'As many products as allowed today' })
+  async create(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Body() body: CreateProductRequest,
+  ): Promise<ProductResponse> {
+    return ProductResponse.from(await this.createProduct.execute(body, actor));
   }
 
   @Patch(':id')

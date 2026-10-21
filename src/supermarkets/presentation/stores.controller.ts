@@ -6,20 +6,20 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiTooManyRequestsResponse,
 } from '@nestjs/swagger';
 import { paginate } from '../../common/http/pagination.js';
-import { UserRole } from '../../security/domain/user-role.js';
-import { Roles } from '../../security/presentation/roles.decorator.js';
-import { RolesGuard } from '../../security/presentation/roles.guard.js';
+import type { AuthenticatedUser } from '../../security/domain/authenticated-user.js';
+import { CurrentUser } from '../../security/presentation/current-user.decorator.js';
 import { CreateStoreUseCase } from '../application/create-store.use-case.js';
 import { FindNearbyStoresUseCase } from '../application/find-nearby-stores.use-case.js';
 import { GetStoreUseCase } from '../application/get-store.use-case.js';
@@ -65,9 +65,10 @@ export class StoresController {
   @ApiOperation({ summary: 'Find open stores within a radius, nearest first' })
   @ApiOkResponse({ type: [NearbyStoreResponse] })
   async nearby(
+    @CurrentUser() actor: AuthenticatedUser,
     @Query() query: NearbyStoresQueryDto,
   ): Promise<NearbyStoreResponse[]> {
-    const nearby = await this.findNearby.execute(query);
+    const nearby = await this.findNearby.execute({ ...query, viewerId: actor.id });
     return nearby.map(NearbyStoreResponse.fromNearby);
   }
 
@@ -75,16 +76,27 @@ export class StoresController {
   @ApiOperation({ summary: 'Get one store' })
   @ApiOkResponse({ type: StoreResponse })
   @ApiNotFoundResponse({ description: 'Store not found' })
-  async detail(@Param('id', ParseUUIDPipe) id: string): Promise<StoreResponse> {
-    return StoreResponse.from(await this.getStore.execute(id));
+  async detail(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<StoreResponse> {
+    return StoreResponse.from(await this.getStore.execute(id, actor));
   }
 
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.Moderator, UserRole.Admin)
-  @ApiOperation({ summary: 'Add a store location to a chain' })
+  @ApiOperation({
+    summary: 'Add a shop',
+    description:
+      'Moderators and admins add VERIFIED shops, public at once. Anyone else adds a COMMUNITY one, ' +
+      'visible only to them until ten products have an accepted price there; a few a day.',
+  })
   @ApiCreatedResponse({ type: StoreResponse })
-  async create(@Body() body: CreateStoreRequest): Promise<StoreResponse> {
-    return StoreResponse.from(await this.createStore.createStore(body));
+  @ApiConflictResponse({ description: 'The same chain already has a shop at this spot' })
+  @ApiTooManyRequestsResponse({ description: 'As many shops as allowed today' })
+  async create(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Body() body: CreateStoreRequest,
+  ): Promise<StoreResponse> {
+    return StoreResponse.from(await this.createStore.createStore(body, actor));
   }
 }

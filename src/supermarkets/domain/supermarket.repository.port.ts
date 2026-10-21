@@ -42,7 +42,12 @@ export interface StoreLocationRepository {
    * radius; the box exists so the query can use the coordinate index instead
    * of scanning the table.
    */
-  findWithinBox(box: BoundingBox, limit: number): Promise<StoreLocation[]>;
+  /**
+   * Shops in the box that everyone can see, plus — when a viewer is given —
+   * that viewer's own not-yet-public ones. Everything that lists shops near a
+   * place goes through here, so a private shop never shows to anyone else.
+   */
+  findWithinBox(box: BoundingBox, limit: number, options?: { viewerId?: string }): Promise<StoreLocation[]>;
   create(input: CreateStoreLocationInput): Promise<StoreLocation>;
 }
 

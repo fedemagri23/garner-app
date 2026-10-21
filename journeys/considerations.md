@@ -324,3 +324,27 @@ Notation: [`README.md`](README.md).
 - **What:** Everything up to Expo's service is tested against a stand-in server. Delivery by Expo to Apple or Google needs a development build, which needs EAS and, for iOS, a paid Apple Developer account; Expo's docs say remote push is unavailable in Expo Go on Android from SDK 53.
 - **Why:** Saying so now avoids calling the checkpoint verified when the last hop was never exercised.
 - **Revisit when:** A development build exists to try it on a real phone.
+
+### CON-051 — A shopper's shop is published at ten priced products, priced mostly by its creator
+- **Phase:** post-plan (mobile phase 8, checkpoint 12) · **Area:** community · **Status:** accepted
+- **What:** A COMMUNITY shop is private to its creator until ten distinct products have an accepted price there (`publicationProgress`); then `publishedAt` is set, in the listener for `PriceObservationAccepted`, and everyone sees it. The plan's first draft also required prices from three different people; that was dropped.
+- **Why:** Nobody but the creator can see a private shop, so nobody else can price it: the three-people rule could never be met. Abuse is held back instead by the price pipeline (a new account's prices are held for review, extreme prices rejected), one shop a day for a new or low-trust account, refusing the same chain within 50 m, flags once public, and moderation.
+- **Revisit when:** Fake shops get through — then require a photo of the shop front, or a nearby check-in, before publishing.
+
+### CON-052 — Who sees what: products are open, shops are not until published
+- **Phase:** post-plan (mobile phase 8, checkpoint 12) · **Area:** community · **Status:** accepted
+- **What:** A shopper's product shows in search for everyone at once, ranked by `weight` (team products 150, community ones from confirmations ×3, recent pricers ×2, flags −5, a slow slide when untouched). A shopper's shop shows only to its creator — in "nearby" and by id (others get 404) — and is left out of price comparisons, plans, price drops and other people's alerts, even for its creator, until published. Hidden, merged or flag-pulled entries leave search; looking them up by id still works, so old lists and trips keep their names.
+- **Why:** The user's rules: products are too many for the team to curate; a shop is only useful once it has prices, and a private one should not shape anyone's results.
+- **Revisit when:** A creator wants to see their own private shop's prices in the comparison before it is public.
+
+### CON-053 — Shoppers' products: no pictures from links, exact duplicates refused, suggestions first
+- **Phase:** post-plan (mobile phase 8, checkpoint 12) · **Area:** community · **Status:** accepted
+- **What:** `POST /v1/products` is open to everyone. A shopper's product is COMMUNITY, its `imageUrl` is ignored, names and descriptions refuse links and markup, it is refused (409) when the same normalized name, brand and size is already there (a missing size matches any), and new or low-trust accounts may add 3 a day (others 30). `GET /v1/product-suggestions?name=` lists likely matches to show before creating. The team skips the duplicate check and the limits; a shopper cannot create brands or categories yet.
+- **Why:** Links to pictures let anyone show anything; near-duplicates are the main way a crowdsourced catalog decays, and asking first is cheaper than merging later.
+- **Revisit when:** Shoppers need photos of products (upload through evidence storage, reviewed), or brands that are not listed.
+
+### CON-054 — Moderation is API-only; merging and a nightly recount are not built
+- **Phase:** post-plan (mobile phase 8, checkpoint 12) · **Area:** community · **Status:** deferred
+- **What:** Moderators have `GET /v1/moderation/queue` and `POST /v1/moderation/{products|stores}/:id/{verify|hide|restore}`, each audited. Merging a duplicate into another product (moving barcodes, list items and prices across databases) is not built: hide the duplicate instead. Shop counters come from `store_price_contributors` rows written by the accepted-price listener; a lost event leaves a shop one product short, with no nightly recount to repair it.
+- **Why:** Merge touches three databases and every module holding product ids; it deserves its own design. The counters live in core with the rows they count, so they cannot drift except by a missed event.
+- **Revisit when:** Duplicates pile up in the queue, or a shop is seen stuck below ten with ten priced products.

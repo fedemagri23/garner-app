@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CommunityModule } from '../community/community.module.js';
 import { AddProductBarcodeUseCase } from './application/add-product-barcode.use-case.js';
 import { BrowseCatalogUseCase } from './application/browse-catalog.use-case.js';
 import { CreateCatalogReferenceUseCase } from './application/create-category.use-case.js';
@@ -27,6 +28,7 @@ import { ProductsController } from './presentation/products.controller.js';
  * identity — while the Prisma implementations stay private to this module.
  */
 @Module({
+  imports: [CommunityModule],
   controllers: [ProductsController, CatalogController],
   providers: [
     SearchProductsUseCase,

@@ -148,3 +148,15 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Symptom:** Not reported by anyone, but a "below $ 1.400" alert (140000 cents) not tied to a store would have fired on a Vienna price of € 1,15 (115 cents) — and on any store anywhere, since only CHEAPER_NEARBY alerts had a place. "Cheapest nearby" also compared against the cheapest price at every other store in the system, so a 115-cent euro price meant no peso price could ever be the cheapest.
 - **Cause:** An alert stored its figures without a currency, and only CHEAPER_NEARBY used its place; the comparison for "nearby" took the minimum over all other stores, with no regard for distance or currency. Every store had been in Argentina until the Vienna demo data.
 - **Fix:** Alerts carry a `currency` (optional; absent means any, as before), and any alert with a place and radius only hears about stores inside it; "cheapest nearby" looks only at other stores in the same currency and inside the radius. A place is all of latitude, longitude and radius, or none. Unit and e2e tests cover a euro price against a peso alert, and a store outside the radius.
+
+### BUG-023 — The quiet-hours e2e test failed between 23:00 and 24:00 UTC
+- **Phase:** post-plan (mobile phase 7/8) · **Area:** notifications · **Scope:** tests only · **Found by:** CI, on a run at 23:26 UTC · **Fixed in:** f5bb0b3
+- **Symptom:** "holds a message through quiet hours" expected the message to be held, and it was delivered at once.
+- **Cause:** The test set quiet hours 0 to 23 UTC to mean "all day", but the window ends at 23:00 (and start = end means no quiet hours), so in the last hour of the UTC day it was not quiet.
+- **Fix:** The test makes its window from the current UTC hour for two hours, wrapping midnight; the rule itself was right.
+
+### BUG-024 — A price at a shop nobody else can see would have reached other people's alerts
+- **Phase:** post-plan (mobile phase 8) · **Area:** notifications, community · **Scope:** production code (caught before release) · **Found by:** tracing every place shops are read while adding private shops · **Fixed in:** "feat(community): shoppers add products and shops"
+- **Symptom:** None yet — private shops did not exist before this checkpoint. Had they gone in as written, a shopper's price at their own unpublished shop would have fired other shoppers' alerts, naming the shop, and counted as a "cheaper nearby" place for everyone.
+- **Cause:** Alert evaluation loads shops by id, which (rightly) does not filter by visibility, so nothing stopped a private shop there.
+- **Fix:** A private shop's prices only reach its creator's alerts, and it is never a comparison place; price comparisons skip non-public shops too. A unit test covers the alert case.

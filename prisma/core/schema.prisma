@@ -278,14 +278,13 @@ model StoreLocation {
   origin             CatalogOrigin    @default(VERIFIED)
   createdById        String?          @db.Uuid
   moderationStatus   ModerationStatus @default(ACTIVE)
-  /// Distinct products, and distinct people other than the creator, with an accepted
-  /// price here. Kept in step with `StorePriceContributor`, and recounted nightly
-  /// because prices live in another database.
+  /// Distinct products, and distinct people, with an accepted price here. Kept in
+  /// step with `StorePriceContributor`; the shop is published at 10 products.
   pricedProductCount Int              @default(0)
   contributorCount   Int              @default(0)
   /// When a shopper-added shop became visible to everyone; null while private.
-  /// The team's shops are published from the start.
-  publishedAt        DateTime?        @db.Timestamptz(3)
+  /// The team's shops are published from the start, hence the default.
+  publishedAt        DateTime?        @default(now()) @db.Timestamptz(3)
   flagCount          Int              @default(0)
   createdAt          DateTime         @default(now()) @db.Timestamptz(3)
   updatedAt          DateTime         @updatedAt @db.Timestamptz(3)

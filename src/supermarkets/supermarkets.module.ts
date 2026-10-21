@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CommunityModule } from '../community/community.module.js';
 import { BrowseSupermarketsUseCase } from './application/browse-supermarkets.use-case.js';
 import { CreateStoreUseCase } from './application/create-store.use-case.js';
 import { FindNearbyStoresUseCase } from './application/find-nearby-stores.use-case.js';
@@ -18,6 +19,7 @@ import { SupermarketsController } from './presentation/supermarkets.controller.j
  * them, so those phases read stores through this contract.
  */
 @Module({
+  imports: [CommunityModule],
   controllers: [SupermarketsController, StoresController],
   providers: [
     BrowseSupermarketsUseCase,

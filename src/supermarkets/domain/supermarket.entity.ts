@@ -1,3 +1,4 @@
+import type { CatalogOrigin, ModerationStatus } from '../../community/domain/catalog-origin.js';
 import type { OpeningInterval } from './opening-hours.js';
 
 /** A chain or merchant — the brand a shopper recognizes. */
@@ -34,6 +35,16 @@ export interface StoreLocation {
   timeZone: string;
   isActive: boolean;
   openingHours: OpeningInterval[];
+  /** The team's, or added by a shopper (`createdById`). */
+  origin: CatalogOrigin;
+  createdById: string | null;
+  moderationStatus: ModerationStatus;
+  /** Null while a shopper's shop is visible only to them. */
+  publishedAt: Date | null;
+  /** Shown to everyone: published, and not pulled or hidden. */
+  isPublic: boolean;
+  /** Distinct products with an accepted price here; ten publish a shopper's shop. */
+  pricedProductCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,6 +61,8 @@ export interface CreateSupermarketInput {
   slug: string;
   logoUrl: string | null;
   websiteUrl: string | null;
+  origin?: CatalogOrigin;
+  createdById?: string | null;
 }
 
 export interface CreateStoreLocationInput {
@@ -65,4 +78,7 @@ export interface CreateStoreLocationInput {
   phone: string | null;
   timeZone: string;
   openingHours: OpeningInterval[];
+  /** Absent for the team's shops, which are public from the start. */
+  origin?: CatalogOrigin;
+  createdById?: string | null;
 }

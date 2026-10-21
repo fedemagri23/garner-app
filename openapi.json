@@ -255,6 +255,7 @@
         ]
       },
       "post": {
+        "description": "Moderators and admins add VERIFIED products. Anyone else adds a COMMUNITY one: shown to everyone, ranked by confirmations and prices, a few a day. Check `/v1/product-suggestions` first.",
         "operationId": "productsCreate",
         "parameters": [],
         "requestBody": {
@@ -279,7 +280,10 @@
             }
           },
           "409": {
-            "description": "A barcode already belongs elsewhere"
+            "description": "A barcode already belongs elsewhere, or the same product is already there"
+          },
+          "429": {
+            "description": "As many products as allowed today"
           }
         },
         "security": [
@@ -287,7 +291,7 @@
             "bearer": []
           }
         ],
-        "summary": "Add a product to the canonical catalog",
+        "summary": "Add a product to the catalog",
         "tags": [
           "products"
         ]
@@ -603,6 +607,314 @@
         ]
       }
     },
+    "/v1/product-suggestions": {
+      "get": {
+        "operationId": "productSuggestionsSuggest",
+        "parameters": [
+          {
+            "name": "name",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minLength": 2,
+              "maxLength": 200,
+              "example": "leche entera",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 20,
+              "default": 8,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductSuggestionResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Products already in the catalog with a name like this one, before adding a new one",
+        "tags": [
+          "community"
+        ]
+      }
+    },
+    "/v1/products/{id}/confirmations": {
+      "post": {
+        "description": "Once per person; not for your own.",
+        "operationId": "productCommunityConfirm",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmationsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You added it yourself"
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Say a product exists and is described right",
+        "tags": [
+          "community"
+        ]
+      },
+      "delete": {
+        "operationId": "productCommunityWithdraw",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmationsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Take back your confirmation",
+        "tags": [
+          "community"
+        ]
+      }
+    },
+    "/v1/products/{id}/flags": {
+      "post": {
+        "operationId": "productCommunityFlag",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlagRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "403": {
+            "description": "You added it yourself"
+          },
+          "429": {
+            "description": "Too many reports today"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Report a product as a duplicate, wrong, made up or inappropriate",
+        "tags": [
+          "community"
+        ]
+      }
+    },
+    "/v1/stores/{id}/flags": {
+      "post": {
+        "operationId": "storeCommunityFlag",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlagRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "403": {
+            "description": "You added it yourself"
+          },
+          "429": {
+            "description": "Too many reports today"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Report a shop as a duplicate, wrong, made up or inappropriate",
+        "tags": [
+          "community"
+        ]
+      }
+    },
+    "/v1/moderation/queue": {
+      "get": {
+        "operationId": "moderationQueue",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewItemResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Entries pulled by flags, then the most flagged",
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
+    "/v1/moderation/{target}/{id}/{action}": {
+      "post": {
+        "operationId": "moderationAct",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "verify",
+                "hide",
+                "restore"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "target",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "products",
+                "stores"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "No such product or shop"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Verify, hide or restore a product or shop",
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
     "/v1/auth/register": {
       "post": {
         "operationId": "authRegister",
@@ -906,6 +1218,7 @@
         ]
       },
       "post": {
+        "description": "Moderators and admins add VERIFIED shops, public at once. Anyone else adds a COMMUNITY one, visible only to them until ten products have an accepted price there; a few a day.",
         "operationId": "storesCreate",
         "parameters": [],
         "requestBody": {
@@ -928,6 +1241,12 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "The same chain already has a shop at this spot"
+          },
+          "429": {
+            "description": "As many shops as allowed today"
           }
         },
         "security": [
@@ -935,7 +1254,7 @@
             "bearer": []
           }
         ],
-        "summary": "Add a store location to a chain",
+        "summary": "Add a shop",
         "tags": [
           "stores"
         ]
@@ -3611,6 +3930,18 @@
               "$ref": "#/components/schemas/ProductBarcodeResponse"
             }
           },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "VERIFIED",
+              "COMMUNITY"
+            ],
+            "description": "The team’s, or added by a shopper and not yet verified"
+          },
+          "confirmationCount": {
+            "type": "number",
+            "description": "People other than its creator who confirmed it"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -3628,6 +3959,8 @@
           "imageUrl",
           "isActive",
           "barcodes",
+          "origin",
+          "confirmationCount",
           "createdAt"
         ]
       },
@@ -3708,7 +4041,8 @@
           },
           "imageUrl": {
             "type": "string",
-            "format": "uri"
+            "format": "uri",
+            "description": "Taken from the team only; ignored for shoppers"
           },
           "barcodes": {
             "maxItems": 10,
@@ -3811,6 +4145,113 @@
         },
         "required": [
           "name"
+        ]
+      },
+      "ProductSuggestionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "packageSize": {
+            "type": "number",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "brandId",
+          "packageSize",
+          "unit"
+        ]
+      },
+      "ConfirmationsResponse": {
+        "type": "object",
+        "properties": {
+          "confirmations": {
+            "type": "number",
+            "description": "People other than its creator who confirmed it"
+          }
+        },
+        "required": [
+          "confirmations"
+        ]
+      },
+      "FlagRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "DUPLICATE",
+              "WRONG_INFO",
+              "NOT_EXIST",
+              "INAPPROPRIATE"
+            ]
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "ReviewItemResponse": {
+        "type": "object",
+        "properties": {
+          "targetType": {
+            "type": "string",
+            "enum": [
+              "PRODUCT",
+              "STORE"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "moderationStatus": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "UNDER_REVIEW",
+              "HIDDEN",
+              "MERGED"
+            ]
+          },
+          "flagCount": {
+            "type": "number"
+          },
+          "confirmationCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "targetType",
+          "id",
+          "name",
+          "moderationStatus",
+          "flagCount",
+          "confirmationCount",
+          "createdAt"
         ]
       },
       "RegisterRequest": {
@@ -3965,6 +4406,26 @@
           "closesAt"
         ]
       },
+      "PublicationResponse": {
+        "type": "object",
+        "properties": {
+          "pricedProducts": {
+            "type": "number",
+            "description": "Distinct products with an accepted price here"
+          },
+          "productsNeeded": {
+            "type": "number"
+          },
+          "productsRemaining": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "pricedProducts",
+          "productsNeeded",
+          "productsRemaining"
+        ]
+      },
       "StoreResponse": {
         "type": "object",
         "properties": {
@@ -4021,6 +4482,32 @@
             "items": {
               "$ref": "#/components/schemas/OpeningHoursResponse"
             }
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "VERIFIED",
+              "COMMUNITY"
+            ],
+            "description": "The team’s, or added by a shopper and not yet verified"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "PUBLIC",
+              "PRIVATE"
+            ],
+            "description": "PRIVATE: only its creator sees it, until enough products are priced there"
+          },
+          "publication": {
+            "nullable": true,
+            "description": "How far a private shop is from being shown to everyone; null once public",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicationResponse"
+              }
+            ]
           }
         },
         "required": [
@@ -4038,7 +4525,10 @@
           "phone",
           "timeZone",
           "isActive",
-          "openingHours"
+          "openingHours",
+          "origin",
+          "visibility",
+          "publication"
         ]
       },
       "StorePageResponse": {
@@ -4116,6 +4606,32 @@
               "$ref": "#/components/schemas/OpeningHoursResponse"
             }
           },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "VERIFIED",
+              "COMMUNITY"
+            ],
+            "description": "The team’s, or added by a shopper and not yet verified"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "PUBLIC",
+              "PRIVATE"
+            ],
+            "description": "PRIVATE: only its creator sees it, until enough products are priced there"
+          },
+          "publication": {
+            "nullable": true,
+            "description": "How far a private shop is from being shown to everyone; null once public",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicationResponse"
+              }
+            ]
+          },
           "distanceKm": {
             "type": "number",
             "description": "Great-circle distance from the searched point"
@@ -4141,6 +4657,9 @@
           "timeZone",
           "isActive",
           "openingHours",
+          "origin",
+          "visibility",
+          "publication",
           "distanceKm",
           "isOpenNow"
         ]
@@ -4174,7 +4693,14 @@
         "properties": {
           "supermarketId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "The chain; or give `supermarketName` for one not listed"
+          },
+          "supermarketName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80,
+            "description": "A chain not listed yet (shoppers only); reused if one by that name exists"
           },
           "name": {
             "type": "string",
@@ -4229,7 +4755,6 @@
           }
         },
         "required": [
-          "supermarketId",
           "name",
           "addressLine",
           "city",

@@ -12,6 +12,9 @@ import type {
   StoreSearchResult,
 } from '../domain/supermarket.repository.port.js';
 
+/** Shown to everyone: published, and not pulled by flags or hidden by moderators. */
+const PUBLIC = { publishedAt: { not: null }, moderationStatus: 'ACTIVE' } satisfies Prisma.StoreLocationWhereInput;
+
 const STORE_INCLUDE = {
   supermarket: true,
   openingHours: { orderBy: [{ dayOfWeek: 'asc' }, { opensAt: 'asc' }] },
@@ -27,7 +30,7 @@ export class PrismaStoreLocationRepository implements StoreLocationRepository {
 
   async search(criteria: StoreSearchCriteria): Promise<StoreSearchResult> {
     const where: Prisma.StoreLocationWhereInput = {
-      ...(criteria.includeInactive ? {} : { isActive: true }),
+      ...(criteria.includeInactive ? {} : { isActive: true, ...PUBLIC }),
       ...(criteria.supermarketId
         ? { supermarketId: criteria.supermarketId }
         : {}),
@@ -80,10 +83,17 @@ export class PrismaStoreLocationRepository implements StoreLocationRepository {
   async findWithinBox(
     box: BoundingBox,
     limit: number,
+    options: { viewerId?: string } = {},
   ): Promise<StoreLocation[]> {
     const rows = await this.prisma.storeLocation.findMany({
       where: {
         isActive: true,
+        OR: [
+          PUBLIC,
+          ...(options.viewerId
+            ? [{ createdById: options.viewerId, moderationStatus: { in: ['ACTIVE' as const, 'UNDER_REVIEW' as const] } }]
+            : []),
+        ],
         latitude: { gte: box.minLatitude, lte: box.maxLatitude },
         longitude: { gte: box.minLongitude, lte: box.maxLongitude },
       },
@@ -108,6 +118,11 @@ export class PrismaStoreLocationRepository implements StoreLocationRepository {
         longitude: input.longitude,
         phone: input.phone,
         timeZone: input.timeZone,
+        origin: input.origin,
+        createdById: input.createdById,
+        // The team's shops are visible from the start (the column's default);
+        // a shopper's waits for prices.
+        ...(input.origin === 'COMMUNITY' ? { publishedAt: null } : {}),
         openingHours: {
           create: input.openingHours.map((interval) => ({
             dayOfWeek: interval.dayOfWeek,
@@ -143,6 +158,12 @@ export class PrismaStoreLocationRepository implements StoreLocationRepository {
       phone: row.phone,
       timeZone: row.timeZone,
       isActive: row.isActive,
+      origin: row.origin,
+      createdById: row.createdById,
+      moderationStatus: row.moderationStatus,
+      publishedAt: row.publishedAt,
+      isPublic: row.publishedAt !== null && row.moderationStatus === 'ACTIVE',
+      pricedProductCount: row.pricedProductCount,
       openingHours: row.openingHours.map((hours) => ({
         dayOfWeek: hours.dayOfWeek,
         opensAt: hours.opensAt,

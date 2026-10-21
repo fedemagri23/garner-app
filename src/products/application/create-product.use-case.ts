@@ -10,6 +10,15 @@ import {
   normalizeProductName,
   type Product,
 } from '../domain/product.entity.js';
+import { CommunityPolicy } from '../../community/application/community-policy.js';
+import { CatalogOrigin } from '../../community/domain/catalog-origin.js';
+import {
+  COMMUNITY_REPOSITORY,
+  type CommunityRepository,
+} from '../../community/domain/community.port.js';
+import { looksLikeSameProduct } from '../../community/domain/duplicates.js';
+import { VERIFIED_BONUS } from '../../community/domain/ranking-weight.js';
+import type { AuthenticatedUser } from '../../security/domain/authenticated-user.js';
 import {
   BRAND_REPOSITORY,
   CATEGORY_REPOSITORY,
@@ -32,10 +41,14 @@ export interface CreateProductCommand {
 }
 
 /**
- * Creating catalog entries is a curated operation, not something a shopper
- * does — the controller restricts it to moderators and administrators. The
- * checks here are about identity: a product must land in a real category and,
- * if it carries barcodes, they must be well-formed and unclaimed.
+ * Adds a product to the catalog. The team's are VERIFIED. Anyone else's are
+ * COMMUNITY: visible to everyone at once, but ranked by how many people back
+ * them, limited to a few a day, and refused when the same product (name, brand
+ * and size) is already there. A shopper's image link is not taken: pictures
+ * from strangers' URLs are a way to show anyone anything.
+ *
+ * The checks for everyone are about identity: a real category and, for
+ * barcodes, well-formed and unclaimed ones.
  */
 @Injectable()
 export class CreateProductUseCase {
@@ -44,9 +57,16 @@ export class CreateProductUseCase {
     @Inject(CATEGORY_REPOSITORY)
     private readonly categories: CategoryRepository,
     @Inject(BRAND_REPOSITORY) private readonly brands: BrandRepository,
+    @Inject(COMMUNITY_REPOSITORY) private readonly community: CommunityRepository,
+    private readonly policy: CommunityPolicy,
   ) {}
 
-  async execute(command: CreateProductCommand): Promise<Product> {
+  async execute(command: CreateProductCommand, actor: AuthenticatedUser): Promise<Product> {
+    const fromTeam = actor.role === 'MODERATOR' || actor.role === 'ADMIN';
+    if (!fromTeam) {
+      await this.policy.assertMayCreate(actor.id, 'PRODUCT');
+    }
+
     const category = await this.categories.findById(command.categoryId);
     if (!category) {
       throw new NotFoundException('Category not found');
@@ -73,16 +93,37 @@ export class CreateProductUseCase {
       }
     }
 
+    const normalizedName = normalizeProductName(command.name);
+    const identity = {
+      normalizedName,
+      brandId: command.brandId ?? null,
+      packageSize: command.packageSize ?? null,
+      unit: command.unit,
+    };
+    const twin = (await this.community.productsNamed(normalizedName, 20)).find((existing) =>
+      looksLikeSameProduct(identity, existing),
+    );
+    if (twin && !fromTeam) {
+      throw new ConflictException(`This product is already in the catalog: ${twin.name}`);
+    }
+
     const product = await this.products.create({
       name: command.name.trim(),
-      normalizedName: normalizeProductName(command.name),
+      normalizedName,
       description: command.description?.trim() ?? null,
       brandId: command.brandId ?? null,
       categoryId: command.categoryId,
       packageSize: command.packageSize ?? null,
       unit: command.unit,
-      imageUrl: command.imageUrl ?? null,
+      imageUrl: fromTeam ? (command.imageUrl ?? null) : null,
+      origin: fromTeam ? CatalogOrigin.Verified : CatalogOrigin.Community,
+      createdById: fromTeam ? null : actor.id,
+      weight: fromTeam ? VERIFIED_BONUS : 0,
     });
+
+    if (!fromTeam) {
+      await this.community.audit({ actorId: actor.id, action: 'created', targetType: 'PRODUCT', targetId: product.id });
+    }
 
     let created = product;
     for (const [index, code] of codes.entries()) {

@@ -11,9 +11,11 @@ import {
   IsString,
   IsUrl,
   IsUUID,
+  Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { PLAIN_TEXT, PLAIN_TEXT_MESSAGE } from '../../common/text/plain-text.js';
 import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
 import type { Brand, Category, Product } from '../domain/product.entity.js';
 import { formatPackageSize, UnitOfMeasure } from '../domain/unit-of-measure.js';
@@ -67,6 +69,13 @@ export class ProductResponse {
   @ApiProperty() isActive!: boolean;
   @ApiProperty({ type: [ProductBarcodeResponse] })
   barcodes!: ProductBarcodeResponse[];
+  @ApiProperty({
+    enum: ['VERIFIED', 'COMMUNITY'],
+    description: 'The team’s, or added by a shopper and not yet verified',
+  })
+  origin!: 'VERIFIED' | 'COMMUNITY';
+  @ApiProperty({ description: 'People other than its creator who confirmed it' })
+  confirmationCount!: number;
   @ApiProperty({ format: 'date-time' }) createdAt!: string;
 
   static from(product: Product): ProductResponse {
@@ -82,6 +91,8 @@ export class ProductResponse {
       imageUrl: product.imageUrl,
       isActive: product.isActive,
       barcodes: product.barcodes,
+      origin: product.origin,
+      confirmationCount: product.confirmationCount,
       createdAt: product.createdAt.toISOString(),
     };
   }
@@ -119,12 +130,14 @@ export class CreateProductRequest {
   @IsString()
   @MinLength(2)
   @MaxLength(200)
+  @Matches(PLAIN_TEXT, { message: PLAIN_TEXT_MESSAGE })
   name!: string;
 
   @ApiPropertyOptional({ maxLength: 2000 })
   @IsOptional()
   @IsString()
   @MaxLength(2000)
+  @Matches(PLAIN_TEXT, { message: PLAIN_TEXT_MESSAGE })
   description?: string;
 
   @ApiProperty({ format: 'uuid' })
@@ -147,7 +160,7 @@ export class CreateProductRequest {
   @IsEnum(UNITS)
   unit!: UnitOfMeasure;
 
-  @ApiPropertyOptional({ format: 'uri' })
+  @ApiPropertyOptional({ format: 'uri', description: 'Taken from the team only; ignored for shoppers' })
   @IsOptional()
   @IsUrl()
   @MaxLength(2048)
