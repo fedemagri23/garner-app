@@ -12,8 +12,9 @@ export class BrowseSupermarketsUseCase {
     private readonly supermarkets: SupermarketRepository,
   ) {}
 
-  list(): Promise<Supermarket[]> {
-    return this.supermarkets.findAll(false);
+  /** The chains to choose from; a shopper's own new chain only to them until it has a public shop. */
+  list(viewerId?: string): Promise<Supermarket[]> {
+    return this.supermarkets.findAll(false, viewerId);
   }
 
   async get(id: string): Promise<Supermarket> {

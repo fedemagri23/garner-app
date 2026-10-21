@@ -17,6 +17,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { UserRole } from '../../security/domain/user-role.js';
+import type { AuthenticatedUser } from '../../security/domain/authenticated-user.js';
+import { CurrentUser } from '../../security/presentation/current-user.decorator.js';
 import { Roles } from '../../security/presentation/roles.decorator.js';
 import { RolesGuard } from '../../security/presentation/roles.guard.js';
 import { BrowseSupermarketsUseCase } from '../application/browse-supermarkets.use-case.js';
@@ -38,8 +40,8 @@ export class SupermarketsController {
   @Get()
   @ApiOperation({ summary: 'List the supermarket chains in the catalog' })
   @ApiOkResponse({ type: [SupermarketResponse] })
-  async list(): Promise<SupermarketResponse[]> {
-    const supermarkets = await this.browse.list();
+  async list(@CurrentUser() viewer: AuthenticatedUser): Promise<SupermarketResponse[]> {
+    const supermarkets = await this.browse.list(viewer.id);
     return supermarkets.map(SupermarketResponse.from);
   }
 

@@ -160,3 +160,9 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Symptom:** None yet — private shops did not exist before this checkpoint. Had they gone in as written, a shopper's price at their own unpublished shop would have fired other shoppers' alerts, naming the shop, and counted as a "cheaper nearby" place for everyone.
 - **Cause:** Alert evaluation loads shops by id, which (rightly) does not filter by visibility, so nothing stopped a private shop there.
 - **Fix:** A private shop's prices only reach its creator's alerts, and it is never a comparison place; price comparisons skip non-public shops too. A unit test covers the alert case.
+
+### BUG-025 — A chain named by a shopper was listed for everyone before any of its shops was public
+- **Phase:** post-plan (mobile phase 8, checkpoint 13) · **Area:** supermarkets, community · **Scope:** production code · **Found by:** the app's web e2e, whose "Agregar tienda" chain chips showed "Almacén Don Pepe", the seeded shopper's private chain · **Fixed in:** "fix(supermarkets): hide shopper-named chains until one of their shops is public"
+- **Symptom:** `GET /v1/supermarkets` returned every active chain, so a chain a shopper named for their still-private shop appeared in everyone's chain list, telling others that shop existed and what it was called.
+- **Cause:** Chains had no visibility of their own; checkpoint 12 hid private shops everywhere but left their chains in the plain list.
+- **Fix:** The list shows the team's chains, shopper-named ones with at least one published, active shop, and the viewer's own. An e2e test covers both sides.

@@ -11,9 +11,16 @@ import type { SupermarketRepository } from '../domain/supermarket.repository.por
 export class PrismaSupermarketRepository implements SupermarketRepository {
   constructor(private readonly prisma: CorePrismaService) {}
 
-  async findAll(includeInactive: boolean): Promise<Supermarket[]> {
+  async findAll(includeInactive: boolean, viewerId?: string): Promise<Supermarket[]> {
     const rows = await this.prisma.supermarket.findMany({
-      where: includeInactive ? {} : { isActive: true },
+      where: {
+        ...(includeInactive ? {} : { isActive: true }),
+        OR: [
+          { origin: 'VERIFIED' },
+          { stores: { some: { publishedAt: { not: null }, isActive: true } } },
+          ...(viewerId ? [{ createdById: viewerId }] : []),
+        ],
+      },
       orderBy: { name: 'asc' },
     });
 

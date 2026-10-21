@@ -422,6 +422,27 @@ describe('Shopper-added products and shops (e2e)', () => {
       expect((await say(ben.token)).body).toEqual({ addedByYou: false, confirmed: true, flagged: true });
     });
 
+    it('keeps a chain a shopper named out of everyone else\'s list until one of its shops is public', async () => {
+      const ana = await shopper();
+      const other = await shopper();
+      await addStore(ana.token, {
+        supermarketId: undefined,
+        supermarketName: 'Almacén Secreto',
+        name: 'Almacén Secreto Centro',
+        latitude: -34.63,
+        longitude: -58.41,
+      }).expect(201);
+      const chains = async (token: string) =>
+        (await http().get('/v1/supermarkets').set(auth(token)).expect(200)).body.map((c: { name: string }) => c.name);
+
+      expect(await chains(ana.token)).toContain('Almacén Secreto');
+      expect(await chains(other.token)).not.toContain('Almacén Secreto');
+      expect(await chains(other.token)).toContain('Coto');
+
+      await core.storeLocation.updateMany({ where: { name: 'Almacén Secreto Centro' }, data: { publishedAt: new Date() } });
+      expect(await chains(other.token)).toContain('Almacén Secreto');
+    });
+
     it('lists what a shopper added with where each stands, and keeps a private shop from others', async () => {
       const ana = await shopper();
       const other = await shopper();

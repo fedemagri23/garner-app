@@ -12,7 +12,11 @@ import type {
  * this port rather than the tables behind it.
  */
 export interface SupermarketRepository {
-  findAll(includeInactive: boolean): Promise<Supermarket[]>;
+  /**
+   * The chains a viewer may see: the team's, and a shopper-named one only
+   * once one of its shops is public, or to the shopper who named it.
+   */
+  findAll(includeInactive: boolean, viewerId?: string): Promise<Supermarket[]>;
   findById(id: string): Promise<Supermarket | null>;
   findBySlug(slug: string): Promise<Supermarket | null>;
   create(input: CreateSupermarketInput): Promise<Supermarket>;
