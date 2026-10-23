@@ -1,4 +1,4 @@
-import { categorySlugFor, chooseBrand, chooseName, parseQuantity } from './product-facts.js';
+import { categoryForTags, chooseBrand, chooseName, parseQuantity } from './product-facts.js';
 
 describe('parseQuantity', () => {
   it('reads sizes as packages print them', () => {
@@ -37,14 +37,23 @@ it('takes the first brand listed', () => {
   expect(chooseBrand({ brands: [] })).toBeNull();
 });
 
-describe('categorySlugFor', () => {
-  it('picks the most specific category we have', () => {
-    expect(categorySlugFor(['en:dairies', 'en:milks', 'en:whole-milks'])).toBe('leche');
-    expect(categorySlugFor(['en:dairies', 'en:cheeses'])).toBe('lacteos');
-    expect(categorySlugFor(['en:beverages', 'en:waters'])).toBe('bebidas');
+describe('categoryForTags', () => {
+  const dairy = { slug: 'lacteos', parentId: null, offTags: ['en:dairies'] };
+  const milk = { slug: 'leche', parentId: 'lacteos', offTags: ['en:milks'] };
+  const yogurt = { slug: 'yogures', parentId: 'lacteos', offTags: ['en:yogurts'] };
+  const drinks = { slug: 'bebidas', parentId: null, offTags: ['en:beverages'] };
+  const categories = [dairy, milk, yogurt, drinks];
+
+  it('maps their most specific tag to our aisle', () => {
+    expect(categoryForTags(categories, ['en:dairies', 'en:milks', 'en:whole-milks'])?.slug).toBe('leche');
+    expect(categoryForTags(categories, ['en:dairies', 'en:fermented-foods', 'en:yogurts'])?.slug).toBe('yogures');
+  });
+
+  it('falls back to the department when no aisle matches', () => {
+    expect(categoryForTags(categories, ['en:dairies', 'en:cheeses'])?.slug).toBe('lacteos');
   });
 
   it('leaves the choice to the shopper when nothing matches', () => {
-    expect(categorySlugFor(['en:frozen-foods'])).toBeNull();
+    expect(categoryForTags(categories, ['en:frozen-foods'])).toBeNull();
   });
 });

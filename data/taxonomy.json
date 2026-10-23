@@ -1,0 +1,3218 @@
+{
+ "version": 1,
+ "categories": [
+  {
+   "slug": "almacen",
+   "parent": null,
+   "position": 0,
+   "icon": "basket-outline",
+   "names": {
+    "es": "Almacén",
+    "en": "Pantry",
+    "de": "Vorrat",
+    "pt": "Mercearia"
+   },
+   "synonyms": {
+    "es": [
+     "despensa",
+     "alacena"
+    ],
+    "en": [
+     "groceries",
+     "cupboard"
+    ],
+    "de": [
+     "Grundnahrungsmittel"
+    ],
+    "pt": [
+     "despensa"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "arroz-legumbres",
+   "parent": "almacen",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Arroz y legumbres",
+    "en": "Rice and pulses",
+    "de": "Reis und Hülsenfrüchte",
+    "pt": "Arroz e leguminosas"
+   },
+   "synonyms": {
+    "es": [
+     "arroz",
+     "lentejas",
+     "porotos",
+     "garbanzos"
+    ]
+   },
+   "offTags": [
+    "en:rices",
+    "en:legumes",
+    "en:pulses",
+    "en:lentils",
+    "en:chickpeas",
+    "en:beans"
+   ]
+  },
+  {
+   "slug": "pastas-secas",
+   "parent": "almacen",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Pastas secas",
+    "en": "Dried pasta",
+    "de": "Nudeln",
+    "pt": "Massas secas"
+   },
+   "synonyms": {
+    "es": [
+     "fideos",
+     "spaghetti",
+     "tallarines"
+    ]
+   },
+   "offTags": [
+    "en:pastas",
+    "en:dry-pastas",
+    "en:spaghetti"
+   ]
+  },
+  {
+   "slug": "harinas",
+   "parent": "almacen",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Harinas y premezclas",
+    "en": "Flour and baking mixes",
+    "de": "Mehl und Backmischungen",
+    "pt": "Farinhas e misturas"
+   },
+   "synonyms": {
+    "es": [
+     "harina",
+     "polenta",
+     "premezcla"
+    ]
+   },
+   "offTags": [
+    "en:flours",
+    "en:wheat-flours",
+    "en:baking-mixes"
+   ]
+  },
+  {
+   "slug": "aceites",
+   "parent": "almacen",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Aceites y vinagres",
+    "en": "Oils and vinegars",
+    "de": "Öl und Essig",
+    "pt": "Óleos e vinagres"
+   },
+   "synonyms": {
+    "es": [
+     "aceite",
+     "oliva",
+     "girasol",
+     "vinagre"
+    ]
+   },
+   "offTags": [
+    "en:vegetable-oils",
+    "en:olive-oils",
+    "en:sunflower-oils",
+    "en:vinegars"
+   ]
+  },
+  {
+   "slug": "azucar",
+   "parent": "almacen",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Azúcar y endulzantes",
+    "en": "Sugar and sweeteners",
+    "de": "Zucker und Süßstoffe",
+    "pt": "Açúcar e adoçantes"
+   },
+   "synonyms": {
+    "es": [
+     "azúcar",
+     "edulcorante",
+     "stevia"
+    ]
+   },
+   "offTags": [
+    "en:sugars",
+    "en:sweeteners"
+   ]
+  },
+  {
+   "slug": "especias",
+   "parent": "almacen",
+   "position": 5,
+   "icon": null,
+   "names": {
+    "es": "Sal, especias y condimentos",
+    "en": "Salt, spices and seasonings",
+    "de": "Salz und Gewürze",
+    "pt": "Sal, especiarias e temperos"
+   },
+   "synonyms": {
+    "es": [
+     "sal",
+     "pimienta",
+     "orégano",
+     "condimento"
+    ]
+   },
+   "offTags": [
+    "en:salts",
+    "en:spices",
+    "en:condiments"
+   ]
+  },
+  {
+   "slug": "conservas",
+   "parent": "almacen",
+   "position": 6,
+   "icon": null,
+   "names": {
+    "es": "Conservas",
+    "en": "Tinned food",
+    "de": "Konserven",
+    "pt": "Conservas"
+   },
+   "synonyms": {
+    "es": [
+     "atún",
+     "lata",
+     "arvejas",
+     "choclo"
+    ]
+   },
+   "offTags": [
+    "en:canned-foods",
+    "en:canned-vegetables",
+    "en:canned-fishes",
+    "en:canned-tunas"
+   ]
+  },
+  {
+   "slug": "salsas",
+   "parent": "almacen",
+   "position": 7,
+   "icon": null,
+   "names": {
+    "es": "Salsas, aderezos y mayonesa",
+    "en": "Sauces and dressings",
+    "de": "Soßen und Dressings",
+    "pt": "Molhos e temperos"
+   },
+   "synonyms": {
+    "es": [
+     "mayonesa",
+     "ketchup",
+     "mostaza",
+     "puré de tomate"
+    ]
+   },
+   "offTags": [
+    "en:sauces",
+    "en:mayonnaises",
+    "en:ketchup",
+    "en:tomato-sauces",
+    "en:mustards"
+   ]
+  },
+  {
+   "slug": "sopas",
+   "parent": "almacen",
+   "position": 8,
+   "icon": null,
+   "names": {
+    "es": "Sopas, caldos y puré instantáneo",
+    "en": "Soups, stock and instant mash",
+    "de": "Suppen und Brühen",
+    "pt": "Sopas e caldos"
+   },
+   "synonyms": {
+    "es": [
+     "caldo",
+     "sopa",
+     "puré"
+    ]
+   },
+   "offTags": [
+    "en:soups",
+    "en:broths",
+    "en:bouillon-cubes"
+   ]
+  },
+  {
+   "slug": "reposteria",
+   "parent": "almacen",
+   "position": 9,
+   "icon": null,
+   "names": {
+    "es": "Repostería",
+    "en": "Baking",
+    "de": "Backzutaten",
+    "pt": "Confeitaria"
+   },
+   "synonyms": {
+    "es": [
+     "levadura",
+     "polvo de hornear",
+     "cacao amargo"
+    ]
+   },
+   "offTags": [
+    "en:baking-decorations",
+    "en:yeasts",
+    "en:baking-powders"
+   ]
+  },
+  {
+   "slug": "desayuno",
+   "parent": null,
+   "position": 1,
+   "icon": "coffee-outline",
+   "names": {
+    "es": "Desayuno y merienda",
+    "en": "Breakfast",
+    "de": "Frühstück",
+    "pt": "Café da manhã"
+   },
+   "synonyms": {
+    "es": [
+     "merienda"
+    ],
+    "en": [
+     "breakfast"
+    ],
+    "de": [
+     "Frühstück"
+    ],
+    "pt": [
+     "lanche"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "cafe",
+   "parent": "desayuno",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Café",
+    "en": "Coffee",
+    "de": "Kaffee",
+    "pt": "Café"
+   },
+   "synonyms": {
+    "es": [
+     "café",
+     "nescafé"
+    ]
+   },
+   "offTags": [
+    "en:coffees",
+    "en:ground-coffees",
+    "en:instant-coffees",
+    "en:coffee-beans"
+   ]
+  },
+  {
+   "slug": "yerba",
+   "parent": "desayuno",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Yerba mate",
+    "en": "Yerba mate",
+    "de": "Mate",
+    "pt": "Erva-mate"
+   },
+   "synonyms": {
+    "es": [
+     "yerba",
+     "mate"
+    ]
+   },
+   "offTags": [
+    "en:yerba-mate",
+    "en:mate"
+   ]
+  },
+  {
+   "slug": "te",
+   "parent": "desayuno",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Té e infusiones",
+    "en": "Tea and infusions",
+    "de": "Tee",
+    "pt": "Chás e infusões"
+   },
+   "synonyms": {
+    "es": [
+     "té",
+     "manzanilla",
+     "infusión"
+    ]
+   },
+   "offTags": [
+    "en:teas",
+    "en:herbal-teas",
+    "en:infusions"
+   ]
+  },
+  {
+   "slug": "cacao",
+   "parent": "desayuno",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Cacao y chocolate en polvo",
+    "en": "Cocoa and chocolate drinks",
+    "de": "Kakao",
+    "pt": "Achocolatados"
+   },
+   "synonyms": {
+    "es": [
+     "cacao",
+     "nesquik",
+     "chocolatada"
+    ]
+   },
+   "offTags": [
+    "en:cocoa-and-chocolate-powders",
+    "en:chocolate-powders"
+   ]
+  },
+  {
+   "slug": "cereales",
+   "parent": "desayuno",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Cereales, avena y granola",
+    "en": "Cereal, oats and granola",
+    "de": "Müsli und Cerealien",
+    "pt": "Cereais e aveia"
+   },
+   "synonyms": {
+    "es": [
+     "cereal",
+     "avena",
+     "granola"
+    ]
+   },
+   "offTags": [
+    "en:breakfast-cereals",
+    "en:oat-flakes",
+    "en:mueslis",
+    "en:granolas"
+   ]
+  },
+  {
+   "slug": "galletitas-dulces",
+   "parent": "desayuno",
+   "position": 5,
+   "icon": null,
+   "names": {
+    "es": "Galletitas dulces",
+    "en": "Sweet biscuits",
+    "de": "Kekse",
+    "pt": "Biscoitos doces"
+   },
+   "synonyms": {
+    "es": [
+     "galletitas",
+     "galletas",
+     "oreo"
+    ]
+   },
+   "offTags": [
+    "en:biscuits",
+    "en:sweet-biscuits",
+    "en:cookies"
+   ]
+  },
+  {
+   "slug": "galletitas-saladas",
+   "parent": "desayuno",
+   "position": 6,
+   "icon": null,
+   "names": {
+    "es": "Galletitas saladas y tostadas",
+    "en": "Crackers and toasts",
+    "de": "Cracker und Zwieback",
+    "pt": "Bolachas salgadas e torradas"
+   },
+   "synonyms": {
+    "es": [
+     "crackers",
+     "tostadas",
+     "galletitas de agua"
+    ]
+   },
+   "offTags": [
+    "en:crackers",
+    "en:rusks"
+   ]
+  },
+  {
+   "slug": "mermeladas",
+   "parent": "desayuno",
+   "position": 7,
+   "icon": null,
+   "names": {
+    "es": "Mermeladas, dulces y miel",
+    "en": "Jams, preserves and honey",
+    "de": "Marmelade und Honig",
+    "pt": "Geleias e mel"
+   },
+   "synonyms": {
+    "es": [
+     "mermelada",
+     "miel",
+     "dulce de membrillo"
+    ]
+   },
+   "offTags": [
+    "en:jams",
+    "en:honeys",
+    "en:fruit-preserves"
+   ]
+  },
+  {
+   "slug": "untables",
+   "parent": "desayuno",
+   "position": 8,
+   "icon": null,
+   "names": {
+    "es": "Dulce de leche y untables",
+    "en": "Dulce de leche and spreads",
+    "de": "Aufstriche",
+    "pt": "Doce de leite e cremes"
+   },
+   "synonyms": {
+    "es": [
+     "dulce de leche",
+     "nutella",
+     "untable"
+    ]
+   },
+   "offTags": [
+    "en:spreads",
+    "en:sweet-spreads",
+    "en:hazelnut-spreads",
+    "en:dulce-de-leche"
+   ]
+  },
+  {
+   "slug": "lacteos",
+   "parent": null,
+   "position": 2,
+   "icon": "cheese",
+   "names": {
+    "es": "Lácteos y huevos",
+    "en": "Dairy and eggs",
+    "de": "Milchprodukte und Eier",
+    "pt": "Laticínios e ovos"
+   },
+   "synonyms": {
+    "es": [
+     "lácteos"
+    ],
+    "en": [
+     "dairy"
+    ],
+    "de": [
+     "Molkerei"
+    ],
+    "pt": [
+     "laticínios"
+    ]
+   },
+   "offTags": [
+    "en:dairies"
+   ]
+  },
+  {
+   "slug": "leche",
+   "parent": "lacteos",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Leche",
+    "en": "Milk",
+    "de": "Milch",
+    "pt": "Leite"
+   },
+   "synonyms": {
+    "es": [
+     "leche"
+    ]
+   },
+   "offTags": [
+    "en:milks",
+    "en:whole-milks",
+    "en:semi-skimmed-milks",
+    "en:skimmed-milks"
+   ]
+  },
+  {
+   "slug": "bebidas-vegetales",
+   "parent": "lacteos",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Bebidas vegetales",
+    "en": "Plant drinks",
+    "de": "Pflanzendrinks",
+    "pt": "Bebidas vegetais"
+   },
+   "synonyms": {
+    "es": [
+     "leche de almendras",
+     "leche de soja",
+     "avena"
+    ]
+   },
+   "offTags": [
+    "en:plant-based-milk-alternatives",
+    "en:soy-milks",
+    "en:almond-milks",
+    "en:oat-milks"
+   ]
+  },
+  {
+   "slug": "yogures",
+   "parent": "lacteos",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Yogures",
+    "en": "Yoghurt",
+    "de": "Joghurt",
+    "pt": "Iogurtes"
+   },
+   "synonyms": {
+    "es": [
+     "yogur",
+     "yogurt"
+    ]
+   },
+   "offTags": [
+    "en:yogurts"
+   ]
+  },
+  {
+   "slug": "quesos",
+   "parent": "lacteos",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Quesos",
+    "en": "Cheese",
+    "de": "Käse",
+    "pt": "Queijos"
+   },
+   "synonyms": {
+    "es": [
+     "queso",
+     "mozzarella",
+     "cremoso"
+    ]
+   },
+   "offTags": [
+    "en:cheeses"
+   ]
+  },
+  {
+   "slug": "manteca-crema",
+   "parent": "lacteos",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Manteca, crema y margarina",
+    "en": "Butter, cream and margarine",
+    "de": "Butter, Sahne und Margarine",
+    "pt": "Manteiga, creme de leite e margarina"
+   },
+   "synonyms": {
+    "es": [
+     "manteca",
+     "crema",
+     "margarina"
+    ]
+   },
+   "offTags": [
+    "en:butters",
+    "en:creams",
+    "en:margarines"
+   ]
+  },
+  {
+   "slug": "postres-lacteos",
+   "parent": "lacteos",
+   "position": 5,
+   "icon": null,
+   "names": {
+    "es": "Postres lácteos",
+    "en": "Dairy desserts",
+    "de": "Milchdesserts",
+    "pt": "Sobremesas lácteas"
+   },
+   "synonyms": {
+    "es": [
+     "flan",
+     "postrecito"
+    ]
+   },
+   "offTags": [
+    "en:dairy-desserts",
+    "en:puddings"
+   ]
+  },
+  {
+   "slug": "huevos",
+   "parent": "lacteos",
+   "position": 6,
+   "icon": null,
+   "names": {
+    "es": "Huevos",
+    "en": "Eggs",
+    "de": "Eier",
+    "pt": "Ovos"
+   },
+   "synonyms": {
+    "es": [
+     "huevo",
+     "maple"
+    ]
+   },
+   "offTags": [
+    "en:eggs",
+    "en:chicken-eggs"
+   ]
+  },
+  {
+   "slug": "frutas-verduras",
+   "parent": null,
+   "position": 3,
+   "icon": "food-apple-outline",
+   "names": {
+    "es": "Frutas y verduras",
+    "en": "Fruit and vegetables",
+    "de": "Obst und Gemüse",
+    "pt": "Frutas e verduras"
+   },
+   "synonyms": {
+    "es": [
+     "verdulería",
+     "frutería"
+    ],
+    "en": [
+     "produce",
+     "veg"
+    ],
+    "de": [
+     "Obst",
+     "Gemüse"
+    ],
+    "pt": [
+     "hortifruti"
+    ]
+   },
+   "offTags": [
+    "en:fresh-foods"
+   ]
+  },
+  {
+   "slug": "frutas",
+   "parent": "frutas-verduras",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Frutas",
+    "en": "Fruit",
+    "de": "Obst",
+    "pt": "Frutas"
+   },
+   "synonyms": {
+    "es": [
+     "manzana",
+     "banana",
+     "naranja"
+    ]
+   },
+   "offTags": [
+    "en:fresh-fruits",
+    "en:fruits"
+   ]
+  },
+  {
+   "slug": "verduras",
+   "parent": "frutas-verduras",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Verduras",
+    "en": "Vegetables",
+    "de": "Gemüse",
+    "pt": "Verduras"
+   },
+   "synonyms": {
+    "es": [
+     "papa",
+     "tomate",
+     "cebolla",
+     "lechuga"
+    ]
+   },
+   "offTags": [
+    "en:fresh-vegetables",
+    "en:vegetables"
+   ]
+  },
+  {
+   "slug": "hierbas",
+   "parent": "frutas-verduras",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Hierbas frescas",
+    "en": "Fresh herbs",
+    "de": "Frische Kräuter",
+    "pt": "Ervas frescas"
+   },
+   "synonyms": {
+    "es": [
+     "perejil",
+     "albahaca"
+    ]
+   },
+   "offTags": [
+    "en:fresh-herbs",
+    "en:herbs"
+   ]
+  },
+  {
+   "slug": "frutos-secos",
+   "parent": "frutas-verduras",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Frutos secos y deshidratados",
+    "en": "Nuts and dried fruit",
+    "de": "Nüsse und Trockenobst",
+    "pt": "Castanhas e frutas secas"
+   },
+   "synonyms": {
+    "es": [
+     "nueces",
+     "almendras",
+     "pasas"
+    ]
+   },
+   "offTags": [
+    "en:nuts",
+    "en:dried-fruits"
+   ]
+  },
+  {
+   "slug": "ensaladas-listas",
+   "parent": "frutas-verduras",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Ensaladas listas",
+    "en": "Ready salads",
+    "de": "Fertigsalate",
+    "pt": "Saladas prontas"
+   },
+   "synonyms": {
+    "es": [
+     "ensalada"
+    ]
+   },
+   "offTags": [
+    "en:salads",
+    "en:bagged-salads"
+   ]
+  },
+  {
+   "slug": "carnes",
+   "parent": null,
+   "position": 4,
+   "icon": "food-steak",
+   "names": {
+    "es": "Carnes y pescados",
+    "en": "Meat and fish",
+    "de": "Fleisch und Fisch",
+    "pt": "Carnes e peixes"
+   },
+   "synonyms": {
+    "es": [
+     "carnicería"
+    ],
+    "en": [
+     "butcher"
+    ],
+    "de": [
+     "Metzgerei"
+    ],
+    "pt": [
+     "açougue"
+    ]
+   },
+   "offTags": [
+    "en:meats"
+   ]
+  },
+  {
+   "slug": "vacuna",
+   "parent": "carnes",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Carne vacuna",
+    "en": "Beef",
+    "de": "Rindfleisch",
+    "pt": "Carne bovina"
+   },
+   "synonyms": {
+    "es": [
+     "asado",
+     "bife",
+     "carne picada",
+     "nalga"
+    ]
+   },
+   "offTags": [
+    "en:beef",
+    "en:beef-meat"
+   ]
+  },
+  {
+   "slug": "cerdo",
+   "parent": "carnes",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Cerdo",
+    "en": "Pork",
+    "de": "Schweinefleisch",
+    "pt": "Porco"
+   },
+   "synonyms": {
+    "es": [
+     "bondiola",
+     "pechito"
+    ]
+   },
+   "offTags": [
+    "en:pork",
+    "en:pork-meat"
+   ]
+  },
+  {
+   "slug": "pollo",
+   "parent": "carnes",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Pollo y aves",
+    "en": "Chicken and poultry",
+    "de": "Geflügel",
+    "pt": "Frango e aves"
+   },
+   "synonyms": {
+    "es": [
+     "pollo",
+     "pechuga",
+     "pata muslo"
+    ]
+   },
+   "offTags": [
+    "en:poultries",
+    "en:chickens",
+    "en:chicken-meat"
+   ]
+  },
+  {
+   "slug": "otras-carnes",
+   "parent": "carnes",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Cordero y otras carnes",
+    "en": "Lamb and other meat",
+    "de": "Lamm und anderes Fleisch",
+    "pt": "Cordeiro e outras carnes"
+   },
+   "synonyms": {
+    "es": [
+     "cordero"
+    ]
+   },
+   "offTags": [
+    "en:lamb-meat"
+   ]
+  },
+  {
+   "slug": "pescados",
+   "parent": "carnes",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Pescados y mariscos",
+    "en": "Fish and seafood",
+    "de": "Fisch und Meeresfrüchte",
+    "pt": "Peixes e frutos do mar"
+   },
+   "synonyms": {
+    "es": [
+     "merluza",
+     "salmón",
+     "langostinos"
+    ]
+   },
+   "offTags": [
+    "en:fishes",
+    "en:seafood",
+    "en:fresh-fish"
+   ]
+  },
+  {
+   "slug": "hamburguesas",
+   "parent": "carnes",
+   "position": 5,
+   "icon": null,
+   "names": {
+    "es": "Hamburguesas y milanesas",
+    "en": "Burgers and breaded cutlets",
+    "de": "Burger und Schnitzel",
+    "pt": "Hambúrgueres e milanesas"
+   },
+   "synonyms": {
+    "es": [
+     "hamburguesa",
+     "milanesa",
+     "patty"
+    ]
+   },
+   "offTags": [
+    "en:hamburgers",
+    "en:breaded-products"
+   ]
+  },
+  {
+   "slug": "fiambreria",
+   "parent": null,
+   "position": 5,
+   "icon": "sausage",
+   "names": {
+    "es": "Fiambres y quesos al corte",
+    "en": "Deli",
+    "de": "Feinkost",
+    "pt": "Frios"
+   },
+   "synonyms": {
+    "es": [
+     "fiambres"
+    ],
+    "en": [
+     "cold cuts"
+    ],
+    "de": [
+     "Aufschnitt",
+     "Wurst"
+    ],
+    "pt": [
+     "frios"
+    ]
+   },
+   "offTags": [
+    "en:prepared-meats"
+   ]
+  },
+  {
+   "slug": "jamones",
+   "parent": "fiambreria",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Jamones y fiambres",
+    "en": "Ham and cold cuts",
+    "de": "Schinken und Aufschnitt",
+    "pt": "Presuntos e frios"
+   },
+   "synonyms": {
+    "es": [
+     "jamón",
+     "paleta",
+     "fiambre"
+    ]
+   },
+   "offTags": [
+    "en:hams",
+    "en:cooked-hams",
+    "en:cured-hams"
+   ]
+  },
+  {
+   "slug": "salames",
+   "parent": "fiambreria",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Salames y embutidos",
+    "en": "Salami and sausages",
+    "de": "Salami und Würste",
+    "pt": "Salames e embutidos"
+   },
+   "synonyms": {
+    "es": [
+     "salame",
+     "chorizo",
+     "longaniza"
+    ]
+   },
+   "offTags": [
+    "en:salamis",
+    "en:sausages",
+    "en:dry-sausages"
+   ]
+  },
+  {
+   "slug": "salchichas",
+   "parent": "fiambreria",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Salchichas",
+    "en": "Hot dogs and frankfurters",
+    "de": "Würstchen",
+    "pt": "Salsichas"
+   },
+   "synonyms": {
+    "es": [
+     "salchicha",
+     "pancho",
+     "vienissima"
+    ]
+   },
+   "offTags": [
+    "en:frankfurters",
+    "en:hot-dogs"
+   ]
+  },
+  {
+   "slug": "quesos-al-corte",
+   "parent": "fiambreria",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Quesos al corte",
+    "en": "Sliced cheese",
+    "de": "Käse am Stück",
+    "pt": "Queijos fatiados"
+   },
+   "synonyms": {
+    "es": [
+     "queso de máquina"
+    ]
+   },
+   "offTags": [
+    "en:sliced-cheeses"
+   ]
+  },
+  {
+   "slug": "aceitunas",
+   "parent": "fiambreria",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Aceitunas y encurtidos",
+    "en": "Olives and pickles",
+    "de": "Oliven und Eingelegtes",
+    "pt": "Azeitonas e conservas"
+   },
+   "synonyms": {
+    "es": [
+     "aceitunas",
+     "pepinillos"
+    ]
+   },
+   "offTags": [
+    "en:olives",
+    "en:pickles"
+   ]
+  },
+  {
+   "slug": "panaderia",
+   "parent": null,
+   "position": 6,
+   "icon": "baguette",
+   "names": {
+    "es": "Panadería",
+    "en": "Bakery",
+    "de": "Bäckerei",
+    "pt": "Padaria"
+   },
+   "synonyms": {
+    "es": [
+     "pan"
+    ],
+    "en": [
+     "bread"
+    ],
+    "de": [
+     "Brot"
+    ],
+    "pt": [
+     "pão"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "pan",
+   "parent": "panaderia",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Pan",
+    "en": "Bread",
+    "de": "Brot",
+    "pt": "Pão"
+   },
+   "synonyms": {
+    "es": [
+     "pan francés",
+     "baguette",
+     "flauta"
+    ]
+   },
+   "offTags": [
+    "en:breads",
+    "en:fresh-breads"
+   ]
+  },
+  {
+   "slug": "pan-lactal",
+   "parent": "panaderia",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Pan lactal y de molde",
+    "en": "Sliced bread",
+    "de": "Toastbrot",
+    "pt": "Pão de forma"
+   },
+   "synonyms": {
+    "es": [
+     "pan lactal",
+     "pan de molde",
+     "bimbo"
+    ]
+   },
+   "offTags": [
+    "en:sliced-breads",
+    "en:sandwich-breads"
+   ]
+  },
+  {
+   "slug": "facturas",
+   "parent": "panaderia",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Facturas y bollería",
+    "en": "Pastries",
+    "de": "Gebäck",
+    "pt": "Folhados e doces"
+   },
+   "synonyms": {
+    "es": [
+     "medialunas",
+     "facturas",
+     "croissant"
+    ]
+   },
+   "offTags": [
+    "en:viennoiseries",
+    "en:pastries",
+    "en:croissants"
+   ]
+  },
+  {
+   "slug": "tortas",
+   "parent": "panaderia",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Tortas y budines",
+    "en": "Cakes",
+    "de": "Kuchen",
+    "pt": "Bolos"
+   },
+   "synonyms": {
+    "es": [
+     "budín",
+     "torta",
+     "bizcochuelo"
+    ]
+   },
+   "offTags": [
+    "en:cakes",
+    "en:sponge-cakes"
+   ]
+  },
+  {
+   "slug": "pan-rallado",
+   "parent": "panaderia",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Pan rallado y rebozadores",
+    "en": "Breadcrumbs",
+    "de": "Paniermehl",
+    "pt": "Farinha de rosca"
+   },
+   "synonyms": {
+    "es": [
+     "pan rallado",
+     "rebozador"
+    ]
+   },
+   "offTags": [
+    "en:breadcrumbs"
+   ]
+  },
+  {
+   "slug": "tapas",
+   "parent": "panaderia",
+   "position": 5,
+   "icon": null,
+   "names": {
+    "es": "Tapas de empanada y tarta",
+    "en": "Pastry sheets",
+    "de": "Teigblätter",
+    "pt": "Massas para empanada e torta"
+   },
+   "synonyms": {
+    "es": [
+     "tapas",
+     "masa"
+    ]
+   },
+   "offTags": [
+    "en:doughs",
+    "en:puff-pastries"
+   ]
+  },
+  {
+   "slug": "congelados",
+   "parent": null,
+   "position": 7,
+   "icon": "snowflake",
+   "names": {
+    "es": "Congelados",
+    "en": "Frozen",
+    "de": "Tiefkühl",
+    "pt": "Congelados"
+   },
+   "synonyms": {
+    "es": [
+     "freezer"
+    ],
+    "en": [
+     "frozen food"
+    ],
+    "de": [
+     "Tiefkühlkost"
+    ],
+    "pt": [
+     "congelados"
+    ]
+   },
+   "offTags": [
+    "en:frozen-foods"
+   ]
+  },
+  {
+   "slug": "verduras-congeladas",
+   "parent": "congelados",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Verduras y papas congeladas",
+    "en": "Frozen vegetables and chips",
+    "de": "Tiefkühlgemüse und Pommes",
+    "pt": "Legumes e batatas congelados"
+   },
+   "synonyms": {
+    "es": [
+     "papas fritas congeladas",
+     "espinaca congelada"
+    ]
+   },
+   "offTags": [
+    "en:frozen-vegetables",
+    "en:frozen-fried-potatoes"
+   ]
+  },
+  {
+   "slug": "comidas-congeladas",
+   "parent": "congelados",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Comidas listas congeladas",
+    "en": "Frozen ready meals",
+    "de": "Tiefkühlgerichte",
+    "pt": "Pratos prontos congelados"
+   },
+   "synonyms": {
+    "es": [
+     "comida congelada"
+    ]
+   },
+   "offTags": [
+    "en:frozen-ready-made-meals"
+   ]
+  },
+  {
+   "slug": "pizzas",
+   "parent": "congelados",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Pizzas y tartas",
+    "en": "Pizza and pies",
+    "de": "Pizza und Quiches",
+    "pt": "Pizzas e tortas"
+   },
+   "synonyms": {
+    "es": [
+     "pizza",
+     "tarta"
+    ]
+   },
+   "offTags": [
+    "en:pizzas",
+    "en:frozen-pizzas",
+    "en:quiches"
+   ]
+  },
+  {
+   "slug": "rebozados",
+   "parent": "congelados",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Rebozados y nuggets",
+    "en": "Breaded and nuggets",
+    "de": "Paniertes und Nuggets",
+    "pt": "Empanados e nuggets"
+   },
+   "synonyms": {
+    "es": [
+     "nuggets",
+     "patitas"
+    ]
+   },
+   "offTags": [
+    "en:nuggets",
+    "en:chicken-nuggets"
+   ]
+  },
+  {
+   "slug": "pescados-congelados",
+   "parent": "congelados",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Pescados congelados",
+    "en": "Frozen fish",
+    "de": "Tiefkühlfisch",
+    "pt": "Peixes congelados"
+   },
+   "synonyms": {
+    "es": [
+     "bastoncitos",
+     "filet congelado"
+    ]
+   },
+   "offTags": [
+    "en:frozen-fishes",
+    "en:fish-fingers"
+   ]
+  },
+  {
+   "slug": "helados",
+   "parent": "congelados",
+   "position": 5,
+   "icon": null,
+   "names": {
+    "es": "Helados",
+    "en": "Ice cream",
+    "de": "Eis",
+    "pt": "Sorvetes"
+   },
+   "synonyms": {
+    "es": [
+     "helado",
+     "palito"
+    ]
+   },
+   "offTags": [
+    "en:ice-creams",
+    "en:frozen-desserts"
+   ]
+  },
+  {
+   "slug": "listos",
+   "parent": null,
+   "position": 8,
+   "icon": "food-takeout-box-outline",
+   "names": {
+    "es": "Comidas listas y frescas",
+    "en": "Fresh and ready meals",
+    "de": "Frisch und fertig",
+    "pt": "Refeições prontas"
+   },
+   "synonyms": {
+    "es": [
+     "rotisería",
+     "comida hecha"
+    ],
+    "en": [
+     "ready meals"
+    ],
+    "de": [
+     "Fertiggerichte"
+    ],
+    "pt": [
+     "rotisseria"
+    ]
+   },
+   "offTags": [
+    "en:meals"
+   ]
+  },
+  {
+   "slug": "pastas-frescas",
+   "parent": "listos",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Pastas frescas",
+    "en": "Fresh pasta",
+    "de": "Frische Pasta",
+    "pt": "Massas frescas"
+   },
+   "synonyms": {
+    "es": [
+     "ñoquis",
+     "ravioles",
+     "sorrentinos"
+    ]
+   },
+   "offTags": [
+    "en:fresh-pastas",
+    "en:ravioli",
+    "en:gnocchi"
+   ]
+  },
+  {
+   "slug": "platos-preparados",
+   "parent": "listos",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Platos preparados",
+    "en": "Prepared dishes",
+    "de": "Fertiggerichte",
+    "pt": "Pratos preparados"
+   },
+   "synonyms": {
+    "es": [
+     "tarta",
+     "empanadas",
+     "pollo al spiedo"
+    ]
+   },
+   "offTags": [
+    "en:prepared-meals"
+   ]
+  },
+  {
+   "slug": "sandwiches",
+   "parent": "listos",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Sándwiches y wraps",
+    "en": "Sandwiches and wraps",
+    "de": "Sandwiches und Wraps",
+    "pt": "Sanduíches e wraps"
+   },
+   "synonyms": {
+    "es": [
+     "sándwich",
+     "sanguche"
+    ]
+   },
+   "offTags": [
+    "en:sandwiches"
+   ]
+  },
+  {
+   "slug": "internacional",
+   "parent": "listos",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Sushi y comida internacional",
+    "en": "Sushi and world food",
+    "de": "Sushi und internationale Küche",
+    "pt": "Sushi e comida internacional"
+   },
+   "synonyms": {
+    "es": [
+     "sushi",
+     "wok"
+    ]
+   },
+   "offTags": [
+    "en:sushi"
+   ]
+  },
+  {
+   "slug": "snacks",
+   "parent": null,
+   "position": 9,
+   "icon": "candy-outline",
+   "names": {
+    "es": "Snacks y golosinas",
+    "en": "Snacks and sweets",
+    "de": "Snacks und Süßigkeiten",
+    "pt": "Snacks e doces"
+   },
+   "synonyms": {
+    "es": [
+     "golosinas",
+     "kiosco"
+    ],
+    "en": [
+     "sweets",
+     "candy"
+    ],
+    "de": [
+     "Süßigkeiten",
+     "Naschzeug"
+    ],
+    "pt": [
+     "guloseimas"
+    ]
+   },
+   "offTags": [
+    "en:snacks"
+   ]
+  },
+  {
+   "slug": "papas-snacks",
+   "parent": "snacks",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Papas fritas y snacks salados",
+    "en": "Crisps and salty snacks",
+    "de": "Chips und Knabbereien",
+    "pt": "Batatas chips e salgadinhos"
+   },
+   "synonyms": {
+    "es": [
+     "papas fritas",
+     "palitos",
+     "chizitos"
+    ]
+   },
+   "offTags": [
+    "en:salty-snacks",
+    "en:chips-and-fries",
+    "en:crisps"
+   ]
+  },
+  {
+   "slug": "chocolates",
+   "parent": "snacks",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Chocolates y bombones",
+    "en": "Chocolate",
+    "de": "Schokolade",
+    "pt": "Chocolates e bombons"
+   },
+   "synonyms": {
+    "es": [
+     "chocolate",
+     "bombones"
+    ]
+   },
+   "offTags": [
+    "en:chocolates",
+    "en:bonbons"
+   ]
+  },
+  {
+   "slug": "alfajores",
+   "parent": "snacks",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Alfajores",
+    "en": "Alfajores",
+    "de": "Alfajores",
+    "pt": "Alfajores"
+   },
+   "synonyms": {
+    "es": [
+     "alfajor"
+    ]
+   },
+   "offTags": [
+    "en:alfajores"
+   ]
+  },
+  {
+   "slug": "caramelos",
+   "parent": "snacks",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Caramelos, chicles y gomitas",
+    "en": "Candy, gum and gummies",
+    "de": "Bonbons, Kaugummi und Fruchtgummi",
+    "pt": "Balas, chicletes e gomas"
+   },
+   "synonyms": {
+    "es": [
+     "caramelos",
+     "chicles",
+     "gomitas"
+    ]
+   },
+   "offTags": [
+    "en:candies",
+    "en:chewing-gum",
+    "en:gummies"
+   ]
+  },
+  {
+   "slug": "barritas",
+   "parent": "snacks",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Barritas",
+    "en": "Cereal and protein bars",
+    "de": "Riegel",
+    "pt": "Barrinhas"
+   },
+   "synonyms": {
+    "es": [
+     "barra de cereal"
+    ]
+   },
+   "offTags": [
+    "en:cereal-bars",
+    "en:protein-bars"
+   ]
+  },
+  {
+   "slug": "frutos-secos-snack",
+   "parent": "snacks",
+   "position": 5,
+   "icon": null,
+   "names": {
+    "es": "Frutos secos para picar",
+    "en": "Snack nuts",
+    "de": "Nüsse zum Knabbern",
+    "pt": "Petiscos de castanhas"
+   },
+   "synonyms": {
+    "es": [
+     "maní",
+     "mix de frutos secos"
+    ]
+   },
+   "offTags": [
+    "en:salted-nuts",
+    "en:roasted-nuts",
+    "en:peanuts"
+   ]
+  },
+  {
+   "slug": "bebidas",
+   "parent": null,
+   "position": 10,
+   "icon": "bottle-soda-outline",
+   "names": {
+    "es": "Bebidas",
+    "en": "Drinks",
+    "de": "Getränke",
+    "pt": "Bebidas"
+   },
+   "synonyms": {
+    "es": [
+     "bebida"
+    ],
+    "en": [
+     "beverages"
+    ],
+    "de": [
+     "Getränk"
+    ],
+    "pt": [
+     "bebida"
+    ]
+   },
+   "offTags": [
+    "en:beverages"
+   ]
+  },
+  {
+   "slug": "agua",
+   "parent": "bebidas",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Agua",
+    "en": "Water",
+    "de": "Wasser",
+    "pt": "Água"
+   },
+   "synonyms": {
+    "es": [
+     "agua mineral",
+     "soda",
+     "sifón"
+    ]
+   },
+   "offTags": [
+    "en:waters",
+    "en:mineral-waters",
+    "en:spring-waters"
+   ]
+  },
+  {
+   "slug": "gaseosas",
+   "parent": "bebidas",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Gaseosas",
+    "en": "Soft drinks",
+    "de": "Limonaden",
+    "pt": "Refrigerantes"
+   },
+   "synonyms": {
+    "es": [
+     "gaseosa",
+     "coca",
+     "cola",
+     "sprite",
+     "limo",
+     "refresco"
+    ]
+   },
+   "offTags": [
+    "en:sodas",
+    "en:colas",
+    "en:carbonated-drinks"
+   ]
+  },
+  {
+   "slug": "jugos",
+   "parent": "bebidas",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Jugos y bebidas saborizadas",
+    "en": "Juice and flavoured drinks",
+    "de": "Säfte",
+    "pt": "Sucos e bebidas saborizadas"
+   },
+   "synonyms": {
+    "es": [
+     "jugo",
+     "agua saborizada",
+     "néctar"
+    ]
+   },
+   "offTags": [
+    "en:juices",
+    "en:fruit-juices",
+    "en:nectars",
+    "en:flavoured-waters"
+   ]
+  },
+  {
+   "slug": "isotonicas",
+   "parent": "bebidas",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Isotónicas y energizantes",
+    "en": "Sports and energy drinks",
+    "de": "Sport- und Energydrinks",
+    "pt": "Isotônicos e energéticos"
+   },
+   "synonyms": {
+    "es": [
+     "gatorade",
+     "speed",
+     "red bull"
+    ]
+   },
+   "offTags": [
+    "en:energy-drinks",
+    "en:sports-drinks"
+   ]
+  },
+  {
+   "slug": "cafe-te-listos",
+   "parent": "bebidas",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Café y té listos",
+    "en": "Iced coffee and tea",
+    "de": "Eiskaffee und Eistee",
+    "pt": "Café e chá prontos"
+   },
+   "synonyms": {
+    "es": [
+     "ice tea",
+     "café frío"
+    ]
+   },
+   "offTags": [
+    "en:iced-teas",
+    "en:coffee-drinks"
+   ]
+  },
+  {
+   "slug": "polvos-bebida",
+   "parent": "bebidas",
+   "position": 5,
+   "icon": null,
+   "names": {
+    "es": "Polvos para preparar",
+    "en": "Drink powders",
+    "de": "Getränkepulver",
+    "pt": "Refrescos em pó"
+   },
+   "synonyms": {
+    "es": [
+     "tang",
+     "clight",
+     "jugo en polvo"
+    ]
+   },
+   "offTags": [
+    "en:powdered-drinks"
+   ]
+  },
+  {
+   "slug": "alcohol",
+   "parent": null,
+   "position": 11,
+   "icon": "glass-wine",
+   "names": {
+    "es": "Bebidas con alcohol",
+    "en": "Alcohol",
+    "de": "Alkoholische Getränke",
+    "pt": "Bebidas alcoólicas"
+   },
+   "synonyms": {
+    "es": [
+     "bebidas alcohólicas"
+    ],
+    "en": [
+     "alcoholic drinks"
+    ],
+    "de": [
+     "Alkohol"
+    ],
+    "pt": [
+     "álcool"
+    ]
+   },
+   "offTags": [
+    "en:alcoholic-beverages"
+   ]
+  },
+  {
+   "slug": "cervezas",
+   "parent": "alcohol",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Cervezas",
+    "en": "Beer",
+    "de": "Bier",
+    "pt": "Cervejas"
+   },
+   "synonyms": {
+    "es": [
+     "cerveza",
+     "birra"
+    ]
+   },
+   "offTags": [
+    "en:beers"
+   ]
+  },
+  {
+   "slug": "vinos",
+   "parent": "alcohol",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Vinos",
+    "en": "Wine",
+    "de": "Wein",
+    "pt": "Vinhos"
+   },
+   "synonyms": {
+    "es": [
+     "vino",
+     "malbec",
+     "tinto"
+    ]
+   },
+   "offTags": [
+    "en:wines",
+    "en:red-wines",
+    "en:white-wines"
+   ]
+  },
+  {
+   "slug": "espumantes",
+   "parent": "alcohol",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Espumantes y sidras",
+    "en": "Sparkling wine and cider",
+    "de": "Sekt und Cidre",
+    "pt": "Espumantes e sidras"
+   },
+   "synonyms": {
+    "es": [
+     "champagne",
+     "sidra",
+     "espumante"
+    ]
+   },
+   "offTags": [
+    "en:sparkling-wines",
+    "en:ciders",
+    "en:champagnes"
+   ]
+  },
+  {
+   "slug": "aperitivos",
+   "parent": "alcohol",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Aperitivos y fernet",
+    "en": "Aperitifs and bitters",
+    "de": "Aperitifs und Bitter",
+    "pt": "Aperitivos e amargos"
+   },
+   "synonyms": {
+    "es": [
+     "fernet",
+     "campari",
+     "vermouth"
+    ]
+   },
+   "offTags": [
+    "en:aperitifs",
+    "en:bitters"
+   ]
+  },
+  {
+   "slug": "destilados",
+   "parent": "alcohol",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Destilados",
+    "en": "Spirits",
+    "de": "Spirituosen",
+    "pt": "Destilados"
+   },
+   "synonyms": {
+    "es": [
+     "whisky",
+     "vodka",
+     "ron",
+     "gin"
+    ]
+   },
+   "offTags": [
+    "en:spirits",
+    "en:whiskies",
+    "en:vodkas",
+    "en:rums",
+    "en:gins"
+   ]
+  },
+  {
+   "slug": "licores",
+   "parent": "alcohol",
+   "position": 5,
+   "icon": null,
+   "names": {
+    "es": "Licores",
+    "en": "Liqueurs",
+    "de": "Liköre",
+    "pt": "Licores"
+   },
+   "synonyms": {
+    "es": [
+     "licor"
+    ]
+   },
+   "offTags": [
+    "en:liqueurs"
+   ]
+  },
+  {
+   "slug": "limpieza",
+   "parent": null,
+   "position": 12,
+   "icon": "spray-bottle",
+   "names": {
+    "es": "Limpieza",
+    "en": "Cleaning",
+    "de": "Reinigung",
+    "pt": "Limpeza"
+   },
+   "synonyms": {
+    "es": [
+     "artículos de limpieza"
+    ],
+    "en": [
+     "household cleaning"
+    ],
+    "de": [
+     "Putzmittel",
+     "Haushalt"
+    ],
+    "pt": [
+     "produtos de limpeza"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "ropa",
+   "parent": "limpieza",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Ropa: jabón y suavizante",
+    "en": "Laundry",
+    "de": "Wäsche",
+    "pt": "Roupa: sabão e amaciante"
+   },
+   "synonyms": {
+    "es": [
+     "jabón en polvo",
+     "jabón líquido",
+     "suavizante"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "lavavajillas",
+   "parent": "limpieza",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Lavavajillas y cocina",
+    "en": "Dishwashing and kitchen",
+    "de": "Spülmittel und Küche",
+    "pt": "Lava-louças e cozinha"
+   },
+   "synonyms": {
+    "es": [
+     "detergente",
+     "lavavajillas"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "bano",
+   "parent": "limpieza",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Baño",
+    "en": "Bathroom",
+    "de": "Bad",
+    "pt": "Banheiro"
+   },
+   "synonyms": {
+    "es": [
+     "limpiador de baño",
+     "antisarro"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "pisos",
+   "parent": "limpieza",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Pisos y superficies",
+    "en": "Floors and surfaces",
+    "de": "Böden und Oberflächen",
+    "pt": "Pisos e superfícies"
+   },
+   "synonyms": {
+    "es": [
+     "limpiador de pisos",
+     "multiuso"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "lavandina",
+   "parent": "limpieza",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Lavandina y desinfectantes",
+    "en": "Bleach and disinfectants",
+    "de": "Bleiche und Desinfektion",
+    "pt": "Água sanitária e desinfetantes"
+   },
+   "synonyms": {
+    "es": [
+     "lavandina",
+     "cloro",
+     "desinfectante"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "papel",
+   "parent": "limpieza",
+   "position": 5,
+   "icon": null,
+   "names": {
+    "es": "Papel higiénico, rollos y servilletas",
+    "en": "Toilet paper and kitchen roll",
+    "de": "Toilettenpapier und Küchenrolle",
+    "pt": "Papel higiênico, toalhas e guardanapos"
+   },
+   "synonyms": {
+    "es": [
+     "papel higiénico",
+     "rollo de cocina",
+     "servilletas"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "bolsas",
+   "parent": "limpieza",
+   "position": 6,
+   "icon": null,
+   "names": {
+    "es": "Bolsas de residuos",
+    "en": "Bin bags",
+    "de": "Müllbeutel",
+    "pt": "Sacos de lixo"
+   },
+   "synonyms": {
+    "es": [
+     "bolsas de basura"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "insecticidas",
+   "parent": "limpieza",
+   "position": 7,
+   "icon": null,
+   "names": {
+    "es": "Insecticidas",
+    "en": "Insecticides",
+    "de": "Insektenschutz",
+    "pt": "Inseticidas"
+   },
+   "synonyms": {
+    "es": [
+     "raid",
+     "repelente"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "accesorios-limpieza",
+   "parent": "limpieza",
+   "position": 8,
+   "icon": null,
+   "names": {
+    "es": "Esponjas, trapos y accesorios",
+    "en": "Sponges, cloths and tools",
+    "de": "Schwämme und Tücher",
+    "pt": "Esponjas, panos e acessórios"
+   },
+   "synonyms": {
+    "es": [
+     "esponja",
+     "trapo",
+     "escoba"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "aromatizantes",
+   "parent": "limpieza",
+   "position": 9,
+   "icon": null,
+   "names": {
+    "es": "Aromatizantes",
+    "en": "Air fresheners",
+    "de": "Lufterfrischer",
+    "pt": "Aromatizantes"
+   },
+   "synonyms": {
+    "es": [
+     "desodorante de ambiente",
+     "glade"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "cuidado-personal",
+   "parent": null,
+   "position": 13,
+   "icon": "lotion-outline",
+   "names": {
+    "es": "Perfumería y cuidado personal",
+    "en": "Personal care",
+    "de": "Drogerie und Körperpflege",
+    "pt": "Higiene e cuidado pessoal"
+   },
+   "synonyms": {
+    "es": [
+     "perfumería",
+     "higiene"
+    ],
+    "en": [
+     "toiletries",
+     "drugstore"
+    ],
+    "de": [
+     "Drogerie"
+    ],
+    "pt": [
+     "higiene pessoal"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "cabello",
+   "parent": "cuidado-personal",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Cuidado del cabello",
+    "en": "Hair care",
+    "de": "Haarpflege",
+    "pt": "Cuidados com o cabelo"
+   },
+   "synonyms": {
+    "es": [
+     "shampoo",
+     "acondicionador"
+    ]
+   },
+   "offTags": [
+    "en:shampoos",
+    "en:hair-conditioners"
+   ]
+  },
+  {
+   "slug": "jabones",
+   "parent": "cuidado-personal",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Jabones y gel de ducha",
+    "en": "Soap and shower gel",
+    "de": "Seife und Duschgel",
+    "pt": "Sabonetes e gel de banho"
+   },
+   "synonyms": {
+    "es": [
+     "jabón",
+     "gel de ducha"
+    ]
+   },
+   "offTags": [
+    "en:soaps",
+    "en:shower-gels"
+   ]
+  },
+  {
+   "slug": "desodorantes",
+   "parent": "cuidado-personal",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Desodorantes",
+    "en": "Deodorant",
+    "de": "Deodorants",
+    "pt": "Desodorantes"
+   },
+   "synonyms": {
+    "es": [
+     "desodorante",
+     "antitranspirante"
+    ]
+   },
+   "offTags": [
+    "en:deodorants"
+   ]
+  },
+  {
+   "slug": "bucal",
+   "parent": "cuidado-personal",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Cuidado bucal",
+    "en": "Oral care",
+    "de": "Mundpflege",
+    "pt": "Higiene bucal"
+   },
+   "synonyms": {
+    "es": [
+     "pasta dental",
+     "cepillo de dientes",
+     "enjuague"
+    ]
+   },
+   "offTags": [
+    "en:toothpastes",
+    "en:mouthwashes"
+   ]
+  },
+  {
+   "slug": "afeitado",
+   "parent": "cuidado-personal",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Afeitado y depilación",
+    "en": "Shaving and hair removal",
+    "de": "Rasur und Haarentfernung",
+    "pt": "Barbear e depilação"
+   },
+   "synonyms": {
+    "es": [
+     "afeitadora",
+     "cera",
+     "espuma de afeitar"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "facial-corporal",
+   "parent": "cuidado-personal",
+   "position": 5,
+   "icon": null,
+   "names": {
+    "es": "Cuidado facial y corporal",
+    "en": "Face and body care",
+    "de": "Gesichts- und Körperpflege",
+    "pt": "Cuidados com rosto e corpo"
+   },
+   "synonyms": {
+    "es": [
+     "crema",
+     "loción"
+    ]
+   },
+   "offTags": [
+    "en:body-creams",
+    "en:face-creams"
+   ]
+  },
+  {
+   "slug": "solar",
+   "parent": "cuidado-personal",
+   "position": 6,
+   "icon": null,
+   "names": {
+    "es": "Protección solar",
+    "en": "Sun care",
+    "de": "Sonnenschutz",
+    "pt": "Proteção solar"
+   },
+   "synonyms": {
+    "es": [
+     "protector solar",
+     "bronceador"
+    ]
+   },
+   "offTags": [
+    "en:sunscreens"
+   ]
+  },
+  {
+   "slug": "femenina",
+   "parent": "cuidado-personal",
+   "position": 7,
+   "icon": null,
+   "names": {
+    "es": "Protección femenina",
+    "en": "Feminine care",
+    "de": "Damenhygiene",
+    "pt": "Higiene feminina"
+   },
+   "synonyms": {
+    "es": [
+     "toallitas femeninas",
+     "tampones"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "algodon",
+   "parent": "cuidado-personal",
+   "position": 8,
+   "icon": null,
+   "names": {
+    "es": "Algodón, pañuelos y hisopos",
+    "en": "Cotton, tissues and swabs",
+    "de": "Watte, Taschentücher und Wattestäbchen",
+    "pt": "Algodão, lenços e hastes"
+   },
+   "synonyms": {
+    "es": [
+     "algodón",
+     "pañuelos descartables",
+     "hisopos"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "maquillaje",
+   "parent": "cuidado-personal",
+   "position": 9,
+   "icon": null,
+   "names": {
+    "es": "Maquillaje",
+    "en": "Make-up",
+    "de": "Make-up",
+    "pt": "Maquiagem"
+   },
+   "synonyms": {
+    "es": [
+     "maquillaje",
+     "esmalte"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "bebes",
+   "parent": null,
+   "position": 14,
+   "icon": "baby-bottle-outline",
+   "names": {
+    "es": "Bebés",
+    "en": "Baby",
+    "de": "Baby",
+    "pt": "Bebês"
+   },
+   "synonyms": {
+    "es": [
+     "bebé",
+     "infantil"
+    ],
+    "en": [
+     "babies"
+    ],
+    "de": [
+     "Kinder"
+    ],
+    "pt": [
+     "bebê",
+     "infantil"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "panales",
+   "parent": "bebes",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Pañales",
+    "en": "Nappies",
+    "de": "Windeln",
+    "pt": "Fraldas"
+   },
+   "synonyms": {
+    "es": [
+     "pañales",
+     "pampers",
+     "huggies"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "toallitas",
+   "parent": "bebes",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Toallitas húmedas",
+    "en": "Baby wipes",
+    "de": "Feuchttücher",
+    "pt": "Lenços umedecidos"
+   },
+   "synonyms": {
+    "es": [
+     "toallitas"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "formula",
+   "parent": "bebes",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Leches de fórmula",
+    "en": "Formula milk",
+    "de": "Säuglingsmilch",
+    "pt": "Fórmulas infantis"
+   },
+   "synonyms": {
+    "es": [
+     "leche de fórmula",
+     "nutrilon"
+    ]
+   },
+   "offTags": [
+    "en:infant-formulas",
+    "en:baby-milks"
+   ]
+  },
+  {
+   "slug": "alimentos-bebe",
+   "parent": "bebes",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Alimentos para bebés",
+    "en": "Baby food",
+    "de": "Babynahrung",
+    "pt": "Papinhas"
+   },
+   "synonyms": {
+    "es": [
+     "papilla",
+     "colado"
+    ]
+   },
+   "offTags": [
+    "en:baby-foods"
+   ]
+  },
+  {
+   "slug": "cuidado-bebe",
+   "parent": "bebes",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Cuidado del bebé",
+    "en": "Baby care",
+    "de": "Babypflege",
+    "pt": "Cuidados com o bebê"
+   },
+   "synonyms": {
+    "es": [
+     "crema para bebé",
+     "shampoo bebé"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "mascotas",
+   "parent": null,
+   "position": 15,
+   "icon": "paw",
+   "names": {
+    "es": "Mascotas",
+    "en": "Pets",
+    "de": "Tierbedarf",
+    "pt": "Pets"
+   },
+   "synonyms": {
+    "es": [
+     "animales"
+    ],
+    "en": [
+     "pet supplies"
+    ],
+    "de": [
+     "Haustiere"
+    ],
+    "pt": [
+     "animais"
+    ]
+   },
+   "offTags": [
+    "en:pet-food"
+   ]
+  },
+  {
+   "slug": "perros",
+   "parent": "mascotas",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Alimento para perros",
+    "en": "Dog food",
+    "de": "Hundefutter",
+    "pt": "Ração para cães"
+   },
+   "synonyms": {
+    "es": [
+     "comida para perro",
+     "balanceado"
+    ]
+   },
+   "offTags": [
+    "en:dog-food"
+   ]
+  },
+  {
+   "slug": "gatos",
+   "parent": "mascotas",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Alimento para gatos",
+    "en": "Cat food",
+    "de": "Katzenfutter",
+    "pt": "Ração para gatos"
+   },
+   "synonyms": {
+    "es": [
+     "comida para gato"
+    ]
+   },
+   "offTags": [
+    "en:cat-food"
+   ]
+  },
+  {
+   "slug": "piedras",
+   "parent": "mascotas",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Piedras sanitarias",
+    "en": "Cat litter",
+    "de": "Katzenstreu",
+    "pt": "Areia para gatos"
+   },
+   "synonyms": {
+    "es": [
+     "piedritas"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "accesorios-mascotas",
+   "parent": "mascotas",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Snacks y accesorios",
+    "en": "Treats and accessories",
+    "de": "Leckerlis und Zubehör",
+    "pt": "Petiscos e acessórios"
+   },
+   "synonyms": {
+    "es": [
+     "hueso",
+     "juguete"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "otros-animales",
+   "parent": "mascotas",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Otros animales",
+    "en": "Other pets",
+    "de": "Andere Tiere",
+    "pt": "Outros animais"
+   },
+   "synonyms": {
+    "es": [
+     "alpiste",
+     "peces"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "salud",
+   "parent": null,
+   "position": 16,
+   "icon": "medical-bag",
+   "names": {
+    "es": "Farmacia y salud",
+    "en": "Pharmacy and health",
+    "de": "Apotheke und Gesundheit",
+    "pt": "Farmácia e saúde"
+   },
+   "synonyms": {
+    "es": [
+     "farmacia"
+    ],
+    "en": [
+     "health"
+    ],
+    "de": [
+     "Gesundheit"
+    ],
+    "pt": [
+     "saúde"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "venta-libre",
+   "parent": "salud",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Venta libre",
+    "en": "Over the counter",
+    "de": "Rezeptfrei",
+    "pt": "Venda livre"
+   },
+   "synonyms": {
+    "es": [
+     "ibuprofeno",
+     "paracetamol"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "vitaminas",
+   "parent": "salud",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Vitaminas y suplementos",
+    "en": "Vitamins and supplements",
+    "de": "Vitamine und Nahrungsergänzung",
+    "pt": "Vitaminas e suplementos"
+   },
+   "synonyms": {
+    "es": [
+     "vitamina",
+     "suplemento"
+    ]
+   },
+   "offTags": [
+    "en:dietary-supplements",
+    "en:vitamins"
+   ]
+  },
+  {
+   "slug": "primeros-auxilios",
+   "parent": "salud",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Primeros auxilios",
+    "en": "First aid",
+    "de": "Erste Hilfe",
+    "pt": "Primeiros socorros"
+   },
+   "synonyms": {
+    "es": [
+     "curitas",
+     "alcohol",
+     "gasas"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "cuidado-intimo",
+   "parent": "salud",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Cuidado íntimo y preservativos",
+    "en": "Intimate care",
+    "de": "Intimpflege",
+    "pt": "Cuidado íntimo"
+   },
+   "synonyms": {
+    "es": [
+     "preservativos",
+     "lubricante"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "hogar",
+   "parent": null,
+   "position": 17,
+   "icon": "home-outline",
+   "names": {
+    "es": "Hogar y bazar",
+    "en": "Home",
+    "de": "Haushalt",
+    "pt": "Casa e utilidades"
+   },
+   "synonyms": {
+    "es": [
+     "bazar"
+    ],
+    "en": [
+     "household"
+    ],
+    "de": [
+     "Haushaltswaren"
+    ],
+    "pt": [
+     "utilidades domésticas"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "descartables",
+   "parent": "hogar",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Descartables",
+    "en": "Disposables",
+    "de": "Einwegartikel",
+    "pt": "Descartáveis"
+   },
+   "synonyms": {
+    "es": [
+     "papel aluminio",
+     "film",
+     "vasos descartables"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "cocina-utensilios",
+   "parent": "hogar",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Cocina y utensilios",
+    "en": "Kitchenware",
+    "de": "Küchenbedarf",
+    "pt": "Utensílios de cozinha"
+   },
+   "synonyms": {
+    "es": [
+     "sartén",
+     "cuchillo"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "pilas",
+   "parent": "hogar",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Pilas y lamparitas",
+    "en": "Batteries and light bulbs",
+    "de": "Batterien und Glühbirnen",
+    "pt": "Pilhas e lâmpadas"
+   },
+   "synonyms": {
+    "es": [
+     "pilas",
+     "lamparita",
+     "foco"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "velas",
+   "parent": "hogar",
+   "position": 3,
+   "icon": null,
+   "names": {
+    "es": "Velas, fósforos y encendedores",
+    "en": "Candles and lighters",
+    "de": "Kerzen und Feuerzeuge",
+    "pt": "Velas, fósforos e isqueiros"
+   },
+   "synonyms": {
+    "es": [
+     "fósforos",
+     "encendedor",
+     "vela"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "parrilla",
+   "parent": "hogar",
+   "position": 4,
+   "icon": null,
+   "names": {
+    "es": "Carbón y parrilla",
+    "en": "Charcoal and barbecue",
+    "de": "Grillkohle und Grill",
+    "pt": "Carvão e churrasco"
+   },
+   "synonyms": {
+    "es": [
+     "carbón",
+     "leña"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "almacenamiento",
+   "parent": "hogar",
+   "position": 5,
+   "icon": null,
+   "names": {
+    "es": "Organización y almacenamiento",
+    "en": "Storage",
+    "de": "Aufbewahrung",
+    "pt": "Organização"
+   },
+   "synonyms": {
+    "es": [
+     "táper",
+     "recipiente"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "ferreteria",
+   "parent": "hogar",
+   "position": 6,
+   "icon": null,
+   "names": {
+    "es": "Ferretería básica",
+    "en": "Basic hardware",
+    "de": "Baumarkt-Grundbedarf",
+    "pt": "Ferragens básicas"
+   },
+   "synonyms": {
+    "es": [
+     "cinta",
+     "pegamento"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "libreria",
+   "parent": null,
+   "position": 18,
+   "icon": "pencil-outline",
+   "names": {
+    "es": "Librería y kiosco",
+    "en": "Stationery and kiosk",
+    "de": "Schreibwaren und Kiosk",
+    "pt": "Papelaria e banca"
+   },
+   "synonyms": {
+    "es": [
+     "papelería"
+    ],
+    "en": [
+     "stationery"
+    ],
+    "de": [
+     "Schreibwaren"
+    ],
+    "pt": [
+     "papelaria"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "utiles",
+   "parent": "libreria",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Útiles escolares y de oficina",
+    "en": "School and office supplies",
+    "de": "Schul- und Bürobedarf",
+    "pt": "Material escolar e de escritório"
+   },
+   "synonyms": {
+    "es": [
+     "cuaderno",
+     "lapicera"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "revistas",
+   "parent": "libreria",
+   "position": 1,
+   "icon": null,
+   "names": {
+    "es": "Revistas y diarios",
+    "en": "Magazines and newspapers",
+    "de": "Zeitschriften und Zeitungen",
+    "pt": "Revistas e jornais"
+   },
+   "synonyms": {
+    "es": [
+     "diario",
+     "revista"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "tarjetas",
+   "parent": "libreria",
+   "position": 2,
+   "icon": null,
+   "names": {
+    "es": "Tarjetas y recargas",
+    "en": "Gift cards and top-ups",
+    "de": "Gutscheine und Aufladungen",
+    "pt": "Cartões e recargas"
+   },
+   "synonyms": {
+    "es": [
+     "recarga",
+     "gift card"
+    ]
+   },
+   "offTags": []
+  },
+  {
+   "slug": "otros",
+   "parent": null,
+   "position": 19,
+   "icon": "dots-horizontal-circle-outline",
+   "names": {
+    "es": "Otros",
+    "en": "Other",
+    "de": "Sonstiges",
+    "pt": "Outros"
+   },
+   "synonyms": {
+    "es": [],
+    "en": [],
+    "de": [],
+    "pt": []
+   },
+   "offTags": []
+  },
+  {
+   "slug": "sin-clasificar",
+   "parent": "otros",
+   "position": 0,
+   "icon": null,
+   "names": {
+    "es": "Sin clasificar",
+    "en": "Uncategorised",
+    "de": "Nicht zugeordnet",
+    "pt": "Sem categoria"
+   },
+   "synonyms": {
+    "es": []
+   },
+   "offTags": []
+  }
+ ]
+}

@@ -222,6 +222,12 @@ export class PrismaProductRepository implements ProductRepository {
         translations: asTranslations(row.category.translations),
         slug: row.category.slug,
         parentId: row.category.parentId,
+        icon: row.category.icon,
+        position: row.category.position,
+        // What a product needs of its category is its name and place; the
+        // taxonomy's search words come with GET /v1/categories.
+        synonyms: {},
+        offTags: [],
       },
       // Decimal is a Prisma detail; the domain works in plain numbers.
       packageSize: row.packageSize === null ? null : Number(row.packageSize),

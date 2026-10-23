@@ -21,6 +21,14 @@ export interface Category {
   translations: Translations;
   slug: string;
   parentId: string | null;
+  /** Departments carry an icon (a MaterialCommunityIcons name); aisles show their department's. */
+  icon: string | null;
+  /** Aisle order within the parent, or among departments. */
+  position: number;
+  /** Search words per language. */
+  synonyms: Partial<Record<string, string[]>>;
+  /** Open Food Facts category tags that map here. */
+  offTags: string[];
 }
 
 export interface ProductBarcode {

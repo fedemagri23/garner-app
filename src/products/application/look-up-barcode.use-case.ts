@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common'
 import type { Language } from '../../common/i18n/language.js';
 import { isValidBarcode, normalizeBarcode } from '../domain/barcode.js';
 import {
-  categorySlugFor,
+  categoryForTags,
   chooseBrand,
   chooseName,
   parseQuantity,
@@ -68,8 +68,7 @@ export class LookUpBarcodeUseCase {
     }
 
     const size = parseQuantity(facts.quantity);
-    const slug = categorySlugFor(facts.categoryTags);
-    const category = slug ? await this.categories.findBySlug(slug) : null;
+    const category = categoryForTags(await this.categories.findAll(), facts.categoryTags);
 
     return {
       match: 'OPEN_FOOD_FACTS',

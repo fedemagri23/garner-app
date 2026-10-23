@@ -133,6 +133,17 @@ model Category {
   translations Json     @default("{}")
   slug         String   @unique
   parentId     String?  @db.Uuid
+  /// MaterialCommunityIcons name the app ships with; departments only.
+  icon         String?  @db.VarChar(60)
+  /// Aisle order within the parent (or among departments).
+  position     Int      @default(0)
+  /// False once retired from the taxonomy; see replacedById.
+  isActive     Boolean  @default(true)
+  replacedById String?  @db.Uuid
+  /// Search words per language, e.g. {"es": ["gaseosa", "refresco"]}.
+  synonyms     Json     @default("{}")
+  /// Open Food Facts category tags that map here, e.g. ["en:yogurts"].
+  offTags      Json     @default("[]")
   createdAt    DateTime @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 

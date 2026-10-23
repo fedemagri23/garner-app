@@ -16,6 +16,7 @@ import argon2 from 'argon2';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient as CoreClient } from '../generated/prisma/core/index.js';
 import { PrismaClient as IntelligenceClient } from '../generated/prisma/intelligence/index.js';
+import { syncTaxonomy } from './taxonomy.mjs';
 
 const core = new CoreClient({
   adapter: new PrismaPg({ connectionString: process.env.CORE_DB_URL }),
@@ -62,14 +63,6 @@ async function upsertUser(email, displayName, role) {
     where: { email },
     create: { email, displayName, role, passwordHash },
     update: { displayName, role, locale: 'es' },
-  });
-}
-
-async function upsertCategory(name, slug, parentId = null, translations = {}) {
-  return core.category.upsert({
-    where: { slug },
-    create: { name, slug, parentId, translations },
-    update: { name, parentId, translations },
   });
 }
 
@@ -211,10 +204,10 @@ async function main() {
     update: savedLocation,
   });
 
-  const almacen = await upsertCategory('Almacén', 'almacen', null, { en: 'Pantry', de: 'Vorrat', pt: 'Mercearia' });
-  const lacteos = await upsertCategory('Lácteos', 'lacteos', null, { en: 'Dairy', de: 'Milchprodukte', pt: 'Laticínios' });
-  const leche = await upsertCategory('Leche', 'leche', lacteos.id, { en: 'Milk', de: 'Milch', pt: 'Leite' });
-  const bebidas = await upsertCategory('Bebidas', 'bebidas', null, { en: 'Drinks', de: 'Getränke', pt: 'Bebidas' });
+  // The real taxonomy (data/taxonomy.json), as every deploy applies it.
+  const taxonomy = await syncTaxonomy(core);
+  const aisle = async (slug) => core.category.findUniqueOrThrow({ where: { slug } });
+  const leche = await aisle('leche');
 
   const serenisima = await upsertBrand('La Serenísima', 'la-serenisima', 'la serenisima');
   const arcor = await upsertBrand('Arcor', 'arcor', 'arcor');
@@ -231,28 +224,28 @@ async function main() {
     upsertProduct({
       name: 'Pan Lactal 500g',
       normalizedName: 'pan lactal 500g',
-      categoryId: almacen.id,
+      categoryId: (await aisle('pan-lactal')).id,
       packageSize: 500,
       unit: 'GRAM',
     }),
     upsertProduct({
       name: 'Arroz Largo Fino 1kg',
       normalizedName: 'arroz largo fino 1kg',
-      categoryId: almacen.id,
+      categoryId: (await aisle('arroz-legumbres')).id,
       packageSize: 1,
       unit: 'KILOGRAM',
     }),
     upsertProduct({
       name: 'Aceite de Girasol 900ml',
       normalizedName: 'aceite de girasol 900ml',
-      categoryId: almacen.id,
+      categoryId: (await aisle('aceites')).id,
       packageSize: 900,
       unit: 'MILLILITER',
     }),
     upsertProduct({
       name: 'Galletitas Surtidas Arcor 400g',
       normalizedName: 'galletitas surtidas arcor 400g',
-      categoryId: almacen.id,
+      categoryId: (await aisle('galletitas-dulces')).id,
       brandId: arcor.id,
       packageSize: 400,
       unit: 'GRAM',
@@ -260,7 +253,7 @@ async function main() {
     upsertProduct({
       name: 'Agua Mineral 2L',
       normalizedName: 'agua mineral 2l',
-      categoryId: bebidas.id,
+      categoryId: (await aisle('agua')).id,
       packageSize: 2,
       unit: 'LITER',
     }),
@@ -565,18 +558,18 @@ async function main() {
 
   // Team staples with no prices yet: enough products for a shop's ten.
   const staples = [];
-  for (const [name, packageSize, unit] of [
-    ['Fideos Spaghetti 500g', 500, 'GRAM'],
-    ['Azúcar 1kg', 1, 'KILOGRAM'],
-    ['Harina 0000 1kg', 1, 'KILOGRAM'],
-    ['Yerba Mate 500g', 500, 'GRAM'],
-    ['Sal Fina 500g', 500, 'GRAM'],
+  for (const [name, packageSize, unit, slug] of [
+    ['Fideos Spaghetti 500g', 500, 'GRAM', 'pastas-secas'],
+    ['Azúcar 1kg', 1, 'KILOGRAM', 'azucar'],
+    ['Harina 0000 1kg', 1, 'KILOGRAM', 'harinas'],
+    ['Yerba Mate 500g', 500, 'GRAM', 'yerba'],
+    ['Sal Fina 500g', 500, 'GRAM', 'especias'],
   ]) {
     staples.push(
       await upsertProduct({
         name,
         normalizedName: name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
-        categoryId: almacen.id,
+        categoryId: (await aisle(slug)).id,
         packageSize,
         unit,
       }),
@@ -589,7 +582,7 @@ async function main() {
   await upsertProduct({
     name: 'Alfajor Artesanal de Maicena',
     normalizedName: 'alfajor artesanal de maicena',
-    categoryId: almacen.id,
+    categoryId: (await aisle('alfajores')).id,
     packageSize: 1,
     unit: 'UNIT',
     origin: 'COMMUNITY',
@@ -653,7 +646,7 @@ Seeded:
   users        admin@garner.test (ADMIN), moderator@garner.test (MODERATOR),
                shopper@garner.test (USER, 90 days old), vecina@garner.test (USER)
   password     ${PASSWORD}
-  catalog      ${products.length} products, 4 categories, 2 brands, ${barcodes.length} barcodes
+  catalog      ${products.length} products, taxonomy ${taxonomy.created} new + ${taxonomy.updated} updated categories, 2 brands, ${barcodes.length} barcodes
   stores       ${storeOrder.length} around the Obelisco (Coto, Carrefour, Día, in ARS)
                ${viennaStores.length} around Stephansplatz, Vienna (Billa, Spar, Hofer, in EUR)
   prices       current price + 14 days of history per product/store

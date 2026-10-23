@@ -2,6 +2,16 @@ import { Injectable } from '@nestjs/common';
 import type { Category as PrismaCategory } from '../../../generated/prisma/core/index.js';
 import { CorePrismaService } from '../../common/database/core-prisma.service.js';
 import { asTranslations, type Translations } from '../../common/i18n/language.js';
+
+/** Stored synonyms, keeping only lists of words. */
+function asSynonyms(value: unknown): Partial<Record<string, string[]>> {
+  if (typeof value !== 'object' || value === null) return {};
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter((entry): entry is [string, unknown[]] => Array.isArray(entry[1]))
+      .map(([language, words]) => [language, words.filter((word): word is string => typeof word === 'string')]),
+  );
+}
 import type { Category } from '../domain/product.entity.js';
 import type { CategoryRepository } from '../domain/product.repository.port.js';
 
@@ -10,8 +20,11 @@ export class PrismaCategoryRepository implements CategoryRepository {
   constructor(private readonly prisma: CorePrismaService) {}
 
   async findAll(): Promise<Category[]> {
+    // Retired categories stay for the products that still point at them, but
+    // are not offered.
     const rows = await this.prisma.category.findMany({
-      orderBy: [{ parentId: 'asc' }, { name: 'asc' }],
+      where: { isActive: true },
+      orderBy: [{ position: 'asc' }, { name: 'asc' }],
     });
 
     return rows.map((row) => this.toDomain(row));
@@ -86,6 +99,10 @@ export class PrismaCategoryRepository implements CategoryRepository {
       translations: asTranslations(row.translations),
       slug: row.slug,
       parentId: row.parentId,
+      icon: row.icon,
+      position: row.position,
+      synonyms: asSynonyms(row.synonyms),
+      offTags: Array.isArray(row.offTags) ? row.offTags.filter((tag): tag is string => typeof tag === 'string') : [],
     };
   }
 }

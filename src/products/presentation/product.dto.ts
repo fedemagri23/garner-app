@@ -54,11 +54,24 @@ export class CategoryTranslations {
   pt?: string;
 }
 
+/** Words a shopper may search a category by, per language. */
+export class CategorySynonyms {
+  @ApiPropertyOptional({ type: [String] }) es?: string[];
+  @ApiPropertyOptional({ type: [String] }) en?: string[];
+  @ApiPropertyOptional({ type: [String] }) de?: string[];
+  @ApiPropertyOptional({ type: [String] }) pt?: string[];
+}
+
 export class CategoryResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ description: 'In Spanish' }) name!: string;
   @ApiProperty({ type: CategoryTranslations, description: 'The name in English, German and Portuguese, where written' })
   translations!: CategoryTranslations;
+  @ApiProperty({ type: String, nullable: true, description: 'MaterialCommunityIcons name; departments only' })
+  icon!: string | null;
+  @ApiProperty({ description: 'Aisle order within the parent, or among departments' }) position!: number;
+  @ApiProperty({ type: CategorySynonyms, description: 'Search words per language' })
+  synonyms!: CategorySynonyms;
   @ApiProperty() slug!: string;
   @ApiProperty({ type: String, format: 'uuid', nullable: true }) parentId!: string | null;
 
@@ -67,6 +80,9 @@ export class CategoryResponse {
       id: category.id,
       name: category.name,
       translations: category.translations,
+      icon: category.icon,
+      position: category.position,
+      synonyms: category.synonyms,
       slug: category.slug,
       parentId: category.parentId,
     };

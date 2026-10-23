@@ -69,35 +69,18 @@ export function parseQuantity(quantity: string | null): { packageSize: number; u
 }
 
 /**
- * Their category tags into ours, most specific first: milk before dairy.
- * Slugs of the categories the catalog has; a tag with no counterpart leaves
- * the category for the shopper to pick.
+ * Their category tags into one of ours, using each category's `offTags`
+ * from the taxonomy: the match on their most specific tag wins (their tags
+ * run from general to specific), and an aisle beats its department.
  */
-const CATEGORY_BY_TAG: [tag: string, slug: string][] = [
-  ['en:milks', 'leche'],
-  ['en:dairies', 'lacteos'],
-  ['en:beverages', 'bebidas'],
-  ['en:waters', 'bebidas'],
-  ['en:pastas', 'almacen'],
-  ['en:rices', 'almacen'],
-  ['en:cereals-and-potatoes', 'almacen'],
-  ['en:breads', 'almacen'],
-  ['en:biscuits-and-cakes', 'almacen'],
-  ['en:sweet-snacks', 'almacen'],
-  ['en:salty-snacks', 'almacen'],
-  ['en:vegetable-oils', 'almacen'],
-  ['en:sweeteners', 'almacen'],
-  ['en:flours', 'almacen'],
-  ['en:salts', 'almacen'],
-  ['en:condiments', 'almacen'],
-  ['en:spreads', 'almacen'],
-  ['en:canned-foods', 'almacen'],
-  ['en:yerba-mate', 'almacen'],
-];
-
-export function categorySlugFor(tags: string[]): string | null {
-  for (const [tag, slug] of CATEGORY_BY_TAG) {
-    if (tags.includes(tag)) return slug;
+export function categoryForTags<T extends { offTags: string[]; parentId: string | null }>(
+  categories: T[],
+  tags: string[],
+): T | null {
+  for (const tag of [...tags].reverse()) {
+    const matches = categories.filter((category) => category.offTags.includes(tag));
+    const best = matches.find((category) => category.parentId !== null) ?? matches[0];
+    if (best) return best;
   }
   return null;
 }

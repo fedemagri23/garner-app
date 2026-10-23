@@ -174,6 +174,7 @@ intelligence.
 ```bash
 # 1. Apply the schema.
 pnpm run prisma:migrate:deploy
+pnpm run taxonomy:sync        # categories from data/taxonomy.json; idempotent, never deletes
 
 # 2. Recompute current prices for every product/store with recent observations,
 #    and re-aggregate each day in the window. Both jobs are idempotent.

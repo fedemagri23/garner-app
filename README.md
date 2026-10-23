@@ -34,6 +34,7 @@ pnpm install                 # also generates the Prisma clients
 cp .env.example .env
 docker compose up -d         # PostgreSQL (port 5433) + Redis (6379)
 pnpm run prisma:migrate:deploy
+pnpm run taxonomy:sync   # the category list from data/taxonomy.json
 pnpm run seed                # development data to click around in
 pnpm run start:dev
 ```
@@ -65,6 +66,7 @@ raw spec at `/docs/openapi.json`.
 | `pnpm run prisma:migrate:pricing` | Create + apply a pricing_db migration |
 | `pnpm run prisma:migrate:intelligence` | Create + apply an intelligence_db migration |
 | `pnpm run prisma:migrate:deploy` | Apply committed migrations to all three databases |
+| `pnpm run taxonomy:sync` | Apply the category taxonomy (`data/taxonomy.json`); run after migrations on every deploy |
 
 ## Architecture
 

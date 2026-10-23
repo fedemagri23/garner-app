@@ -3,6 +3,7 @@ import type { AddressInfo } from 'node:net';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import type { App } from 'supertest/types';
+import { CorePrismaService } from '../src/common/database/core-prisma.service.js';
 import { RedisService } from '../src/common/redis/redis.service.js';
 import { PRODUCT_FACTS_SOURCE } from '../src/products/domain/product-facts.js';
 import { CachedProductFacts } from '../src/products/infrastructure/cached-product-facts.js';
@@ -92,6 +93,8 @@ describe('Barcode lookup (e2e)', () => {
 
     const admin = (await registerWithRole(app, 'ADMIN')).accessToken;
     dairyId = (await http().post('/v1/categories').set(auth(admin)).send({ name: 'Lácteos' }).expect(201)).body.id;
+    // The taxonomy file gives each category the Open Food Facts tags that map to it.
+    await app.get(CorePrismaService).category.update({ where: { id: dairyId }, data: { offTags: ['en:dairies'] } });
     categoryId = (await http().post('/v1/categories').set(auth(admin)).send({ name: 'Almacén' }).expect(201)).body.id;
     await http()
       .post('/v1/products')

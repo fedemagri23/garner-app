@@ -4034,6 +4034,35 @@
           }
         }
       },
+      "CategorySynonyms": {
+        "type": "object",
+        "properties": {
+          "es": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "en": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "de": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pt": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "CategoryResponse": {
         "type": "object",
         "properties": {
@@ -4053,6 +4082,23 @@
               }
             ]
           },
+          "icon": {
+            "type": "string",
+            "nullable": true,
+            "description": "MaterialCommunityIcons name; departments only"
+          },
+          "position": {
+            "type": "number",
+            "description": "Aisle order within the parent, or among departments"
+          },
+          "synonyms": {
+            "description": "Search words per language",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CategorySynonyms"
+              }
+            ]
+          },
           "slug": {
             "type": "string"
           },
@@ -4066,6 +4112,9 @@
           "id",
           "name",
           "translations",
+          "icon",
+          "position",
+          "synonyms",
           "slug",
           "parentId"
         ]
