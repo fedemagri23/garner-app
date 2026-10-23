@@ -17,6 +17,10 @@ import {
 } from '../../optimization/domain/optimization.repository.port.js';
 import type { Plan } from '../../optimization/domain/plan.js';
 import type { OptimizationMode } from '../../optimization/domain/scoring.js';
+import {
+  DERIVED_PRICE_REPOSITORY,
+  type DerivedPriceRepository,
+} from '../../price-intelligence/domain/price-intelligence.repository.port.js';
 import type { AuthenticatedUser } from '../../security/domain/authenticated-user.js';
 import { CatalogReferences } from '../../shopping-lists/application/catalog-references.js';
 import { ShoppingListAccess } from '../../shopping-lists/application/shopping-list-access.js';
@@ -65,6 +69,8 @@ export class StartShoppingSessionUseCase {
     @Inject(OPTIMIZATION_REQUEST_REPOSITORY)
     private readonly optimizations: OptimizationRequestRepository,
     private readonly events: EventBus,
+    @Inject(DERIVED_PRICE_REPOSITORY)
+    private readonly prices: DerivedPriceRepository,
   ) {}
 
   async execute(
@@ -108,6 +114,9 @@ export class StartShoppingSessionUseCase {
     const planned = command.optimizationId
       ? await this.plannedLines(actor, list.id, command.optimizationId, command.mode)
       : new Map<string, PlannedLine>();
+    const atStore = command.storeId
+      ? await this.pricesAt(command.storeId, list.currency, list.items.map((item) => item.productId))
+      : new Map<string, number>();
 
     const { session, created } = await this.sessions.start({
       id: command.id,
@@ -130,7 +139,9 @@ export class StartShoppingSessionUseCase {
           productId: item.productId,
           quantity: item.quantity,
           notes: item.notes,
-          expectedUnitPriceCents: plan?.unitPriceCents ?? item.expectedUnitPriceCents,
+          // At one store, what that store charges; the list's estimate where it has no price.
+          expectedUnitPriceCents:
+            plan?.unitPriceCents ?? atStore.get(item.productId) ?? item.expectedUnitPriceCents,
           // Shopping a single store means every line is bought there, whatever
           // store each item had been pencilled in for.
           storeId: command.storeId ?? plan?.storeId ?? item.selectedStoreId,
@@ -152,6 +163,14 @@ export class StartShoppingSessionUseCase {
     }
 
     return session;
+  }
+
+  /** What the store currently charges for each product, in the list's currency. */
+  private async pricesAt(storeId: string, currency: string, productIds: string[]): Promise<Map<string, number>> {
+    const prices = await this.prices.findForProductsAtStores([...new Set(productIds)], [storeId]);
+    return new Map(
+      prices.filter((price) => price.currency === currency).map((price) => [price.productId, price.priceCents]),
+    );
   }
 
   /** The chosen plan's store and price for each product it places. */

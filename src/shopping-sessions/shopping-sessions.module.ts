@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { OptimizationModule } from '../optimization/optimization.module.js';
+import { PriceIntelligenceModule } from '../price-intelligence/price-intelligence.module.js';
 import { ShoppingListsModule } from '../shopping-lists/shopping-lists.module.js';
 import { ChangeSessionStatusUseCase } from './application/change-session-status.use-case.js';
 import { ListShoppingSessionsUseCase } from './application/list-shopping-sessions.use-case.js';
@@ -18,7 +19,7 @@ import { ShoppingSessionsController } from './presentation/shopping-sessions.con
  * for the pricing work phase 4 hangs off it.
  */
 @Module({
-  imports: [ShoppingListsModule, OptimizationModule],
+  imports: [ShoppingListsModule, OptimizationModule, PriceIntelligenceModule],
   controllers: [ShoppingSessionsController],
   providers: [
     StartShoppingSessionUseCase,

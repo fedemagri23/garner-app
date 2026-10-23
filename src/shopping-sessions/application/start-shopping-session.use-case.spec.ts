@@ -1,5 +1,6 @@
 import { ConflictException } from '@nestjs/common';
 import type { EventBus } from '../../common/events/event-bus.js';
+import type { DerivedPriceRepository } from '../../price-intelligence/domain/price-intelligence.repository.port.js';
 import type { AuthenticatedUser } from '../../security/domain/authenticated-user.js';
 import type { CatalogReferences } from '../../shopping-lists/application/catalog-references.js';
 import type { ShoppingListAccess } from '../../shopping-lists/application/shopping-list-access.js';
@@ -56,6 +57,7 @@ describe('StartShoppingSessionUseCase', () => {
   let catalog: { requireStore: jest.Mock };
   let optimizations: { findById: jest.Mock };
   let events: { publish: jest.Mock };
+  let prices: { findForProductsAtStores: jest.Mock };
   let useCase: StartShoppingSessionUseCase;
 
   beforeEach(() => {
@@ -67,6 +69,7 @@ describe('StartShoppingSessionUseCase', () => {
     catalog = { requireStore: jest.fn() };
     optimizations = { findById: jest.fn().mockResolvedValue(null) };
     events = { publish: jest.fn() };
+    prices = { findForProductsAtStores: jest.fn().mockResolvedValue([]) };
 
     useCase = new StartShoppingSessionUseCase(
       sessions as unknown as ShoppingSessionRepository,
@@ -74,6 +77,7 @@ describe('StartShoppingSessionUseCase', () => {
       catalog as unknown as CatalogReferences,
       optimizations as unknown as OptimizationRequestRepository,
       events as unknown as EventBus,
+      prices as unknown as DerivedPriceRepository,
     );
   });
 
@@ -107,6 +111,21 @@ describe('StartShoppingSessionUseCase', () => {
     const lines = sessions.start.mock.calls[0][0].items;
     expect(lines.every((line: { storeId: string }) => line.storeId === 'store-a')).toBe(true);
     expect(catalog.requireStore).toHaveBeenCalledWith('store-a');
+  });
+
+  it('expects what the shopped store charges, keeping the list\'s estimate where it has no price', async () => {
+    prices.findForProductsAtStores.mockResolvedValue([
+      { productId: 'milk', storeId: 'store-a', currency: 'ARS', priceCents: 140 },
+      // In another currency: not comparable with the list's.
+      { productId: 'bread', storeId: 'store-a', currency: 'EUR', priceCents: 2 },
+    ]);
+
+    await useCase.execute(actor, { listId: 'list-1', storeId: 'store-a' });
+
+    const lines = sessions.start.mock.calls[0][0].items;
+    expect(lines.map((line: { productId: string; expectedUnitPriceCents: number }) => [line.productId, line.expectedUnitPriceCents]))
+      .toEqual([['milk', 140], ['bread', 89]]);
+    expect(prices.findForProductsAtStores).toHaveBeenCalledWith(expect.arrayContaining(['milk', 'bread']), ['store-a']);
   });
 
   it('publishes ShoppingSessionStarted only when a trip was actually created', async () => {
