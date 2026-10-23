@@ -607,6 +607,62 @@
         ]
       }
     },
+    "/v1/product-lookup/{code}": {
+      "get": {
+        "description": "For filling in \"Agregar producto\". CATALOG: open that product instead. OPEN_FOOD_FACTS: suggested fields, to be checked by the shopper; credit the source. NONE also when the outside service failed.",
+        "operationId": "productLookupLookup",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "language",
+            "required": false,
+            "in": "query",
+            "description": "Which of the product’s names to prefer",
+            "schema": {
+              "default": "es",
+              "type": "string",
+              "enum": [
+                "es",
+                "en",
+                "de",
+                "pt"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BarcodeLookupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not a valid barcode"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "What a barcode is: in our catalog, or what Open Food Facts knows of it",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
     "/v1/product-suggestions": {
       "get": {
         "operationId": "productSuggestionsSuggest",
@@ -3832,7 +3888,8 @@
             "enum": [
               "es",
               "en",
-              "de"
+              "de",
+              "pt"
             ],
             "description": "What push and email are written in"
           },
@@ -3864,7 +3921,8 @@
             "enum": [
               "es",
               "en",
-              "de"
+              "de",
+              "pt"
             ],
             "description": "The app’s language; push and email follow it"
           }
@@ -3968,6 +4026,11 @@
             "type": "string",
             "maxLength": 80,
             "example": "Milchprodukte"
+          },
+          "pt": {
+            "type": "string",
+            "maxLength": 80,
+            "example": "Laticínios"
           }
         }
       },
@@ -3983,7 +4046,7 @@
             "description": "In Spanish"
           },
           "translations": {
-            "description": "The name in English and German, where written",
+            "description": "The name in English, German and Portuguese, where written",
             "allOf": [
               {
                 "$ref": "#/components/schemas/CategoryTranslations"
@@ -4071,6 +4134,14 @@
             "type": "string",
             "nullable": true
           },
+          "imageSource": {
+            "type": "string",
+            "enum": [
+              "OPEN_FOOD_FACTS"
+            ],
+            "nullable": true,
+            "description": "Where the picture comes from when not the team’s: credit it (CC BY-SA)"
+          },
           "isActive": {
             "type": "boolean"
           },
@@ -4107,6 +4178,7 @@
           "unit",
           "packageLabel",
           "imageUrl",
+          "imageSource",
           "isActive",
           "barcodes",
           "origin",
@@ -4199,6 +4271,10 @@
               "LITER",
               "UNIT"
             ]
+          },
+          "photoFromLookup": {
+            "type": "boolean",
+            "description": "Use the photo of the first barcode found by `/v1/product-lookup` (Open Food Facts), credited; the server takes it from its own lookup, never from a link"
           },
           "imageUrl": {
             "type": "string",
@@ -4309,6 +4385,75 @@
         },
         "required": [
           "name"
+        ]
+      },
+      "BarcodeLookupResponse": {
+        "type": "object",
+        "properties": {
+          "match": {
+            "type": "string",
+            "enum": [
+              "CATALOG",
+              "OPEN_FOOD_FACTS",
+              "NONE"
+            ]
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "CATALOG only"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "brandName": {
+            "type": "string",
+            "nullable": true
+          },
+          "packageSize": {
+            "type": "number",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "GRAM",
+              "KILOGRAM",
+              "MILLILITER",
+              "LITER",
+              "UNIT"
+            ],
+            "nullable": true
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Ours, mapped from their categories"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Their front photo (CC BY-SA): credit it"
+          },
+          "sourceUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "The product’s page there, for the credit"
+          }
+        },
+        "required": [
+          "match",
+          "productId",
+          "name",
+          "brandName",
+          "packageSize",
+          "unit",
+          "categoryId",
+          "imageUrl",
+          "sourceUrl"
         ]
       },
       "ProductSuggestionResponse": {

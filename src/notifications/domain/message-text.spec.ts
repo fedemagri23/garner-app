@@ -25,6 +25,8 @@ describe('formatMoney', () => {
     expect(formatMoney(115, 'EUR', 'en')).toBe('€1.15');
     expect(formatMoney(139000, 'ARS', 'de')).toBe('1.390\u00a0ARS');
     expect(formatMoney(115, 'EUR', 'de')).toBe('1,15\u00a0€');
+    expect(formatMoney(139000, 'ARS', 'pt')).toBe('AR$ 1.390');
+    expect(formatMoney(1990, 'BRL', 'pt')).toBe('R$ 19,90');
   });
 });
 
@@ -86,6 +88,13 @@ describe('the other words outside the app', () => {
       'Dejar de recibir estos emails: https://x.test/u',
     ]);
     expect(emailFooter('de', 'https://x.test/u')[2]).toBe('Diese E-Mails abbestellen: https://x.test/u');
+  });
+
+  it('speaks Portuguese', () => {
+    expect(messageText(notification(), names, 'pt')).toEqual({
+      title: 'Leche entera 1 L caiu para AR$ 1.390',
+      body: 'Em Día Almagro, abaixo do preço que você pediu.',
+    });
   });
 
   it('writes the test push in each language', () => {

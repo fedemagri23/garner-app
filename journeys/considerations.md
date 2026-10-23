@@ -366,3 +366,15 @@ Notation: [`README.md`](README.md).
 - **What:** Starting a trip with `storeId` (the app now sends the shop it detects) sets each line's expected unit price to that store's current derived price in the list's currency, read through `DERIVED_PRICE_REPOSITORY`; a product with no price there keeps the list's estimate. A plan's prices still win when following a plan.
 - **Why:** The list's estimate is the cheapest nearby when the item was added, usually at another store; "Esperado" should be what this shelf is likely to say.
 - **Revisit when:** Prices at the store change during a long trip, or the list's currency and the store's differ (the app does not send the store then).
+
+### CON-058 — Barcode lookup through Open Food Facts, from the server, only as a suggestion
+- **Phase:** post-plan (mobile phase 9, checkpoint 16) · **Area:** products · **Status:** accepted
+- **What:** `GET /v1/product-lookup/{code}?language=` answers CATALOG (our product: open it), OPEN_FOOD_FACTS (name in the shopper's language, first brand, size and unit parsed from the printed quantity, our category from their tags, front photo, their page) or NONE. The server asks `{OPEN_FOOD_FACTS_URL}/api/v2/product/{code}.json` with `OPEN_FOOD_FACTS_USER_AGENT`, a 3 s timeout and at most 90 reads a minute per process; answers are cached in Redis (found a week, missing a day, failures not cached), and any failure is NONE. Adding a product with `photoFromLookup: true` takes the photo of its first barcode from that cache, never from the request, and records `imageSource: OPEN_FOOD_FACTS` so the app credits it (CC BY-SA). Multipacks, two quantities and unknown units give no size rather than a wrong one. The default User-Agent names the project's repository; set the variable to a contact address before launch, as they ask.
+- **Why:** Scanning an unknown code is the moment to add a product, and typing name, brand and size in an aisle is what makes people give up. The data is volunteers', so it only fills a form the shopper checks, and the product stays COMMUNITY.
+- **Revisit when:** Before launch: a legal look at the ODbL (we copy single products a shopper confirms, never in bulk) and the photo credit; or when Argentine coverage proves too thin and another source is wanted.
+
+### CON-059 — Portuguese is the fourth language
+- **Phase:** post-plan (mobile phase 9) · **Area:** i18n · **Status:** accepted
+- **What:** `pt` joins `LANGUAGES`: push, test push and email phrases in Brazilian Portuguese, money as `AR$ 1.390`, `€ 1,15`, `R$ 19,90`, category translations (`pt`) seeded, and the lookup prefers `product_name_pt`.
+- **Why:** Asked for by the user; Brazil is the largest neighbouring market and its shoppers travel to Argentina.
+- **Revisit when:** European Portuguese wording is wanted (this is pt-BR).

@@ -4,7 +4,7 @@
  * Spanish (Argentina) is where Garner started and what an account without a
  * choice gets.
  */
-export const LANGUAGES = ['es', 'en', 'de'] as const;
+export const LANGUAGES = ['es', 'en', 'de', 'pt'] as const;
 export type Language = (typeof LANGUAGES)[number];
 export const DEFAULT_LANGUAGE: Language = 'es';
 
@@ -21,7 +21,7 @@ export type Translations = Partial<Record<Exclude<Language, 'es'>, string>>;
 export function asTranslations(value: unknown): Translations {
   if (typeof value !== 'object' || value === null) return {};
   const out: Translations = {};
-  for (const language of ['en', 'de'] as const) {
+  for (const language of ['en', 'de', 'pt'] as const) {
     const name = (value as Record<string, unknown>)[language];
     if (typeof name === 'string' && name.trim()) out[language] = name.trim();
   }

@@ -110,6 +110,14 @@ export class AppConfigService {
     return this.get('MAX_REQUEST_BODY_KB') * 1024;
   }
 
+  get openFoodFactsUrl(): string {
+    return this.get('OPEN_FOOD_FACTS_URL');
+  }
+
+  get openFoodFactsUserAgent(): string {
+    return this.get('OPEN_FOOD_FACTS_USER_AGENT');
+  }
+
   get expoPushUrl(): string {
     return this.get('EXPO_PUSH_URL');
   }

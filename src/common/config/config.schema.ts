@@ -52,6 +52,12 @@ export const configSchema = z.object({
   EXPO_PUSH_URL: z.url().default('https://exp.host/--/api/v2/push/send'),
   EXPO_ACCESS_TOKEN: z.string().min(1).optional(),
 
+  // Open Food Facts, asked for what a barcode is when a shopper adds a
+  // product. Override the URL to point at a stand-in in tests. They ask every
+  // client to identify itself: "AppName/Version (contact)".
+  OPEN_FOOD_FACTS_URL: z.url().default('https://world.openfoodfacts.org'),
+  OPEN_FOOD_FACTS_USER_AGENT: z.string().min(3).default('Garner/0.1 (https://github.com/fedemagri23/garner-app)'),
+
   // Where this API is reachable from outside, for links in emails.
   PUBLIC_BASE_URL: z.url().default('http://localhost:3000'),
 

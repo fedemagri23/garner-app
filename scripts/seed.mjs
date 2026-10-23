@@ -211,10 +211,10 @@ async function main() {
     update: savedLocation,
   });
 
-  const almacen = await upsertCategory('Almacén', 'almacen', null, { en: 'Pantry', de: 'Vorrat' });
-  const lacteos = await upsertCategory('Lácteos', 'lacteos', null, { en: 'Dairy', de: 'Milchprodukte' });
-  const leche = await upsertCategory('Leche', 'leche', lacteos.id, { en: 'Milk', de: 'Milch' });
-  const bebidas = await upsertCategory('Bebidas', 'bebidas', null, { en: 'Drinks', de: 'Getränke' });
+  const almacen = await upsertCategory('Almacén', 'almacen', null, { en: 'Pantry', de: 'Vorrat', pt: 'Mercearia' });
+  const lacteos = await upsertCategory('Lácteos', 'lacteos', null, { en: 'Dairy', de: 'Milchprodukte', pt: 'Laticínios' });
+  const leche = await upsertCategory('Leche', 'leche', lacteos.id, { en: 'Milk', de: 'Milch', pt: 'Leite' });
+  const bebidas = await upsertCategory('Bebidas', 'bebidas', null, { en: 'Drinks', de: 'Getränke', pt: 'Bebidas' });
 
   const serenisima = await upsertBrand('La Serenísima', 'la-serenisima', 'la serenisima');
   const arcor = await upsertBrand('Arcor', 'arcor', 'arcor');

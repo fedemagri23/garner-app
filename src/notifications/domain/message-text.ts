@@ -14,6 +14,7 @@ const STYLES: Record<
   es: { group: '.', decimal: ',', symbolAfter: false, space: ' ', symbols: { ARS: '$', EUR: '€', USD: 'US$' } },
   en: { group: ',', decimal: '.', symbolAfter: false, space: '', symbols: { ARS: 'AR$', EUR: '€', USD: 'US$' } },
   de: { group: '.', decimal: ',', symbolAfter: true, space: ' ', symbols: { ARS: 'ARS', EUR: '€', USD: 'US$' } },
+  pt: { group: '.', decimal: ',', symbolAfter: false, space: ' ', symbols: { ARS: 'AR$', EUR: '€', USD: 'US$', BRL: 'R$' } },
 };
 
 /**
@@ -87,6 +88,18 @@ const PHRASES: Record<Language, Phrases> = {
     emailWhy: 'Du bekommst diese E-Mail, weil du E-Mail-Benachrichtigungen in Garner aktiviert hast.',
     emailStop: (url) => `Diese E-Mails abbestellen: ${url}`,
     testBody: 'Wenn du das siehst, funktionieren Benachrichtigungen auf diesem Handy.',
+  },
+  pt: {
+    somewhere: 'um supermercado perto de você',
+    belowTitle: (product, price) => `${product} caiu para ${price}`,
+    belowBody: (store) => `Em ${store ?? 'um supermercado perto de você'}, abaixo do preço que você pediu.`,
+    dropTitle: (product, percent) => (percent ? `${product}: −${percent}%` : `${product} baixou de preço`),
+    dropBody: (where, price, before) => (before ? `${where} tem por ${price}, antes ${before}.` : `${where} tem por ${price}.`),
+    nearbyTitle: (product) => `${product} mais barato perto`,
+    nearbyBody: (where, price) => `${where} agora é o mais barato perto de você, por ${price}.`,
+    emailWhy: 'Você recebe isto porque ativou os avisos por e-mail no Garner.',
+    emailStop: (url) => `Parar de receber estes e-mails: ${url}`,
+    testBody: 'Se você está vendo isto, os avisos funcionam neste celular.',
   },
 };
 

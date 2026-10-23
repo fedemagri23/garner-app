@@ -30,6 +30,7 @@ import {
   type ProductRepository,
 } from '../domain/product.repository.port.js';
 import type { UnitOfMeasure } from '../domain/unit-of-measure.js';
+import { LookUpBarcodeUseCase } from './look-up-barcode.use-case.js';
 
 export interface CreateProductCommand {
   /** Chosen by the phone when it adds one offline, so sending it twice adds it once. */
@@ -43,6 +44,8 @@ export interface CreateProductCommand {
   packageSize?: number;
   unit: UnitOfMeasure;
   imageUrl?: string;
+  /** Take the picture Open Food Facts has for the first barcode (credited). */
+  photoFromLookup?: boolean;
   barcodes?: string[];
 }
 
@@ -68,6 +71,7 @@ export class CreateProductUseCase {
     @Inject(BRAND_REPOSITORY) private readonly brands: BrandRepository,
     @Inject(COMMUNITY_REPOSITORY) private readonly community: CommunityRepository,
     private readonly policy: CommunityPolicy,
+    private readonly lookup: LookUpBarcodeUseCase,
   ) {}
 
   async execute(command: CreateProductCommand, actor: AuthenticatedUser): Promise<Product> {
@@ -133,6 +137,9 @@ export class CreateProductUseCase {
       throw new ConflictException(`This product is already in the catalog: ${twin.name}`);
     }
 
+    const photo =
+      command.photoFromLookup && codes[0] ? ((await this.lookup.factsFor(codes[0]))?.imageUrl ?? null) : null;
+
     const product = await this.products.create({
       id: command.id,
       name: command.name.trim(),
@@ -142,7 +149,10 @@ export class CreateProductUseCase {
       categoryId: command.categoryId,
       packageSize: command.packageSize ?? null,
       unit: command.unit,
-      imageUrl: fromTeam ? (command.imageUrl ?? null) : null,
+      // A link from a shopper is never taken; Open Food Facts' picture is, read
+      // from the server's own lookup of the barcode.
+      imageUrl: (fromTeam ? command.imageUrl : undefined) ?? photo,
+      imageSource: (fromTeam && command.imageUrl) || !photo ? null : 'OPEN_FOOD_FACTS',
       origin: fromTeam ? CatalogOrigin.Verified : CatalogOrigin.Community,
       createdById: fromTeam ? null : actor.id,
       weight: fromTeam ? VERIFIED_BONUS : 0,

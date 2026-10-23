@@ -138,7 +138,7 @@ describe('product identity', () => {
 
   describe('CreateProductUseCase', () => {
     it('stores the normalized name alongside the display name', async () => {
-      const useCase = new CreateProductUseCase(products, categories, brands, community as never, policy as never);
+      const useCase = new CreateProductUseCase(products, categories, brands, community as never, policy as never, { factsFor: jest.fn() } as never);
 
       await useCase.execute({
         name: 'Leche Entera 1L',
@@ -156,7 +156,7 @@ describe('product identity', () => {
     });
 
     it('rejects a barcode that fails its checksum', async () => {
-      const useCase = new CreateProductUseCase(products, categories, brands, community as never, policy as never);
+      const useCase = new CreateProductUseCase(products, categories, brands, community as never, policy as never, { factsFor: jest.fn() } as never);
 
       await expect(
         useCase.execute({
@@ -172,7 +172,7 @@ describe('product identity', () => {
 
     it('refuses to give one barcode to a second product', async () => {
       products.findByBarcode.mockResolvedValue(milk);
-      const useCase = new CreateProductUseCase(products, categories, brands, community as never, policy as never);
+      const useCase = new CreateProductUseCase(products, categories, brands, community as never, policy as never, { factsFor: jest.fn() } as never);
 
       await expect(
         useCase.execute({
@@ -187,7 +187,7 @@ describe('product identity', () => {
     });
 
     it('marks the first barcode primary and the rest secondary', async () => {
-      const useCase = new CreateProductUseCase(products, categories, brands, community as never, policy as never);
+      const useCase = new CreateProductUseCase(products, categories, brands, community as never, policy as never, { factsFor: jest.fn() } as never);
 
       await useCase.execute({
         name: 'Leche Entera 1L',
@@ -213,7 +213,7 @@ describe('product identity', () => {
 
   describe('who adds a product', () => {
     const create = (actor: typeof shopper | typeof moderator, extra = {}) =>
-      new CreateProductUseCase(products, categories, brands, community as never, policy as never).execute(
+      new CreateProductUseCase(products, categories, brands, community as never, policy as never, { factsFor: jest.fn() } as never).execute(
         { name: 'Leche Entera 1L', categoryId: 'cat-1', unit: UnitOfMeasure.Liter, packageSize: 1, imageUrl: 'https://x.test/a.png', ...extra },
         actor,
       );

@@ -3,6 +3,9 @@ import { normalizeText } from '../../common/text/normalize.js';
 import type { CatalogOrigin, ModerationStatus } from '../../community/domain/catalog-origin.js';
 import type { UnitOfMeasure } from './unit-of-measure.js';
 
+/** Pictures from outside the team, credited where shown. */
+export type ImageSource = 'OPEN_FOOD_FACTS';
+
 /** A brand as the catalog exposes it. */
 export interface Brand {
   id: string;
@@ -43,6 +46,8 @@ export interface Product {
   packageSize: number | null;
   unit: UnitOfMeasure;
   imageUrl: string | null;
+  /** Where a picture not taken by the team came from, to credit it. */
+  imageSource: ImageSource | null;
   isActive: boolean;
   barcodes: ProductBarcode[];
   /** The team's, or added by a shopper (`createdById`). */
@@ -66,6 +71,7 @@ export interface CreateProductInput {
   packageSize: number | null;
   unit: UnitOfMeasure;
   imageUrl: string | null;
+  imageSource?: ImageSource | null;
   /** Absent for the team's products; a shopper's are COMMUNITY with their id. */
   origin?: CatalogOrigin;
   createdById?: string | null;

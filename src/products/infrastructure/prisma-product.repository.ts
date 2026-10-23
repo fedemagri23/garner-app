@@ -107,6 +107,7 @@ export class PrismaProductRepository implements ProductRepository {
         packageSize: input.packageSize,
         unit: input.unit,
         imageUrl: input.imageUrl,
+        imageSource: input.imageSource ?? null,
         origin: input.origin,
         createdById: input.createdById,
         weight: input.weight,
@@ -226,6 +227,7 @@ export class PrismaProductRepository implements ProductRepository {
       packageSize: row.packageSize === null ? null : Number(row.packageSize),
       unit: row.unit as UnitOfMeasure,
       imageUrl: row.imageUrl,
+      imageSource: row.imageSource === 'OPEN_FOOD_FACTS' ? 'OPEN_FOOD_FACTS' : null,
       isActive: row.isActive,
       barcodes: row.barcodes.map((barcode) => ({
         code: barcode.code,

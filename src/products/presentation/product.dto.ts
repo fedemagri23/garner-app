@@ -46,12 +46,18 @@ export class CategoryTranslations {
   @IsString()
   @MaxLength(80)
   de?: string;
+
+  @ApiPropertyOptional({ maxLength: 80, example: 'Laticínios' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  pt?: string;
 }
 
 export class CategoryResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ description: 'In Spanish' }) name!: string;
-  @ApiProperty({ type: CategoryTranslations, description: 'The name in English and German, where written' })
+  @ApiProperty({ type: CategoryTranslations, description: 'The name in English, German and Portuguese, where written' })
   translations!: CategoryTranslations;
   @ApiProperty() slug!: string;
   @ApiProperty({ type: String, format: 'uuid', nullable: true }) parentId!: string | null;
@@ -85,6 +91,12 @@ export class ProductResponse {
   @ApiProperty({ type: String, nullable: true, example: '1 L' })
   packageLabel!: string | null;
   @ApiProperty({ type: String, nullable: true }) imageUrl!: string | null;
+  @ApiProperty({
+    enum: ['OPEN_FOOD_FACTS'],
+    nullable: true,
+    description: 'Where the picture comes from when not the team’s: credit it (CC BY-SA)',
+  })
+  imageSource!: 'OPEN_FOOD_FACTS' | null;
   @ApiProperty() isActive!: boolean;
   @ApiProperty({ type: [ProductBarcodeResponse] })
   barcodes!: ProductBarcodeResponse[];
@@ -108,6 +120,7 @@ export class ProductResponse {
       unit: product.unit,
       packageLabel: formatPackageSize(product.packageSize, product.unit),
       imageUrl: product.imageUrl,
+      imageSource: product.imageSource,
       isActive: product.isActive,
       barcodes: product.barcodes,
       origin: product.origin,
@@ -198,6 +211,15 @@ export class CreateProductRequest {
   @ApiProperty({ enum: UNITS })
   @IsEnum(UNITS)
   unit!: UnitOfMeasure;
+
+  @ApiPropertyOptional({
+    description:
+      'Use the photo of the first barcode found by `/v1/product-lookup` (Open Food Facts), credited; ' +
+      'the server takes it from its own lookup, never from a link',
+  })
+  @IsOptional()
+  @IsBoolean()
+  photoFromLookup?: boolean;
 
   @ApiPropertyOptional({ format: 'uri', description: 'Taken from the team only; ignored for shoppers' })
   @IsOptional()
