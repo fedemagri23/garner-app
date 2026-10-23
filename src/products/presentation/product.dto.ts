@@ -67,8 +67,6 @@ export class CategoryResponse {
   @ApiProperty({ description: 'In Spanish' }) name!: string;
   @ApiProperty({ type: CategoryTranslations, description: 'The name in English, German and Portuguese, where written' })
   translations!: CategoryTranslations;
-  @ApiProperty({ type: String, nullable: true, description: 'MaterialCommunityIcons name; departments only' })
-  icon!: string | null;
   @ApiProperty({ description: 'Aisle order within the parent, or among departments' }) position!: number;
   @ApiProperty({ type: CategorySynonyms, description: 'Search words per language' })
   synonyms!: CategorySynonyms;
@@ -80,7 +78,6 @@ export class CategoryResponse {
       id: category.id,
       name: category.name,
       translations: category.translations,
-      icon: category.icon,
       position: category.position,
       synonyms: category.synonyms,
       slug: category.slug,

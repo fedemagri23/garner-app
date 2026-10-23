@@ -5,7 +5,6 @@
    "slug": "almacen",
    "parent": null,
    "position": 0,
-   "icon": "basket-outline",
    "names": {
     "es": "Almacén",
     "en": "Pantry",
@@ -34,7 +33,6 @@
    "slug": "arroz-legumbres",
    "parent": "almacen",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Arroz y legumbres",
     "en": "Rice and pulses",
@@ -62,7 +60,6 @@
    "slug": "pastas-secas",
    "parent": "almacen",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Pastas secas",
     "en": "Dried pasta",
@@ -86,7 +83,6 @@
    "slug": "harinas",
    "parent": "almacen",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Harinas y premezclas",
     "en": "Flour and baking mixes",
@@ -110,7 +106,6 @@
    "slug": "aceites",
    "parent": "almacen",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Aceites y vinagres",
     "en": "Oils and vinegars",
@@ -136,7 +131,6 @@
    "slug": "azucar",
    "parent": "almacen",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Azúcar y endulzantes",
     "en": "Sugar and sweeteners",
@@ -159,7 +153,6 @@
    "slug": "especias",
    "parent": "almacen",
    "position": 5,
-   "icon": null,
    "names": {
     "es": "Sal, especias y condimentos",
     "en": "Salt, spices and seasonings",
@@ -184,7 +177,6 @@
    "slug": "conservas",
    "parent": "almacen",
    "position": 6,
-   "icon": null,
    "names": {
     "es": "Conservas",
     "en": "Tinned food",
@@ -210,7 +202,6 @@
    "slug": "salsas",
    "parent": "almacen",
    "position": 7,
-   "icon": null,
    "names": {
     "es": "Salsas, aderezos y mayonesa",
     "en": "Sauces and dressings",
@@ -237,7 +228,6 @@
    "slug": "sopas",
    "parent": "almacen",
    "position": 8,
-   "icon": null,
    "names": {
     "es": "Sopas, caldos y puré instantáneo",
     "en": "Soups, stock and instant mash",
@@ -261,7 +251,6 @@
    "slug": "reposteria",
    "parent": "almacen",
    "position": 9,
-   "icon": null,
    "names": {
     "es": "Repostería",
     "en": "Baking",
@@ -285,7 +274,6 @@
    "slug": "desayuno",
    "parent": null,
    "position": 1,
-   "icon": "coffee-outline",
    "names": {
     "es": "Desayuno y merienda",
     "en": "Breakfast",
@@ -312,7 +300,6 @@
    "slug": "cafe",
    "parent": "desayuno",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Café",
     "en": "Coffee",
@@ -336,7 +323,6 @@
    "slug": "yerba",
    "parent": "desayuno",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Yerba mate",
     "en": "Yerba mate",
@@ -358,7 +344,6 @@
    "slug": "te",
    "parent": "desayuno",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Té e infusiones",
     "en": "Tea and infusions",
@@ -382,7 +367,6 @@
    "slug": "cacao",
    "parent": "desayuno",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Cacao y chocolate en polvo",
     "en": "Cocoa and chocolate drinks",
@@ -405,7 +389,6 @@
    "slug": "cereales",
    "parent": "desayuno",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Cereales, avena y granola",
     "en": "Cereal, oats and granola",
@@ -430,7 +413,6 @@
    "slug": "galletitas-dulces",
    "parent": "desayuno",
    "position": 5,
-   "icon": null,
    "names": {
     "es": "Galletitas dulces",
     "en": "Sweet biscuits",
@@ -454,7 +436,6 @@
    "slug": "galletitas-saladas",
    "parent": "desayuno",
    "position": 6,
-   "icon": null,
    "names": {
     "es": "Galletitas saladas y tostadas",
     "en": "Crackers and toasts",
@@ -477,7 +458,6 @@
    "slug": "mermeladas",
    "parent": "desayuno",
    "position": 7,
-   "icon": null,
    "names": {
     "es": "Mermeladas, dulces y miel",
     "en": "Jams, preserves and honey",
@@ -501,7 +481,6 @@
    "slug": "untables",
    "parent": "desayuno",
    "position": 8,
-   "icon": null,
    "names": {
     "es": "Dulce de leche y untables",
     "en": "Dulce de leche and spreads",
@@ -526,7 +505,6 @@
    "slug": "lacteos",
    "parent": null,
    "position": 2,
-   "icon": "cheese",
    "names": {
     "es": "Lácteos y huevos",
     "en": "Dairy and eggs",
@@ -555,7 +533,6 @@
    "slug": "leche",
    "parent": "lacteos",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Leche",
     "en": "Milk",
@@ -578,7 +555,6 @@
    "slug": "bebidas-vegetales",
    "parent": "lacteos",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Bebidas vegetales",
     "en": "Plant drinks",
@@ -603,7 +579,6 @@
    "slug": "yogures",
    "parent": "lacteos",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Yogures",
     "en": "Yoghurt",
@@ -624,7 +599,6 @@
    "slug": "quesos",
    "parent": "lacteos",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Quesos",
     "en": "Cheese",
@@ -646,7 +620,6 @@
    "slug": "manteca-crema",
    "parent": "lacteos",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Manteca, crema y margarina",
     "en": "Butter, cream and margarine",
@@ -670,7 +643,6 @@
    "slug": "postres-lacteos",
    "parent": "lacteos",
    "position": 5,
-   "icon": null,
    "names": {
     "es": "Postres lácteos",
     "en": "Dairy desserts",
@@ -692,7 +664,6 @@
    "slug": "huevos",
    "parent": "lacteos",
    "position": 6,
-   "icon": null,
    "names": {
     "es": "Huevos",
     "en": "Eggs",
@@ -714,7 +685,6 @@
    "slug": "frutas-verduras",
    "parent": null,
    "position": 3,
-   "icon": "food-apple-outline",
    "names": {
     "es": "Frutas y verduras",
     "en": "Fruit and vegetables",
@@ -746,7 +716,6 @@
    "slug": "frutas",
    "parent": "frutas-verduras",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Frutas",
     "en": "Fruit",
@@ -769,7 +738,6 @@
    "slug": "verduras",
    "parent": "frutas-verduras",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Verduras",
     "en": "Vegetables",
@@ -793,7 +761,6 @@
    "slug": "hierbas",
    "parent": "frutas-verduras",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Hierbas frescas",
     "en": "Fresh herbs",
@@ -815,7 +782,6 @@
    "slug": "frutos-secos",
    "parent": "frutas-verduras",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Frutos secos y deshidratados",
     "en": "Nuts and dried fruit",
@@ -838,7 +804,6 @@
    "slug": "ensaladas-listas",
    "parent": "frutas-verduras",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Ensaladas listas",
     "en": "Ready salads",
@@ -859,7 +824,6 @@
    "slug": "carnes",
    "parent": null,
    "position": 4,
-   "icon": "food-steak",
    "names": {
     "es": "Carnes y pescados",
     "en": "Meat and fish",
@@ -888,7 +852,6 @@
    "slug": "vacuna",
    "parent": "carnes",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Carne vacuna",
     "en": "Beef",
@@ -912,7 +875,6 @@
    "slug": "cerdo",
    "parent": "carnes",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Cerdo",
     "en": "Pork",
@@ -934,7 +896,6 @@
    "slug": "pollo",
    "parent": "carnes",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Pollo y aves",
     "en": "Chicken and poultry",
@@ -958,7 +919,6 @@
    "slug": "otras-carnes",
    "parent": "carnes",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Cordero y otras carnes",
     "en": "Lamb and other meat",
@@ -978,7 +938,6 @@
    "slug": "pescados",
    "parent": "carnes",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Pescados y mariscos",
     "en": "Fish and seafood",
@@ -1002,7 +961,6 @@
    "slug": "hamburguesas",
    "parent": "carnes",
    "position": 5,
-   "icon": null,
    "names": {
     "es": "Hamburguesas y milanesas",
     "en": "Burgers and breaded cutlets",
@@ -1025,7 +983,6 @@
    "slug": "fiambreria",
    "parent": null,
    "position": 5,
-   "icon": "sausage",
    "names": {
     "es": "Fiambres y quesos al corte",
     "en": "Deli",
@@ -1055,7 +1012,6 @@
    "slug": "jamones",
    "parent": "fiambreria",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Jamones y fiambres",
     "en": "Ham and cold cuts",
@@ -1079,7 +1035,6 @@
    "slug": "salames",
    "parent": "fiambreria",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Salames y embutidos",
     "en": "Salami and sausages",
@@ -1103,7 +1058,6 @@
    "slug": "salchichas",
    "parent": "fiambreria",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Salchichas",
     "en": "Hot dogs and frankfurters",
@@ -1126,7 +1080,6 @@
    "slug": "quesos-al-corte",
    "parent": "fiambreria",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Quesos al corte",
     "en": "Sliced cheese",
@@ -1146,7 +1099,6 @@
    "slug": "aceitunas",
    "parent": "fiambreria",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Aceitunas y encurtidos",
     "en": "Olives and pickles",
@@ -1168,7 +1120,6 @@
    "slug": "panaderia",
    "parent": null,
    "position": 6,
-   "icon": "baguette",
    "names": {
     "es": "Panadería",
     "en": "Bakery",
@@ -1195,7 +1146,6 @@
    "slug": "pan",
    "parent": "panaderia",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Pan",
     "en": "Bread",
@@ -1218,7 +1168,6 @@
    "slug": "pan-lactal",
    "parent": "panaderia",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Pan lactal y de molde",
     "en": "Sliced bread",
@@ -1241,7 +1190,6 @@
    "slug": "facturas",
    "parent": "panaderia",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Facturas y bollería",
     "en": "Pastries",
@@ -1265,7 +1213,6 @@
    "slug": "tortas",
    "parent": "panaderia",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Tortas y budines",
     "en": "Cakes",
@@ -1288,7 +1235,6 @@
    "slug": "pan-rallado",
    "parent": "panaderia",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Pan rallado y rebozadores",
     "en": "Breadcrumbs",
@@ -1309,7 +1255,6 @@
    "slug": "tapas",
    "parent": "panaderia",
    "position": 5,
-   "icon": null,
    "names": {
     "es": "Tapas de empanada y tarta",
     "en": "Pastry sheets",
@@ -1331,7 +1276,6 @@
    "slug": "congelados",
    "parent": null,
    "position": 7,
-   "icon": "snowflake",
    "names": {
     "es": "Congelados",
     "en": "Frozen",
@@ -1360,7 +1304,6 @@
    "slug": "verduras-congeladas",
    "parent": "congelados",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Verduras y papas congeladas",
     "en": "Frozen vegetables and chips",
@@ -1382,7 +1325,6 @@
    "slug": "comidas-congeladas",
    "parent": "congelados",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Comidas listas congeladas",
     "en": "Frozen ready meals",
@@ -1402,7 +1344,6 @@
    "slug": "pizzas",
    "parent": "congelados",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Pizzas y tartas",
     "en": "Pizza and pies",
@@ -1425,7 +1366,6 @@
    "slug": "rebozados",
    "parent": "congelados",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Rebozados y nuggets",
     "en": "Breaded and nuggets",
@@ -1447,7 +1387,6 @@
    "slug": "pescados-congelados",
    "parent": "congelados",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Pescados congelados",
     "en": "Frozen fish",
@@ -1469,7 +1408,6 @@
    "slug": "helados",
    "parent": "congelados",
    "position": 5,
-   "icon": null,
    "names": {
     "es": "Helados",
     "en": "Ice cream",
@@ -1491,7 +1429,6 @@
    "slug": "listos",
    "parent": null,
    "position": 8,
-   "icon": "food-takeout-box-outline",
    "names": {
     "es": "Comidas listas y frescas",
     "en": "Fresh and ready meals",
@@ -1521,7 +1458,6 @@
    "slug": "pastas-frescas",
    "parent": "listos",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Pastas frescas",
     "en": "Fresh pasta",
@@ -1545,7 +1481,6 @@
    "slug": "platos-preparados",
    "parent": "listos",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Platos preparados",
     "en": "Prepared dishes",
@@ -1567,7 +1502,6 @@
    "slug": "sandwiches",
    "parent": "listos",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Sándwiches y wraps",
     "en": "Sandwiches and wraps",
@@ -1588,7 +1522,6 @@
    "slug": "internacional",
    "parent": "listos",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Sushi y comida internacional",
     "en": "Sushi and world food",
@@ -1609,7 +1542,6 @@
    "slug": "snacks",
    "parent": null,
    "position": 9,
-   "icon": "candy-outline",
    "names": {
     "es": "Snacks y golosinas",
     "en": "Snacks and sweets",
@@ -1641,7 +1573,6 @@
    "slug": "papas-snacks",
    "parent": "snacks",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Papas fritas y snacks salados",
     "en": "Crisps and salty snacks",
@@ -1665,7 +1596,6 @@
    "slug": "chocolates",
    "parent": "snacks",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Chocolates y bombones",
     "en": "Chocolate",
@@ -1687,7 +1617,6 @@
    "slug": "alfajores",
    "parent": "snacks",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Alfajores",
     "en": "Alfajores",
@@ -1707,7 +1636,6 @@
    "slug": "caramelos",
    "parent": "snacks",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Caramelos, chicles y gomitas",
     "en": "Candy, gum and gummies",
@@ -1731,7 +1659,6 @@
    "slug": "barritas",
    "parent": "snacks",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Barritas",
     "en": "Cereal and protein bars",
@@ -1752,7 +1679,6 @@
    "slug": "frutos-secos-snack",
    "parent": "snacks",
    "position": 5,
-   "icon": null,
    "names": {
     "es": "Frutos secos para picar",
     "en": "Snack nuts",
@@ -1775,7 +1701,6 @@
    "slug": "bebidas",
    "parent": null,
    "position": 10,
-   "icon": "bottle-soda-outline",
    "names": {
     "es": "Bebidas",
     "en": "Drinks",
@@ -1804,7 +1729,6 @@
    "slug": "agua",
    "parent": "bebidas",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Agua",
     "en": "Water",
@@ -1828,7 +1752,6 @@
    "slug": "gaseosas",
    "parent": "bebidas",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Gaseosas",
     "en": "Soft drinks",
@@ -1855,7 +1778,6 @@
    "slug": "jugos",
    "parent": "bebidas",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Jugos y bebidas saborizadas",
     "en": "Juice and flavoured drinks",
@@ -1880,7 +1802,6 @@
    "slug": "isotonicas",
    "parent": "bebidas",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Isotónicas y energizantes",
     "en": "Sports and energy drinks",
@@ -1903,7 +1824,6 @@
    "slug": "cafe-te-listos",
    "parent": "bebidas",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Café y té listos",
     "en": "Iced coffee and tea",
@@ -1925,7 +1845,6 @@
    "slug": "polvos-bebida",
    "parent": "bebidas",
    "position": 5,
-   "icon": null,
    "names": {
     "es": "Polvos para preparar",
     "en": "Drink powders",
@@ -1947,7 +1866,6 @@
    "slug": "alcohol",
    "parent": null,
    "position": 11,
-   "icon": "glass-wine",
    "names": {
     "es": "Bebidas con alcohol",
     "en": "Alcohol",
@@ -1976,7 +1894,6 @@
    "slug": "cervezas",
    "parent": "alcohol",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Cervezas",
     "en": "Beer",
@@ -1997,7 +1914,6 @@
    "slug": "vinos",
    "parent": "alcohol",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Vinos",
     "en": "Wine",
@@ -2021,7 +1937,6 @@
    "slug": "espumantes",
    "parent": "alcohol",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Espumantes y sidras",
     "en": "Sparkling wine and cider",
@@ -2045,7 +1960,6 @@
    "slug": "aperitivos",
    "parent": "alcohol",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Aperitivos y fernet",
     "en": "Aperitifs and bitters",
@@ -2068,7 +1982,6 @@
    "slug": "destilados",
    "parent": "alcohol",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Destilados",
     "en": "Spirits",
@@ -2095,7 +2008,6 @@
    "slug": "licores",
    "parent": "alcohol",
    "position": 5,
-   "icon": null,
    "names": {
     "es": "Licores",
     "en": "Liqueurs",
@@ -2115,7 +2027,6 @@
    "slug": "limpieza",
    "parent": null,
    "position": 12,
-   "icon": "spray-bottle",
    "names": {
     "es": "Limpieza",
     "en": "Cleaning",
@@ -2143,7 +2054,6 @@
    "slug": "ropa",
    "parent": "limpieza",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Ropa: jabón y suavizante",
     "en": "Laundry",
@@ -2163,7 +2073,6 @@
    "slug": "lavavajillas",
    "parent": "limpieza",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Lavavajillas y cocina",
     "en": "Dishwashing and kitchen",
@@ -2182,7 +2091,6 @@
    "slug": "bano",
    "parent": "limpieza",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Baño",
     "en": "Bathroom",
@@ -2201,7 +2109,6 @@
    "slug": "pisos",
    "parent": "limpieza",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Pisos y superficies",
     "en": "Floors and surfaces",
@@ -2220,7 +2127,6 @@
    "slug": "lavandina",
    "parent": "limpieza",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Lavandina y desinfectantes",
     "en": "Bleach and disinfectants",
@@ -2240,7 +2146,6 @@
    "slug": "papel",
    "parent": "limpieza",
    "position": 5,
-   "icon": null,
    "names": {
     "es": "Papel higiénico, rollos y servilletas",
     "en": "Toilet paper and kitchen roll",
@@ -2260,7 +2165,6 @@
    "slug": "bolsas",
    "parent": "limpieza",
    "position": 6,
-   "icon": null,
    "names": {
     "es": "Bolsas de residuos",
     "en": "Bin bags",
@@ -2278,7 +2182,6 @@
    "slug": "insecticidas",
    "parent": "limpieza",
    "position": 7,
-   "icon": null,
    "names": {
     "es": "Insecticidas",
     "en": "Insecticides",
@@ -2297,7 +2200,6 @@
    "slug": "accesorios-limpieza",
    "parent": "limpieza",
    "position": 8,
-   "icon": null,
    "names": {
     "es": "Esponjas, trapos y accesorios",
     "en": "Sponges, cloths and tools",
@@ -2317,7 +2219,6 @@
    "slug": "aromatizantes",
    "parent": "limpieza",
    "position": 9,
-   "icon": null,
    "names": {
     "es": "Aromatizantes",
     "en": "Air fresheners",
@@ -2336,7 +2237,6 @@
    "slug": "cuidado-personal",
    "parent": null,
    "position": 13,
-   "icon": "lotion-outline",
    "names": {
     "es": "Perfumería y cuidado personal",
     "en": "Personal care",
@@ -2365,7 +2265,6 @@
    "slug": "cabello",
    "parent": "cuidado-personal",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Cuidado del cabello",
     "en": "Hair care",
@@ -2387,7 +2286,6 @@
    "slug": "jabones",
    "parent": "cuidado-personal",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Jabones y gel de ducha",
     "en": "Soap and shower gel",
@@ -2409,7 +2307,6 @@
    "slug": "desodorantes",
    "parent": "cuidado-personal",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Desodorantes",
     "en": "Deodorant",
@@ -2430,7 +2327,6 @@
    "slug": "bucal",
    "parent": "cuidado-personal",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Cuidado bucal",
     "en": "Oral care",
@@ -2453,7 +2349,6 @@
    "slug": "afeitado",
    "parent": "cuidado-personal",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Afeitado y depilación",
     "en": "Shaving and hair removal",
@@ -2473,7 +2368,6 @@
    "slug": "facial-corporal",
    "parent": "cuidado-personal",
    "position": 5,
-   "icon": null,
    "names": {
     "es": "Cuidado facial y corporal",
     "en": "Face and body care",
@@ -2495,7 +2389,6 @@
    "slug": "solar",
    "parent": "cuidado-personal",
    "position": 6,
-   "icon": null,
    "names": {
     "es": "Protección solar",
     "en": "Sun care",
@@ -2516,7 +2409,6 @@
    "slug": "femenina",
    "parent": "cuidado-personal",
    "position": 7,
-   "icon": null,
    "names": {
     "es": "Protección femenina",
     "en": "Feminine care",
@@ -2535,7 +2427,6 @@
    "slug": "algodon",
    "parent": "cuidado-personal",
    "position": 8,
-   "icon": null,
    "names": {
     "es": "Algodón, pañuelos y hisopos",
     "en": "Cotton, tissues and swabs",
@@ -2555,7 +2446,6 @@
    "slug": "maquillaje",
    "parent": "cuidado-personal",
    "position": 9,
-   "icon": null,
    "names": {
     "es": "Maquillaje",
     "en": "Make-up",
@@ -2574,7 +2464,6 @@
    "slug": "bebes",
    "parent": null,
    "position": 14,
-   "icon": "baby-bottle-outline",
    "names": {
     "es": "Bebés",
     "en": "Baby",
@@ -2603,7 +2492,6 @@
    "slug": "panales",
    "parent": "bebes",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Pañales",
     "en": "Nappies",
@@ -2623,7 +2511,6 @@
    "slug": "toallitas",
    "parent": "bebes",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Toallitas húmedas",
     "en": "Baby wipes",
@@ -2641,7 +2528,6 @@
    "slug": "formula",
    "parent": "bebes",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Leches de fórmula",
     "en": "Formula milk",
@@ -2663,7 +2549,6 @@
    "slug": "alimentos-bebe",
    "parent": "bebes",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Alimentos para bebés",
     "en": "Baby food",
@@ -2684,7 +2569,6 @@
    "slug": "cuidado-bebe",
    "parent": "bebes",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Cuidado del bebé",
     "en": "Baby care",
@@ -2703,7 +2587,6 @@
    "slug": "mascotas",
    "parent": null,
    "position": 15,
-   "icon": "paw",
    "names": {
     "es": "Mascotas",
     "en": "Pets",
@@ -2732,7 +2615,6 @@
    "slug": "perros",
    "parent": "mascotas",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Alimento para perros",
     "en": "Dog food",
@@ -2753,7 +2635,6 @@
    "slug": "gatos",
    "parent": "mascotas",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Alimento para gatos",
     "en": "Cat food",
@@ -2773,7 +2654,6 @@
    "slug": "piedras",
    "parent": "mascotas",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Piedras sanitarias",
     "en": "Cat litter",
@@ -2791,7 +2671,6 @@
    "slug": "accesorios-mascotas",
    "parent": "mascotas",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Snacks y accesorios",
     "en": "Treats and accessories",
@@ -2810,7 +2689,6 @@
    "slug": "otros-animales",
    "parent": "mascotas",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Otros animales",
     "en": "Other pets",
@@ -2829,7 +2707,6 @@
    "slug": "salud",
    "parent": null,
    "position": 16,
-   "icon": "medical-bag",
    "names": {
     "es": "Farmacia y salud",
     "en": "Pharmacy and health",
@@ -2856,7 +2733,6 @@
    "slug": "venta-libre",
    "parent": "salud",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Venta libre",
     "en": "Over the counter",
@@ -2875,7 +2751,6 @@
    "slug": "vitaminas",
    "parent": "salud",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Vitaminas y suplementos",
     "en": "Vitamins and supplements",
@@ -2897,7 +2772,6 @@
    "slug": "primeros-auxilios",
    "parent": "salud",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Primeros auxilios",
     "en": "First aid",
@@ -2917,7 +2791,6 @@
    "slug": "cuidado-intimo",
    "parent": "salud",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Cuidado íntimo y preservativos",
     "en": "Intimate care",
@@ -2936,7 +2809,6 @@
    "slug": "hogar",
    "parent": null,
    "position": 17,
-   "icon": "home-outline",
    "names": {
     "es": "Hogar y bazar",
     "en": "Home",
@@ -2963,7 +2835,6 @@
    "slug": "descartables",
    "parent": "hogar",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Descartables",
     "en": "Disposables",
@@ -2983,7 +2854,6 @@
    "slug": "cocina-utensilios",
    "parent": "hogar",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Cocina y utensilios",
     "en": "Kitchenware",
@@ -3002,7 +2872,6 @@
    "slug": "pilas",
    "parent": "hogar",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Pilas y lamparitas",
     "en": "Batteries and light bulbs",
@@ -3022,7 +2891,6 @@
    "slug": "velas",
    "parent": "hogar",
    "position": 3,
-   "icon": null,
    "names": {
     "es": "Velas, fósforos y encendedores",
     "en": "Candles and lighters",
@@ -3042,7 +2910,6 @@
    "slug": "parrilla",
    "parent": "hogar",
    "position": 4,
-   "icon": null,
    "names": {
     "es": "Carbón y parrilla",
     "en": "Charcoal and barbecue",
@@ -3061,7 +2928,6 @@
    "slug": "almacenamiento",
    "parent": "hogar",
    "position": 5,
-   "icon": null,
    "names": {
     "es": "Organización y almacenamiento",
     "en": "Storage",
@@ -3080,7 +2946,6 @@
    "slug": "ferreteria",
    "parent": "hogar",
    "position": 6,
-   "icon": null,
    "names": {
     "es": "Ferretería básica",
     "en": "Basic hardware",
@@ -3099,7 +2964,6 @@
    "slug": "libreria",
    "parent": null,
    "position": 18,
-   "icon": "pencil-outline",
    "names": {
     "es": "Librería y kiosco",
     "en": "Stationery and kiosk",
@@ -3126,7 +2990,6 @@
    "slug": "utiles",
    "parent": "libreria",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Útiles escolares y de oficina",
     "en": "School and office supplies",
@@ -3145,7 +3008,6 @@
    "slug": "revistas",
    "parent": "libreria",
    "position": 1,
-   "icon": null,
    "names": {
     "es": "Revistas y diarios",
     "en": "Magazines and newspapers",
@@ -3164,7 +3026,6 @@
    "slug": "tarjetas",
    "parent": "libreria",
    "position": 2,
-   "icon": null,
    "names": {
     "es": "Tarjetas y recargas",
     "en": "Gift cards and top-ups",
@@ -3183,7 +3044,6 @@
    "slug": "otros",
    "parent": null,
    "position": 19,
-   "icon": "dots-horizontal-circle-outline",
    "names": {
     "es": "Otros",
     "en": "Other",
@@ -3202,7 +3062,6 @@
    "slug": "sin-clasificar",
    "parent": "otros",
    "position": 0,
-   "icon": null,
    "names": {
     "es": "Sin clasificar",
     "en": "Uncategorised",

@@ -99,7 +99,6 @@ export class PrismaCategoryRepository implements CategoryRepository {
       translations: asTranslations(row.translations),
       slug: row.slug,
       parentId: row.parentId,
-      icon: row.icon,
       position: row.position,
       synonyms: asSynonyms(row.synonyms),
       offTags: Array.isArray(row.offTags) ? row.offTags.filter((tag): tag is string => typeof tag === 'string') : [],

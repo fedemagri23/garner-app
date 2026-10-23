@@ -5,7 +5,6 @@ interface Entry {
   slug: string;
   parent: string | null;
   position: number;
-  icon: string | null;
   names: Record<string, string>;
   synonyms: Record<string, string[]>;
   offTags: string[];
@@ -41,10 +40,7 @@ describe('the category taxonomy file', () => {
     }
   });
 
-  it('gives every department an icon and its aisles distinct positions', () => {
-    for (const category of categories.filter((entry) => entry.parent === null)) {
-      expect({ slug: category.slug, icon: !!category.icon }).toEqual({ slug: category.slug, icon: true });
-    }
+  it('gives the aisles of a department distinct positions', () => {
     const groups = new Map<string, number[]>();
     for (const { parent, position } of categories) {
       groups.set(parent ?? '', [...(groups.get(parent ?? '') ?? []), position]);

@@ -35,7 +35,6 @@ export async function syncTaxonomy(core, data = loadTaxonomy()) {
       name: category.names.es,
       translations: { en: category.names.en, de: category.names.de, pt: category.names.pt },
       parentId: category.parent ? ids.get(category.parent) : null,
-      icon: category.icon ?? null,
       position: category.position,
       isActive: true,
       replacedById: null,

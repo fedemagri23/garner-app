@@ -384,3 +384,9 @@ Notation: [`README.md`](README.md).
 - **What:** `data/taxonomy.json` lists 20 departments and 121 aisles (two levels), each with names in es/en/de/pt, a MaterialCommunityIcons icon (departments), its position, search synonyms and the Open Food Facts tags that map to it. `pnpm run taxonomy:sync` (run by the seed, and on every deploy after migrations) upserts by slug, never deletes: a category the file no longer lists is retired (`isActive: false`), and an entry with `replaces: [...]` takes over the old one's products. `GET /v1/categories` returns only active categories, in aisle order, with `icon`, `position` and `synonyms`. The barcode lookup maps through `offTags` to the most specific aisle (`categoryForTags`), replacing the hard-coded table of CON-058. A unit test validates the file (unique slugs, ≤ 2 levels, four names, department icons, distinct positions, each Open Food Facts tag in one place). The seed's products now sit in aisles (Pan Lactal in Pan lactal, Agua in Agua, …). `POST /v1/categories` stays for the team and the tests, but anything it creates that the file does not list is retired at the next sync: the file is the source of truth. Search does not yet match category names (checkpoint 20).
 - **Why:** A catalog of real products needs real aisles; keeping them in one reviewed file means every environment has the same shape, in every language, and changes go through review.
 - **Revisit when:** A third level is needed, or the team wants to edit categories without a deploy.
+
+### CON-061 — Categories have no icons
+- **Phase:** post-plan (mobile phase 10) · **Area:** catalog · **Status:** accepted
+- **What:** The `icon` column, the taxonomy file's `icon` fields and `CategoryResponse.icon` are removed (migration `20261023200000_drop_category_icon`). Categories are shown by name only. Amends CON-060.
+- **Why:** Decided by the user.
+- **Revisit when:** The user asks for icons.

@@ -21,8 +21,6 @@ export interface Category {
   translations: Translations;
   slug: string;
   parentId: string | null;
-  /** Departments carry an icon (a MaterialCommunityIcons name); aisles show their department's. */
-  icon: string | null;
   /** Aisle order within the parent, or among departments. */
   position: number;
   /** Search words per language. */

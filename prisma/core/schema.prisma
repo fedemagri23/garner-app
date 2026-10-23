@@ -133,8 +133,6 @@ model Category {
   translations Json     @default("{}")
   slug         String   @unique
   parentId     String?  @db.Uuid
-  /// MaterialCommunityIcons name the app ships with; departments only.
-  icon         String?  @db.VarChar(60)
   /// Aisle order within the parent (or among departments).
   position     Int      @default(0)
   /// False once retired from the taxonomy; see replacedById.

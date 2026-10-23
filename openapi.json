@@ -4082,11 +4082,6 @@
               }
             ]
           },
-          "icon": {
-            "type": "string",
-            "nullable": true,
-            "description": "MaterialCommunityIcons name; departments only"
-          },
           "position": {
             "type": "number",
             "description": "Aisle order within the parent, or among departments"
@@ -4112,7 +4107,6 @@
           "id",
           "name",
           "translations",
-          "icon",
           "position",
           "synonyms",
           "slug",
