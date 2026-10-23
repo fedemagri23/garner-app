@@ -21,8 +21,8 @@ const notification = {
   currency: 'ARS',
 } as unknown as Notification;
 
-const recipient = (deviceTokens: string[]) =>
-  ({ userId: 'user-1', email: null, preferences: {}, deviceTokens }) as unknown as NotificationRecipient;
+const recipient = (deviceTokens: string[], language = 'es') =>
+  ({ userId: 'user-1', email: null, preferences: {}, deviceTokens, language }) as unknown as NotificationRecipient;
 
 describe('PushChannel', () => {
   let sender: { send: jest.Mock };
@@ -62,6 +62,17 @@ describe('PushChannel', () => {
         data: { notificationId: 'n1', productId: 'milk' },
       },
       expect.objectContaining({ to: 't2' }),
+    ]);
+  });
+
+  it('writes in the language the shopper uses the app in', async () => {
+    await channel.send(notification, recipient(['t1'], 'en'));
+
+    expect(sender.send).toHaveBeenCalledWith([
+      expect.objectContaining({
+        title: 'Leche entera 1 L dropped to AR$1,390',
+        body: 'At Día Almagro, below the price you asked for.',
+      }),
     ]);
   });
 

@@ -109,6 +109,7 @@ import { NotificationsController } from './presentation/notifications.controller
               new SmtpEmailSender(config.smtpUrl, config.emailFrom),
               tokens,
               config.publicBaseUrl,
+              names,
             ),
           );
         }

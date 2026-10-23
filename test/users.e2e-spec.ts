@@ -60,6 +60,16 @@ describe('User profile and preferences (e2e)', () => {
       expect(response.body.displayName).toBe('Federico');
     });
 
+    it('keeps the app\'s language, Spanish until told otherwise', async () => {
+      const me = () => request(app.getHttpServer()).get('/v1/users/me').set(auth(otherShopper)).expect(200);
+      expect((await me()).body.locale).toBe('es');
+
+      await request(app.getHttpServer()).patch('/v1/users/me').set(auth(otherShopper)).send({ locale: 'de' }).expect(200);
+      expect((await me()).body.locale).toBe('de');
+
+      await request(app.getHttpServer()).patch('/v1/users/me').set(auth(otherShopper)).send({ locale: 'fr' }).expect(400);
+    });
+
     it('refuses to change the email, which identifies the account', async () => {
       await request(app.getHttpServer())
         .patch('/v1/users/me')

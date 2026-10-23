@@ -1,3 +1,4 @@
+import type { Language } from '../../common/i18n/language.js';
 import type {
   Notification,
   NotificationCategory,
@@ -105,6 +106,8 @@ export interface NotificationRecipient {
   preferences: NotificationPreferences;
   /** The phones registered for push; none when the shopper never turned it on. */
   deviceTokens: string[];
+  /** What push and email are written in. */
+  language: Language;
 }
 
 /**

@@ -1,5 +1,8 @@
 import { BadGatewayException, Inject, Injectable } from '@nestjs/common';
+import { DEFAULT_LANGUAGE } from '../../common/i18n/language.js';
 import type { AuthenticatedUser } from '../../security/domain/authenticated-user.js';
+import { USER_REPOSITORY, type UserRepository } from '../../users/domain/user.repository.port.js';
+import { testPush } from '../domain/message-text.js';
 import {
   DEVICE_TOKEN_REPOSITORY,
   PUSH_SENDER,
@@ -7,12 +10,6 @@ import {
   type DeviceTokenRepository,
   type PushSender,
 } from '../domain/notification.repository.port.js';
-
-/** What the test push says, in the app's language. */
-const TEST_PUSH = {
-  title: 'Garner',
-  body: 'Si ves esto, los avisos funcionan en este teléfono.',
-};
 
 /**
  * The phones a shopper wants to be reached on. Registering one is the consent
@@ -24,6 +21,7 @@ export class ManageDevicesUseCase {
   constructor(
     @Inject(DEVICE_TOKEN_REPOSITORY) private readonly devices: DeviceTokenRepository,
     @Inject(PUSH_SENDER) private readonly push: PushSender,
+    @Inject(USER_REPOSITORY) private readonly users: UserRepository,
   ) {}
 
   register(actor: AuthenticatedUser, token: string, platform: string): Promise<DeviceToken> {
@@ -36,7 +34,8 @@ export class ManageDevicesUseCase {
 
   /**
    * Sends a test message to every phone the shopper has registered, so they
-   * can see push working without waiting for a price to move. Says how many
+   * can see push working without waiting for a price to move, in their
+   * language. Says how many
    * phones there were and how many took it.
    */
   async sendTest(actor: AuthenticatedUser): Promise<{ devices: number; delivered: number }> {
@@ -46,10 +45,11 @@ export class ManageDevicesUseCase {
       return { devices: 0, delivered: 0 };
     }
 
+    const message = testPush((await this.users.findById(actor.id))?.locale ?? DEFAULT_LANGUAGE);
     let outcomes;
     try {
       outcomes = await this.push.send(
-        phones.map((phone) => ({ to: phone.token, ...TEST_PUSH, data: { test: '1' } })),
+        phones.map((phone) => ({ to: phone.token, ...message, data: { test: '1' } })),
       );
     } catch {
       throw new BadGatewayException('The push service could not be reached');

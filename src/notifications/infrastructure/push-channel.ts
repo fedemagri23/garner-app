@@ -7,7 +7,7 @@ import type {
   PushSender,
 } from '../domain/notification.repository.port.js';
 import type { Notification } from '../domain/price-alert.entity.js';
-import { pushText } from '../domain/push-text.js';
+import { messageText } from '../domain/message-text.js';
 
 /**
  * Push, for phones that registered. Registering is the consent: a person who
@@ -35,7 +35,7 @@ export class PushChannel implements NotificationChannel {
 
   async send(notification: Notification, recipient: NotificationRecipient): Promise<void> {
     const namesOf = await this.names.forSubjects([notification]);
-    const { title, body } = pushText(notification, namesOf(notification));
+    const { title, body } = messageText(notification, namesOf(notification), recipient.language);
 
     const data: Record<string, string> = { notificationId: notification.id };
     if (notification.productId) data.productId = notification.productId;

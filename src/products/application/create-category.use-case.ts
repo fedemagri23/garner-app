@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { asTranslations, type Translations } from '../../common/i18n/language.js';
 import { normalizeText, slugify } from '../../common/text/normalize.js';
 import type { Brand, Category } from '../domain/product.entity.js';
 import {
@@ -29,6 +30,7 @@ export class CreateCatalogReferenceUseCase {
   async createCategory(input: {
     name: string;
     parentId?: string;
+    translations?: Translations;
   }): Promise<Category> {
     const slug = slugify(input.name);
 
@@ -44,6 +46,7 @@ export class CreateCatalogReferenceUseCase {
       name: input.name.trim(),
       slug,
       parentId: input.parentId ?? null,
+      translations: asTranslations(input.translations),
     });
   }
 

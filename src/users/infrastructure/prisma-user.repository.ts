@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { User as PrismaUser } from '../../../generated/prisma/core/index.js';
 import { CorePrismaService } from '../../common/database/core-prisma.service.js';
+import { asLanguage } from '../../common/i18n/language.js';
 import type { UserRole } from '../../security/domain/user-role.js';
 import {
   normalizeEmail,
@@ -42,7 +43,7 @@ export class PrismaUserRepository implements UserRepository {
   ): Promise<User> {
     const row = await this.prisma.user.update({
       where: { id },
-      data: { displayName: input.displayName },
+      data: { displayName: input.displayName, locale: input.locale },
     });
 
     return this.toDomain(row);
@@ -69,6 +70,7 @@ export class PrismaUserRepository implements UserRepository {
       // generated type is the infrastructure detail being mapped away here.
       role: row.role as UserRole,
       isActive: row.isActive,
+      locale: asLanguage(row.locale),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

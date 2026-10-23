@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Category as PrismaCategory } from '../../../generated/prisma/core/index.js';
 import { CorePrismaService } from '../../common/database/core-prisma.service.js';
+import { asTranslations, type Translations } from '../../common/i18n/language.js';
 import type { Category } from '../domain/product.entity.js';
 import type { CategoryRepository } from '../domain/product.repository.port.js';
 
@@ -72,8 +73,9 @@ export class PrismaCategoryRepository implements CategoryRepository {
     name: string;
     slug: string;
     parentId: string | null;
+    translations?: Translations;
   }): Promise<Category> {
-    const row = await this.prisma.category.create({ data: input });
+    const row = await this.prisma.category.create({ data: { ...input, translations: input.translations ?? {} } });
     return this.toDomain(row);
   }
 
@@ -81,6 +83,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
     return {
       id: row.id,
       name: row.name,
+      translations: asTranslations(row.translations),
       slug: row.slug,
       parentId: row.parentId,
     };

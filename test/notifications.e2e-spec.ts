@@ -560,7 +560,7 @@ describe('Price alerts and notifications (e2e)', () => {
       const unsubscribeLink = async (mailId: string): Promise<string> => {
         const response = await fetch(`${MAILPIT}/message/${mailId}`);
         const { Text } = (await response.json()) as { Text: string };
-        const url = /Stop these emails: (\S+)/.exec(Text)![1];
+        const url = /(?:Stop these emails|Dejar de recibir estos emails|Diese E-Mails abbestellen): (\S+)/.exec(Text)![1];
         const { pathname, search } = new URL(url);
         return `${pathname}${search}`;
       };
@@ -581,7 +581,8 @@ describe('Price alerts and notifications (e2e)', () => {
         const stored = await deliverOne();
 
         const [mail] = await mailTo(await shopperEmail());
-        expect(mail.Subject).toBe(stored.title);
+        // Written in the shopper's language from the facts, as push is.
+        expect(mail.Subject).toBe('Leche Entera 1L bajó a $ 0,90');
 
         const headers = (await (
           await fetch(`${MAILPIT}/message/${mail.ID}/headers`)
@@ -594,6 +595,22 @@ describe('Price alerts and notifications (e2e)', () => {
         });
         expect(channels.map((row) => row.channel).sort()).toEqual(['email', 'in-app']);
         expect(channels.every((row) => row.sentAt !== null)).toBe(true);
+      });
+
+      it('writes the email in the language the shopper uses the app in', async () => {
+        await optIn();
+        await http().patch('/v1/users/me').set(auth(shopper)).send({ locale: 'en' }).expect(200);
+        try {
+          await deliverOne();
+
+          const [mail] = await mailTo(await shopperEmail());
+          expect(mail.Subject).toBe('Leche Entera 1L dropped to AR$0.90');
+          const { Text } = (await (await fetch(`${MAILPIT}/message/${mail.ID}`)).json()) as { Text: string };
+          expect(Text).toContain('At Coto Centro, below the price you asked for.');
+          expect(Text).toContain('Stop these emails: ');
+        } finally {
+          await http().patch('/v1/users/me').set(auth(shopper)).send({ locale: 'es' }).expect(200);
+        }
       });
 
       it('emails nobody who has not opted in', async () => {
@@ -777,6 +794,26 @@ describe('Price alerts and notifications (e2e)', () => {
         data: { notificationId: stored.id, productId: milkId },
       });
       expect((await core.notification.findUniqueOrThrow({ where: { id: stored.id } })).status).toBe('SENT');
+    });
+
+    it('pushes in the language the shopper chose, test push included', async () => {
+      await register(PHONE).expect(201);
+      await http().patch('/v1/users/me').set(auth(shopper)).send({ locale: 'de' }).expect(200);
+      try {
+        await http().post('/v1/devices/test').set(auth(shopper)).expect(200);
+        await createAlert({ type: 'BELOW_THRESHOLD', thresholdCents: 100 });
+        await priceChanges(90, 120);
+        const stored = await core.notification.findFirstOrThrow();
+        await deliver.execute(stored.id);
+
+        expect(expo.received[0][0].body).toBe('Wenn du das siehst, funktionieren Benachrichtigungen auf diesem Handy.');
+        expect(expo.received[1][0]).toMatchObject({
+          title: 'Leche Entera 1L ist auf 0,90\u00a0ARS gefallen',
+          body: 'Bei Coto Centro, unter dem gewünschten Preis.',
+        });
+      } finally {
+        await http().patch('/v1/users/me').set(auth(shopper)).send({ locale: 'es' }).expect(200);
+      }
     });
 
     it('retries a push when the service is down, and does not send it twice once it has gone', async () => {

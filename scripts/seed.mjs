@@ -61,15 +61,15 @@ async function upsertUser(email, displayName, role) {
   return core.user.upsert({
     where: { email },
     create: { email, displayName, role, passwordHash },
-    update: { displayName, role },
+    update: { displayName, role, locale: 'es' },
   });
 }
 
-async function upsertCategory(name, slug, parentId = null) {
+async function upsertCategory(name, slug, parentId = null, translations = {}) {
   return core.category.upsert({
     where: { slug },
-    create: { name, slug, parentId },
-    update: { name, parentId },
+    create: { name, slug, parentId, translations },
+    update: { name, parentId, translations },
   });
 }
 
@@ -211,10 +211,10 @@ async function main() {
     update: savedLocation,
   });
 
-  const almacen = await upsertCategory('Almacén', 'almacen');
-  const lacteos = await upsertCategory('Lácteos', 'lacteos');
-  const leche = await upsertCategory('Leche', 'leche', lacteos.id);
-  const bebidas = await upsertCategory('Bebidas', 'bebidas');
+  const almacen = await upsertCategory('Almacén', 'almacen', null, { en: 'Pantry', de: 'Vorrat' });
+  const lacteos = await upsertCategory('Lácteos', 'lacteos', null, { en: 'Dairy', de: 'Milchprodukte' });
+  const leche = await upsertCategory('Leche', 'leche', lacteos.id, { en: 'Milk', de: 'Milch' });
+  const bebidas = await upsertCategory('Bebidas', 'bebidas', null, { en: 'Drinks', de: 'Getränke' });
 
   const serenisima = await upsertBrand('La Serenísima', 'la-serenisima', 'la serenisima');
   const arcor = await upsertBrand('Arcor', 'arcor', 'arcor');

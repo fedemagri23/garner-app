@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { DEFAULT_LANGUAGE } from '../../common/i18n/language.js';
 import {
   USER_REPOSITORY,
   type UserRepository,
@@ -182,6 +183,7 @@ export class DeliverNotificationUseCase {
       email: user?.email ?? null,
       preferences: preferences ?? { userId, ...DEFAULT_NOTIFICATION_PREFERENCES },
       deviceTokens: phones.map((phone) => phone.token),
+      language: user?.locale ?? DEFAULT_LANGUAGE,
     };
   }
 }

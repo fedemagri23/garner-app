@@ -1,4 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import type { Language } from '../../common/i18n/language.js';
 import type { User } from '../domain/user.entity.js';
 import {
   USER_REPOSITORY,
@@ -7,6 +8,8 @@ import {
 
 export interface UpdateUserProfileCommand {
   displayName?: string;
+  /** The app's language, sent when the shopper picks one (or the phone's is used). */
+  locale?: Language;
 }
 
 /**
@@ -31,6 +34,7 @@ export class UpdateUserProfileUseCase {
 
     return this.users.updateProfile(userId, {
       displayName: command.displayName?.trim(),
+      locale: command.locale,
     });
   }
 }

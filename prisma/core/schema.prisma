@@ -49,6 +49,8 @@ model User {
   displayName  String
   role         UserRole @default(USER)
   isActive     Boolean  @default(true)
+  /// es, en or de: what push and email are written in.
+  locale       String   @default("es") @db.VarChar(5)
   createdAt    DateTime @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 
@@ -125,12 +127,14 @@ enum UnitOfMeasure {
 /// A browsable catalog category, optionally nested one or more levels deep
 /// ("Dairy" → "Milk").
 model Category {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  slug      String   @unique
-  parentId  String?  @db.Uuid
-  createdAt DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  /// The name in other languages, e.g. {"en": "Dairy", "de": "Milchprodukte"}.
+  translations Json     @default("{}")
+  slug         String   @unique
+  parentId     String?  @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 
   parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
   children Category[] @relation("CategoryTree")

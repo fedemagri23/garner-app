@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '../../../generated/prisma/core/index.js';
 import { CorePrismaService } from '../../common/database/core-prisma.service.js';
+import { asTranslations } from '../../common/i18n/language.js';
 import type {
   CreateProductInput,
   Product,
@@ -217,6 +218,7 @@ export class PrismaProductRepository implements ProductRepository {
       category: {
         id: row.category.id,
         name: row.category.name,
+        translations: asTranslations(row.category.translations),
         slug: row.category.slug,
         parentId: row.category.parentId,
       },

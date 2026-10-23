@@ -42,7 +42,7 @@ describe('Catalog (e2e)', () => {
     const dairy = await request(app.getHttpServer())
       .post('/v1/categories')
       .set(auth(curator))
-      .send({ name: 'Lácteos' })
+      .send({ name: 'Lácteos', translations: { en: 'Dairy', de: 'Milchprodukte' } })
       .expect(201);
     dairyId = dairy.body.id;
 
@@ -102,6 +102,16 @@ describe('Catalog (e2e)', () => {
         expect.arrayContaining([
           expect.objectContaining({ name: 'Lácteos', slug: 'lacteos' }),
           expect.objectContaining({ name: 'Leche', parentId: dairyId }),
+        ]),
+      );
+    });
+
+    it('carries a category\'s name in the other languages, where one was written', async () => {
+      const categories = await request(app.getHttpServer()).get('/v1/categories').set(auth(shopper)).expect(200);
+      expect(categories.body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: 'Lácteos', translations: { en: 'Dairy', de: 'Milchprodukte' } }),
+          expect.objectContaining({ name: 'Leche', translations: {} }),
         ]),
       );
     });

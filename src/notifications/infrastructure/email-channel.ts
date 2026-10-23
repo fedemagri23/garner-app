@@ -1,4 +1,6 @@
 import { Logger } from '@nestjs/common';
+import type { SubjectNamesLoader } from '../application/notification-names.js';
+import { emailFooter, messageText } from '../domain/message-text.js';
 import type { Notification } from '../domain/price-alert.entity.js';
 import type {
   EmailSender,
@@ -8,8 +10,9 @@ import type {
 } from '../domain/notification.repository.port.js';
 
 /**
- * Email, for people who asked for it. Opt-in only, and every message carries
- * a one-click unsubscribe link (RFC 8058) that works without logging in.
+ * Email, for people who asked for it, in their language. Opt-in only, and
+ * every message carries a one-click unsubscribe link (RFC 8058) that works
+ * without logging in.
  */
 export class EmailChannel implements NotificationChannel {
   readonly name = 'email';
@@ -20,6 +23,7 @@ export class EmailChannel implements NotificationChannel {
     private readonly sender: EmailSender,
     private readonly tokens: UnsubscribeTokens,
     private readonly publicBaseUrl: string,
+    private readonly names: SubjectNamesLoader,
   ) {}
 
   appliesTo(recipient: NotificationRecipient): boolean {
@@ -34,16 +38,13 @@ export class EmailChannel implements NotificationChannel {
       `${this.publicBaseUrl}/v1/notification-emails/unsubscribe` +
       `?token=${encodeURIComponent(this.tokens.issue(recipient.userId))}`;
 
+    const namesOf = await this.names.forSubjects([notification]);
+    const { title, body } = messageText(notification, namesOf(notification), recipient.language);
+
     await this.sender.send({
       to: recipient.email!,
-      subject: notification.title,
-      text: [
-        notification.body,
-        '',
-        '—',
-        'You are receiving this because you turned on email alerts in Garner.',
-        `Stop these emails: ${unsubscribeUrl}`,
-      ].join('\n'),
+      subject: title,
+      text: [body, '', ...emailFooter(recipient.language, unsubscribeUrl)].join('\n'),
       headers: {
         'List-Unsubscribe': `<${unsubscribeUrl}>`,
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',

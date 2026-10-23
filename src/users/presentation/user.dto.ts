@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsIn,
   IsLatitude,
   IsLongitude,
   IsNumber,
@@ -15,6 +16,7 @@ import {
   MinLength,
   ValidateIf,
 } from 'class-validator';
+import { LANGUAGES, type Language } from '../../common/i18n/language.js';
 import { UserRole } from '../../security/domain/user-role.js';
 import {
   MAX_SEARCH_RADIUS_KM,
@@ -39,6 +41,9 @@ export class UserResponse {
   @ApiProperty()
   isActive!: boolean;
 
+  @ApiProperty({ enum: LANGUAGES, description: 'What push and email are written in' })
+  locale!: Language;
+
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
 
@@ -49,6 +54,7 @@ export class UserResponse {
       displayName: user.displayName,
       role: user.role,
       isActive: user.isActive,
+      locale: user.locale,
       createdAt: user.createdAt.toISOString(),
     };
   }
@@ -61,6 +67,11 @@ export class UpdateUserProfileRequest {
   @MinLength(1)
   @MaxLength(80)
   displayName?: string;
+
+  @ApiPropertyOptional({ enum: LANGUAGES, description: 'The app’s language; push and email follow it' })
+  @IsOptional()
+  @IsIn(LANGUAGES)
+  locale?: Language;
 }
 
 export class UserPreferencesResponse {

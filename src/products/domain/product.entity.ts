@@ -1,3 +1,4 @@
+import type { Translations } from '../../common/i18n/language.js';
 import { normalizeText } from '../../common/text/normalize.js';
 import type { CatalogOrigin, ModerationStatus } from '../../community/domain/catalog-origin.js';
 import type { UnitOfMeasure } from './unit-of-measure.js';
@@ -12,7 +13,9 @@ export interface Brand {
 /** A category, with its parent when it is nested. */
 export interface Category {
   id: string;
+  /** In Spanish; `translations` has it in the app's other languages. */
   name: string;
+  translations: Translations;
   slug: string;
   parentId: string | null;
 }

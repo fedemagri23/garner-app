@@ -1,3 +1,4 @@
+import type { Language } from '../../common/i18n/language.js';
 import type { UserRole } from '../../security/domain/user-role.js';
 
 /** An account as the rest of the system sees it — never carries the password hash. */
@@ -7,6 +8,8 @@ export interface User {
   displayName: string;
   role: UserRole;
   isActive: boolean;
+  /** What push and email are written in. */
+  locale: Language;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,6 +35,7 @@ export interface CreateUserInput {
  */
 export interface UpdateUserProfileInput {
   displayName?: string;
+  locale?: Language;
 }
 
 /** Emails are matched case-insensitively; storing them normalized keeps the unique index honest. */

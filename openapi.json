@@ -3827,6 +3827,15 @@
           "isActive": {
             "type": "boolean"
           },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "es",
+              "en",
+              "de"
+            ],
+            "description": "What push and email are written in"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -3838,6 +3847,7 @@
           "displayName",
           "role",
           "isActive",
+          "locale",
           "createdAt"
         ]
       },
@@ -3848,6 +3858,15 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 80
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "es",
+              "en",
+              "de"
+            ],
+            "description": "The app’s language; push and email follow it"
           }
         }
       },
@@ -3937,6 +3956,21 @@
           "slug"
         ]
       },
+      "CategoryTranslations": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string",
+            "maxLength": 80,
+            "example": "Dairy"
+          },
+          "de": {
+            "type": "string",
+            "maxLength": 80,
+            "example": "Milchprodukte"
+          }
+        }
+      },
       "CategoryResponse": {
         "type": "object",
         "properties": {
@@ -3945,7 +3979,16 @@
             "format": "uuid"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "In Spanish"
+          },
+          "translations": {
+            "description": "The name in English and German, where written",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CategoryTranslations"
+              }
+            ]
           },
           "slug": {
             "type": "string"
@@ -3959,6 +4002,7 @@
         "required": [
           "id",
           "name",
+          "translations",
           "slug",
           "parentId"
         ]
@@ -4245,6 +4289,9 @@
           "parentId": {
             "type": "string",
             "format": "uuid"
+          },
+          "translations": {
+            "$ref": "#/components/schemas/CategoryTranslations"
           }
         },
         "required": [

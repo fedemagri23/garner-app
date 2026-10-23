@@ -14,6 +14,7 @@ import {
   Matches,
   MaxLength,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 import { PLAIN_TEXT, PLAIN_TEXT_MESSAGE } from '../../common/text/plain-text.js';
 import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
@@ -32,9 +33,26 @@ export class BrandResponse {
   }
 }
 
+/** A category's name in the app's other languages; absent where nobody wrote one. */
+export class CategoryTranslations {
+  @ApiPropertyOptional({ maxLength: 80, example: 'Dairy' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  en?: string;
+
+  @ApiPropertyOptional({ maxLength: 80, example: 'Milchprodukte' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  de?: string;
+}
+
 export class CategoryResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
-  @ApiProperty() name!: string;
+  @ApiProperty({ description: 'In Spanish' }) name!: string;
+  @ApiProperty({ type: CategoryTranslations, description: 'The name in English and German, where written' })
+  translations!: CategoryTranslations;
   @ApiProperty() slug!: string;
   @ApiProperty({ type: String, format: 'uuid', nullable: true }) parentId!: string | null;
 
@@ -42,6 +60,7 @@ export class CategoryResponse {
     return {
       id: category.id,
       name: category.name,
+      translations: category.translations,
       slug: category.slug,
       parentId: category.parentId,
     };
@@ -269,6 +288,12 @@ export class CreateCategoryRequest {
   @IsOptional()
   @IsUUID()
   parentId?: string;
+
+  @ApiPropertyOptional({ type: CategoryTranslations })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CategoryTranslations)
+  translations?: CategoryTranslations;
 }
 
 export class CreateBrandRequest {

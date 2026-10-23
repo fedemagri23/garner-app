@@ -1,3 +1,4 @@
+import type { Translations } from '../../common/i18n/language.js';
 import type {
   Brand,
   Category,
@@ -63,6 +64,7 @@ export interface CategoryRepository {
     name: string;
     slug: string;
     parentId: string | null;
+    translations?: Translations;
   }): Promise<Category>;
 }
 
