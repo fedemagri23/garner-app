@@ -5418,6 +5418,11 @@
             "type": "string",
             "nullable": true
           },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "To group a list by department and aisle"
+          },
           "categoryName": {
             "type": "string"
           },
@@ -5435,6 +5440,7 @@
           "id",
           "name",
           "brandName",
+          "categoryId",
           "categoryName",
           "packageLabel",
           "imageUrl"

@@ -43,6 +43,7 @@ export class ProductSummaryResponse {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() name!: string;
   @ApiProperty({ type: String, nullable: true }) brandName!: string | null;
+  @ApiProperty({ format: 'uuid', description: 'To group a list by department and aisle' }) categoryId!: string;
   @ApiProperty() categoryName!: string;
   @ApiProperty({ type: String, nullable: true, example: '1 L' }) packageLabel!: string | null;
   @ApiProperty({ type: String, nullable: true }) imageUrl!: string | null;
@@ -52,6 +53,7 @@ export class ProductSummaryResponse {
       id: product.id,
       name: product.name,
       brandName: product.brand?.name ?? null,
+      categoryId: product.category.id,
       categoryName: product.category.name,
       packageLabel: formatPackageSize(product.packageSize, product.unit),
       imageUrl: product.imageUrl,
