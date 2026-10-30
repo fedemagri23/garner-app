@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Patch, Post } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -11,6 +11,8 @@ import {
 import type { AuthenticatedUser } from '../../security/domain/authenticated-user.js';
 import { CurrentUser } from '../../security/presentation/current-user.decorator.js';
 import { DeleteAccountUseCase } from '../application/delete-account.use-case.js';
+import { TERMS_VERSION } from '../domain/legal/legal-documents.js';
+import { USER_REPOSITORY, type UserRepository } from '../domain/user.repository.port.js';
 import { GetUserProfileUseCase } from '../application/get-user-profile.use-case.js';
 import { UpdateUserProfileUseCase } from '../application/update-user-profile.use-case.js';
 import { UserPreferencesUseCase } from '../application/user-preferences.use-case.js';
@@ -36,6 +38,7 @@ export class UsersController {
     private readonly updateUserProfile: UpdateUserProfileUseCase,
     private readonly preferences: UserPreferencesUseCase,
     private readonly deleteAccount: DeleteAccountUseCase,
+    @Inject(USER_REPOSITORY) private readonly users: UserRepository,
   ) {}
 
   @Get('me')
@@ -58,6 +61,14 @@ export class UsersController {
   @ApiForbiddenResponse({ description: 'Wrong password' })
   async deleteMe(@CurrentUser() actor: AuthenticatedUser, @Body() body: DeleteAccountRequest): Promise<void> {
     await this.deleteAccount.byId(actor.id, body.password);
+  }
+
+  @Post('me/terms')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Accept the current terms of use and privacy policy' })
+  @ApiOkResponse({ type: UserResponse })
+  async acceptTerms(@CurrentUser() actor: AuthenticatedUser): Promise<UserResponse> {
+    return UserResponse.from(await this.users.acceptTerms(actor.id, TERMS_VERSION, new Date()));
   }
 
   @Patch('me')

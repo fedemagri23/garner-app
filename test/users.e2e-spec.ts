@@ -273,4 +273,36 @@ describe('User profile and preferences (e2e)', () => {
       await http().post('/v1/auth/login').send({ email: ana.email, password: 'correct-horse-battery' }).expect(401);
     });
   });
+
+  describe('terms and legal pages', () => {
+    const http = () => request(app.getHttpServer());
+
+    it('records the terms accepted at sign-up, and asks the others to accept them', async () => {
+      const accepted = await http()
+        .post('/v1/auth/register')
+        .send({ email: uniqueEmail('terms'), password: 'correct-horse-battery', displayName: 'Ana', acceptTerms: true })
+        .expect(201);
+      const me = await http().get('/v1/users/me').set(auth(accepted.body.accessToken)).expect(200);
+      expect(me.body).toMatchObject({ termsAccepted: true, currentTermsVersion: expect.any(String) });
+
+      const notYet = await http()
+        .post('/v1/auth/register')
+        .send({ email: uniqueEmail('noterms'), password: 'correct-horse-battery', displayName: 'Ben' })
+        .expect(201);
+      expect((await http().get('/v1/users/me').set(auth(notYet.body.accessToken)).expect(200)).body.termsAccepted).toBe(false);
+      const after = await http().post('/v1/users/me/terms').set(auth(notYet.body.accessToken)).expect(200);
+      expect(after.body.termsAccepted).toBe(true);
+    });
+
+    it('serves the terms, privacy and credits pages in the language asked for', async () => {
+      const terms = await http().get('/v1/legal/terms').query({ lang: 'de' }).expect(200);
+      expect(terms.headers['content-type']).toContain('text/html');
+      expect(terms.text).toContain('Nutzungsbedingungen');
+      expect(terms.text).toContain('Entwurf');
+
+      expect((await http().get('/v1/legal/privacy').expect(200)).text).toContain('Privacidad');
+      expect((await http().get('/v1/legal/credits').query({ lang: 'en' }).expect(200)).text).toContain('Open Database License');
+      await http().get('/v1/legal/cookies').expect(404);
+    });
+  });
 });

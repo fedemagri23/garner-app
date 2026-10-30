@@ -20,6 +20,7 @@ export interface UserRepository {
   create(input: CreateUserInput): Promise<User>;
   /** For a password reset or change; the hash only, never the password. */
   updatePasswordHash(id: string, passwordHash: string): Promise<void>;
+  acceptTerms(id: string, version: string, at: Date): Promise<User>;
 }
 
 export const USER_REPOSITORY = Symbol('USER_REPOSITORY');

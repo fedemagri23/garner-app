@@ -1,3 +1,4 @@
+import { TERMS_VERSION } from '../../users/domain/legal/legal-documents.js';
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { EventBus } from '../../common/events/event-bus.js';
 import { createDomainEvent } from '../../common/events/domain-event.js';
@@ -21,6 +22,8 @@ export interface RegisterCommand {
   email: string;
   password: string;
   displayName: string;
+  /** The sign-up form's "Acepto los términos". */
+  acceptTerms?: boolean;
 }
 
 @Injectable()
@@ -46,6 +49,9 @@ export class RegisterUseCase {
       passwordHash,
       displayName: command.displayName,
     });
+    if (command.acceptTerms) {
+      await this.users.acceptTerms(user.id, TERMS_VERSION, new Date());
+    }
 
     const event: UserCreatedEvent = createDomainEvent(
       DomainEventName.UserCreated,

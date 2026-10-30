@@ -1,6 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsEmail,
+  IsOptional,
   IsString,
   Matches,
   MaxLength,
@@ -26,6 +28,11 @@ export class RegisterRequest {
   @MinLength(1)
   @MaxLength(80)
   displayName!: string;
+
+  @ApiPropertyOptional({ description: 'The person accepted the current terms and privacy policy' })
+  @IsOptional()
+  @IsBoolean()
+  acceptTerms?: boolean;
 }
 
 export class LoginRequest {

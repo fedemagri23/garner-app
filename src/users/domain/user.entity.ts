@@ -10,6 +10,8 @@ export interface User {
   isActive: boolean;
   /** What push and email are written in. */
   locale: Language;
+  /** The terms version this account accepted; null if none yet. */
+  termsVersion: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

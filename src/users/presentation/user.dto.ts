@@ -17,6 +17,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { LANGUAGES, type Language } from '../../common/i18n/language.js';
+import { TERMS_VERSION } from '../domain/legal/legal-documents.js';
 import { UserRole } from '../../security/domain/user-role.js';
 import {
   MAX_SEARCH_RADIUS_KM,
@@ -44,6 +45,12 @@ export class UserResponse {
   @ApiProperty({ enum: LANGUAGES, description: 'What push and email are written in' })
   locale!: Language;
 
+  @ApiProperty({ description: 'Whether the account accepted the current terms (else the app asks)' })
+  termsAccepted!: boolean;
+
+  @ApiProperty({ description: 'The current terms version' })
+  currentTermsVersion!: string;
+
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
 
@@ -55,6 +62,8 @@ export class UserResponse {
       role: user.role,
       isActive: user.isActive,
       locale: user.locale,
+      termsAccepted: user.termsVersion === TERMS_VERSION,
+      currentTermsVersion: TERMS_VERSION,
       createdAt: user.createdAt.toISOString(),
     };
   }

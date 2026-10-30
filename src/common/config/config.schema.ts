@@ -58,6 +58,10 @@ export const configSchema = z.object({
   OPEN_FOOD_FACTS_URL: z.url().default('https://world.openfoodfacts.org'),
   OPEN_FOOD_FACTS_USER_AGENT: z.string().min(3).default('Garner/0.1 (https://github.com/fedemagri23/garner-app)'),
 
+  // Where people write about takedowns and privacy; shown on the legal pages.
+  // Unset, the pages say it will be published before launch.
+  CONTACT_EMAIL: z.email().optional(),
+
   // Where this API is reachable from outside, for links in emails.
   PUBLIC_BASE_URL: z.url().default('http://localhost:3000'),
 

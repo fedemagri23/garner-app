@@ -118,6 +118,10 @@ export class AppConfigService {
     return this.get('OPEN_FOOD_FACTS_USER_AGENT');
   }
 
+  get contactEmail(): string | null {
+    return this.get('CONTACT_EMAIL') ?? null;
+  }
+
   get expoPushUrl(): string {
     return this.get('EXPO_PUSH_URL');
   }

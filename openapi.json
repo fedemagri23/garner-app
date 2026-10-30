@@ -145,6 +145,33 @@
         ]
       }
     },
+    "/v1/users/me/terms": {
+      "post": {
+        "operationId": "usersAcceptTerms",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Accept the current terms of use and privacy policy",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/v1/users/me/preferences": {
       "get": {
         "operationId": "usersMyPreferences",
@@ -4063,6 +4090,14 @@
             ],
             "description": "What push and email are written in"
           },
+          "termsAccepted": {
+            "type": "boolean",
+            "description": "Whether the account accepted the current terms (else the app asks)"
+          },
+          "currentTermsVersion": {
+            "type": "string",
+            "description": "The current terms version"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -4075,6 +4110,8 @@
           "role",
           "isActive",
           "locale",
+          "termsAccepted",
+          "currentTermsVersion",
           "createdAt"
         ]
       },
@@ -5013,6 +5050,10 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 80
+          },
+          "acceptTerms": {
+            "type": "boolean",
+            "description": "The person accepted the current terms and privacy policy"
           }
         },
         "required": [

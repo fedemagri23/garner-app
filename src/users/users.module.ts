@@ -3,6 +3,7 @@ import { DeleteAccountUseCase } from './application/delete-account.use-case.js';
 import { ACCOUNT_DELETION } from './domain/account-deletion.port.js';
 import { PrismaAccountDeletion } from './infrastructure/prisma-account-deletion.js';
 import { AccountDeletionPageController } from './presentation/account-deletion-page.controller.js';
+import { LegalController } from './presentation/legal.controller.js';
 import { ProductsModule } from '../products/products.module.js';
 import { GetUserProfileUseCase } from './application/get-user-profile.use-case.js';
 import { UpdateUserProfileUseCase } from './application/update-user-profile.use-case.js';
@@ -24,7 +25,7 @@ import { UsersController } from './presentation/users.controller.js';
  */
 @Module({
   imports: [ProductsModule],
-  controllers: [UsersController, AccountDeletionPageController],
+  controllers: [UsersController, AccountDeletionPageController, LegalController],
   providers: [
     GetUserProfileUseCase,
     UpdateUserProfileUseCase,

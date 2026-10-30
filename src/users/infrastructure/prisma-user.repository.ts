@@ -49,6 +49,11 @@ export class PrismaUserRepository implements UserRepository {
     return this.toDomain(row);
   }
 
+  async acceptTerms(id: string, version: string, at: Date): Promise<User> {
+    const row = await this.prisma.user.update({ where: { id }, data: { termsVersion: version, termsAcceptedAt: at } });
+    return this.toDomain(row);
+  }
+
   async updatePasswordHash(id: string, passwordHash: string): Promise<void> {
     await this.prisma.user.update({ where: { id }, data: { passwordHash } });
   }
@@ -75,6 +80,7 @@ export class PrismaUserRepository implements UserRepository {
       role: row.role as UserRole,
       isActive: row.isActive,
       locale: asLanguage(row.locale),
+      termsVersion: row.termsVersion,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };
