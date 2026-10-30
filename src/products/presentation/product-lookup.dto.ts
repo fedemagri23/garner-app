@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 import { LANGUAGES, type Language } from '../../common/i18n/language.js';
 import type { BarcodeLookup } from '../application/look-up-barcode.use-case.js';
+import { PRODUCT_LABELS, type ProductLabel } from '../domain/product-label.js';
 import { UnitOfMeasure } from '../domain/unit-of-measure.js';
 
 export class BarcodeLookupQuery {
@@ -22,6 +23,8 @@ export class BarcodeLookupResponse {
   @ApiProperty({ enum: Object.values(UnitOfMeasure), nullable: true }) unit!: UnitOfMeasure | null;
   @ApiProperty({ type: String, format: 'uuid', nullable: true, description: 'Ours, mapped from their categories' })
   categoryId!: string | null;
+  @ApiProperty({ enum: PRODUCT_LABELS, isArray: true, description: 'Labels Open Food Facts gives it' })
+  labels!: ProductLabel[];
   @ApiProperty({ type: String, nullable: true, description: 'Their front photo (CC BY-SA): credit it' })
   imageUrl!: string | null;
   @ApiProperty({ type: String, nullable: true, description: 'The product’s page there, for the credit' })
@@ -35,6 +38,7 @@ export class BarcodeLookupResponse {
       packageSize: null,
       unit: null,
       categoryId: null,
+      labels: [],
       imageUrl: null,
       sourceUrl: null,
     };

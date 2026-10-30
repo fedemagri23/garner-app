@@ -230,6 +230,7 @@ async function main() {
     }),
     upsertProduct({
       name: 'Arroz Largo Fino 1kg',
+      labels: ['gluten-free', 'vegan'],
       normalizedName: 'arroz largo fino 1kg',
       categoryId: (await aisle('arroz-legumbres')).id,
       packageSize: 1,

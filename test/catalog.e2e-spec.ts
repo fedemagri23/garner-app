@@ -195,6 +195,28 @@ describe('Catalog (e2e)', () => {
         .expect(400);
     });
 
+    it('filters by diet labels, every one asked for', async () => {
+      const curator = (await registerWithRole(app, 'MODERATOR')).accessToken;
+      const post = (name: string, labels: string[]) =>
+        request(app.getHttpServer())
+          .post('/v1/products')
+          .set(auth(curator))
+          .send({ name, categoryId: dairyId, unit: 'UNIT', labels })
+          .expect(201);
+      const both = (await post('Yogur Vegano Sin TACC', ['vegan', 'gluten-free'])).body;
+      await post('Yogur Vegano', ['vegan']);
+      expect(both.labels).toEqual(['gluten-free', 'vegan']);
+
+      const found = await request(app.getHttpServer())
+        .get('/v1/products')
+        .query({ labels: 'vegan,gluten-free' })
+        .set(auth(shopper))
+        .expect(200);
+      expect(found.body.data.map((p: { name: string }) => p.name)).toEqual(['Yogur Vegano Sin TACC']);
+
+      await request(app.getHttpServer()).get('/v1/products').query({ labels: 'spicy' }).set(auth(shopper)).expect(400);
+    });
+
     it('requires authentication', async () => {
       await request(app.getHttpServer()).get('/v1/products').expect(401);
     });

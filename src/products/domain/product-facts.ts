@@ -16,6 +16,8 @@ export interface ProductFacts {
   quantity: string | null;
   /** Their taxonomy, most general first: "en:dairies", "en:milks". */
   categoryTags: string[];
+  /** Their labels: "en:vegan", "en:no-gluten"… */
+  labelTags?: string[];
   imageUrl: string | null;
 }
 

@@ -1,10 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
   IsEnum,
+  IsIn,
   IsNumber,
   IsOptional,
   IsPositive,
@@ -19,6 +20,7 @@ import {
 import { PLAIN_TEXT, PLAIN_TEXT_MESSAGE } from '../../common/text/plain-text.js';
 import { PaginationQuery, PaginationMeta } from '../../common/http/pagination.js';
 import type { Brand, Category, Product } from '../domain/product.entity.js';
+import { PRODUCT_LABELS, type ProductLabel } from '../domain/product-label.js';
 import { formatPackageSize, UnitOfMeasure } from '../domain/unit-of-measure.js';
 
 const UNITS = Object.values(UnitOfMeasure);
@@ -110,6 +112,8 @@ export class ProductResponse {
     description: 'Where the picture comes from when not the team’s: credit it (CC BY-SA)',
   })
   imageSource!: 'OPEN_FOOD_FACTS' | null;
+  @ApiProperty({ enum: PRODUCT_LABELS, isArray: true, description: 'Gluten-free, vegan, organic…' })
+  labels!: ProductLabel[];
   @ApiProperty() isActive!: boolean;
   @ApiProperty({ type: [ProductBarcodeResponse] })
   barcodes!: ProductBarcodeResponse[];
@@ -134,6 +138,7 @@ export class ProductResponse {
       packageLabel: formatPackageSize(product.packageSize, product.unit),
       imageUrl: product.imageUrl,
       imageSource: product.imageSource,
+      labels: product.labels,
       isActive: product.isActive,
       barcodes: product.barcodes,
       origin: product.origin,
@@ -168,6 +173,17 @@ export class SearchProductsQueryDto extends PaginationQuery {
   @IsOptional()
   @IsUUID()
   brandId?: string;
+
+  @ApiPropertyOptional({
+    type: [String],
+    enum: PRODUCT_LABELS,
+    description: 'Only products with every one of these labels; comma-separated or repeated',
+  })
+  @IsOptional()
+  @Transform(({ value }) => (Array.isArray(value) ? value : String(value).split(',')).map((v: string) => v.trim()).filter(Boolean))
+  @IsArray()
+  @IsIn(PRODUCT_LABELS, { each: true })
+  labels?: ProductLabel[];
 }
 
 export class CreateProductRequest {
@@ -224,6 +240,13 @@ export class CreateProductRequest {
   @ApiProperty({ enum: UNITS })
   @IsEnum(UNITS)
   unit!: UnitOfMeasure;
+
+  @ApiPropertyOptional({ enum: PRODUCT_LABELS, isArray: true })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(PRODUCT_LABELS.length)
+  @IsIn(PRODUCT_LABELS, { each: true })
+  labels?: ProductLabel[];
 
   @ApiPropertyOptional({
     description:
@@ -290,6 +313,12 @@ export class UpdateProductRequest {
   @IsUrl()
   @MaxLength(2048)
   imageUrl?: string;
+
+  @ApiPropertyOptional({ enum: PRODUCT_LABELS, isArray: true })
+  @IsOptional()
+  @IsArray()
+  @IsIn(PRODUCT_LABELS, { each: true })
+  labels?: ProductLabel[];
 
   @ApiPropertyOptional({
     description:

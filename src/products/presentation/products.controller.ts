@@ -70,6 +70,7 @@ export class ProductsController {
       term: query.search,
       categoryId: query.categoryId,
       brandId: query.brandId,
+      labels: query.labels,
       skip: query.skip,
       take: query.take,
     });

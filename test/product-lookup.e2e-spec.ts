@@ -47,6 +47,7 @@ function answer(req: IncomingMessage, res: import('node:http').ServerResponse) {
           brands: 'Havanna, Grupo Havanna',
           quantity: '70 g',
           categories_tags: ['en:snacks', 'en:dairies'],
+          labels_tags: ['en:no-gluten', 'en:fair-trade'],
           image_front_url: PICTURE,
         },
       }),
@@ -137,6 +138,7 @@ describe('Barcode lookup (e2e)', () => {
       packageSize: 70,
       unit: 'GRAM',
       categoryId: dairyId,
+      labels: ['gluten-free'],
       imageUrl: PICTURE,
       sourceUrl: `https://world.openfoodfacts.org/product/${KNOWN}`,
     });

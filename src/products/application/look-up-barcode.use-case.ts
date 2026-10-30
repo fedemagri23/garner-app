@@ -16,6 +16,7 @@ import {
   type CategoryRepository,
   type ProductRepository,
 } from '../domain/product.repository.port.js';
+import { labelsFromTags, type ProductLabel } from '../domain/product-label.js';
 import type { UnitOfMeasure } from '../domain/unit-of-measure.js';
 
 export type BarcodeLookup =
@@ -29,6 +30,7 @@ export type BarcodeLookup =
       packageSize: number | null;
       unit: UnitOfMeasure | null;
       categoryId: string | null;
+      labels: ProductLabel[];
       imageUrl: string | null;
       sourceUrl: string;
     }
@@ -77,6 +79,7 @@ export class LookUpBarcodeUseCase {
       packageSize: size?.packageSize ?? null,
       unit: size?.unit ?? null,
       categoryId: category?.id ?? null,
+      labels: labelsFromTags(facts.labelTags ?? []),
       imageUrl: facts.imageUrl,
       sourceUrl: `https://world.openfoodfacts.org/product/${code}`,
     };

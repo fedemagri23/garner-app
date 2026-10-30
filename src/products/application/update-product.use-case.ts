@@ -1,3 +1,4 @@
+import type { ProductLabel } from '../domain/product-label.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
   normalizeProductName,
@@ -22,6 +23,7 @@ export interface UpdateProductCommand {
   packageSize?: number | null;
   unit?: UnitOfMeasure;
   imageUrl?: string | null;
+  labels?: ProductLabel[];
   isActive?: boolean;
 }
 
@@ -63,6 +65,7 @@ export class UpdateProductUseCase {
       packageSize: command.packageSize,
       unit: command.unit,
       imageUrl: command.imageUrl,
+      labels: command.labels,
       isActive: command.isActive,
     };
 

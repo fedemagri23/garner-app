@@ -10,6 +10,7 @@ const FIELDS = [
   'brands',
   'quantity',
   'categories_tags',
+  'labels_tags',
   'image_front_url',
 ];
 
@@ -18,6 +19,7 @@ interface OffProduct {
   brands?: string;
   quantity?: string;
   categories_tags?: string[];
+  labels_tags?: string[];
   image_front_url?: string;
   [name: `product_name_${string}`]: string | undefined;
 }
@@ -79,6 +81,7 @@ function toFacts(code: string, product: OffProduct): ProductFacts | null {
     brands: (product.brands ?? '').split(',').map((brand) => brand.trim()).filter(Boolean),
     quantity: product.quantity?.trim() || null,
     categoryTags: product.categories_tags ?? [],
+    labelTags: product.labels_tags ?? [],
     imageUrl: product.image_front_url?.startsWith('https://') ? product.image_front_url : null,
   };
 }

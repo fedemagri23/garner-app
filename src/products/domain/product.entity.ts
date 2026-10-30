@@ -1,6 +1,7 @@
 import type { Translations } from '../../common/i18n/language.js';
 import { normalizeText } from '../../common/text/normalize.js';
 import type { CatalogOrigin, ModerationStatus } from '../../community/domain/catalog-origin.js';
+import type { ProductLabel } from './product-label.js';
 import type { UnitOfMeasure } from './unit-of-measure.js';
 
 /** Pictures from outside the team, credited where shown. */
@@ -54,6 +55,8 @@ export interface Product {
   imageUrl: string | null;
   /** Where a picture not taken by the team came from, to credit it. */
   imageSource: ImageSource | null;
+  /** Gluten-free, vegan, organic… */
+  labels: ProductLabel[];
   isActive: boolean;
   barcodes: ProductBarcode[];
   /** The team's, or added by a shopper (`createdById`). */
@@ -78,6 +81,7 @@ export interface CreateProductInput {
   unit: UnitOfMeasure;
   imageUrl: string | null;
   imageSource?: ImageSource | null;
+  labels?: ProductLabel[];
   /** Absent for the team's products; a shopper's are COMMUNITY with their id. */
   origin?: CatalogOrigin;
   createdById?: string | null;
@@ -98,6 +102,7 @@ export interface UpdateProductInput {
   packageSize?: number | null;
   unit?: UnitOfMeasure;
   imageUrl?: string | null;
+  labels?: ProductLabel[];
   /** Products are retired by clearing this, never deleted. */
   isActive?: boolean;
 }

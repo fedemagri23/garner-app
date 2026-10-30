@@ -29,6 +29,7 @@ import {
   type CategoryRepository,
   type ProductRepository,
 } from '../domain/product.repository.port.js';
+import { asLabels, type ProductLabel } from '../domain/product-label.js';
 import type { UnitOfMeasure } from '../domain/unit-of-measure.js';
 import { LookUpBarcodeUseCase } from './look-up-barcode.use-case.js';
 
@@ -44,6 +45,8 @@ export interface CreateProductCommand {
   packageSize?: number;
   unit: UnitOfMeasure;
   imageUrl?: string;
+  /** Gluten-free, vegan… as the shopper (or the lookup) said. */
+  labels?: ProductLabel[];
   /** Take the picture Open Food Facts has for the first barcode (credited). */
   photoFromLookup?: boolean;
   barcodes?: string[];
@@ -153,6 +156,7 @@ export class CreateProductUseCase {
       // from the server's own lookup of the barcode.
       imageUrl: (fromTeam ? command.imageUrl : undefined) ?? photo,
       imageSource: (fromTeam && command.imageUrl) || !photo ? null : 'OPEN_FOOD_FACTS',
+      labels: command.labels ? asLabels(command.labels) : [],
       origin: fromTeam ? CatalogOrigin.Verified : CatalogOrigin.Community,
       createdById: fromTeam ? null : actor.id,
       weight: fromTeam ? VERIFIED_BONUS : 0,

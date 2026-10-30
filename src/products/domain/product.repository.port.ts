@@ -1,4 +1,5 @@
 import type { Translations } from '../../common/i18n/language.js';
+import type { ProductLabel } from './product-label.js';
 import type {
   Brand,
   Category,
@@ -12,6 +13,8 @@ export interface ProductSearchCriteria {
   /** Free text, already normalized, matched against name and brand. */
   term?: string;
   categoryId?: string;
+  /** Products carrying every one of these. */
+  labels?: ProductLabel[];
   /** Includes the category's descendants, so browsing "Dairy" finds "Milk". */
   categoryIds?: string[];
   brandId?: string;

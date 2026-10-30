@@ -230,6 +230,28 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "name": "labels",
+            "required": false,
+            "in": "query",
+            "description": "Only products with every one of these labels; comma-separated or repeated",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "gluten-free",
+                  "vegan",
+                  "vegetarian",
+                  "organic",
+                  "lactose-free",
+                  "sugar-free",
+                  "kosher",
+                  "halal"
+                ]
+              }
+            }
           }
         ],
         "responses": {
@@ -4185,6 +4207,23 @@
             "nullable": true,
             "description": "Where the picture comes from when not the team’s: credit it (CC BY-SA)"
           },
+          "labels": {
+            "type": "array",
+            "description": "Gluten-free, vegan, organic…",
+            "items": {
+              "type": "string",
+              "enum": [
+                "gluten-free",
+                "vegan",
+                "vegetarian",
+                "organic",
+                "lactose-free",
+                "sugar-free",
+                "kosher",
+                "halal"
+              ]
+            }
+          },
           "isActive": {
             "type": "boolean"
           },
@@ -4222,6 +4261,7 @@
           "packageLabel",
           "imageUrl",
           "imageSource",
+          "labels",
           "isActive",
           "barcodes",
           "origin",
@@ -4315,6 +4355,22 @@
               "UNIT"
             ]
           },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "gluten-free",
+                "vegan",
+                "vegetarian",
+                "organic",
+                "lactose-free",
+                "sugar-free",
+                "kosher",
+                "halal"
+              ]
+            }
+          },
           "photoFromLookup": {
             "type": "boolean",
             "description": "Use the photo of the first barcode found by `/v1/product-lookup` (Open Food Facts), credited; the server takes it from its own lookup, never from a link"
@@ -4374,6 +4430,22 @@
           "imageUrl": {
             "type": "string",
             "format": "uri"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "gluten-free",
+                "vegan",
+                "vegetarian",
+                "organic",
+                "lactose-free",
+                "sugar-free",
+                "kosher",
+                "halal"
+              ]
+            }
           },
           "isActive": {
             "type": "boolean",
@@ -4476,6 +4548,23 @@
             "nullable": true,
             "description": "Ours, mapped from their categories"
           },
+          "labels": {
+            "type": "array",
+            "description": "Labels Open Food Facts gives it",
+            "items": {
+              "type": "string",
+              "enum": [
+                "gluten-free",
+                "vegan",
+                "vegetarian",
+                "organic",
+                "lactose-free",
+                "sugar-free",
+                "kosher",
+                "halal"
+              ]
+            }
+          },
           "imageUrl": {
             "type": "string",
             "nullable": true,
@@ -4495,6 +4584,7 @@
           "packageSize",
           "unit",
           "categoryId",
+          "labels",
           "imageUrl",
           "sourceUrl"
         ]

@@ -1,3 +1,4 @@
+import type { ProductLabel } from '../domain/product-label.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { normalizeText } from '../../common/text/normalize.js';
 import type { Product } from '../domain/product.entity.js';
@@ -12,6 +13,7 @@ export interface SearchProductsQuery {
   term?: string;
   categoryId?: string;
   brandId?: string;
+  labels?: ProductLabel[];
   skip: number;
   take: number;
 }
@@ -54,6 +56,7 @@ export class SearchProductsUseCase {
       term: term || undefined,
       categoryIds,
       brandId: query.brandId,
+      labels: query.labels,
       skip: query.skip,
       take: query.take,
     });

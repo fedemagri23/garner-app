@@ -201,6 +201,8 @@ model Product {
   imageUrl          String?
   /// Where the picture comes from when it is not the team's: OPEN_FOOD_FACTS.
   imageSource       String?          @db.VarChar(40)
+  /// Diet and lifestyle labels: gluten-free, vegan, organic… (product-label.ts).
+  labels            String[]         @default([])
   isActive          Boolean          @default(true)
   /// Who it comes from; every entry that predates shoppers adding their own is the team's.
   origin            CatalogOrigin    @default(VERIFIED)
@@ -232,6 +234,7 @@ model Product {
   @@index([isActive])
   @@index([origin, moderationStatus, weight])
   @@index([createdById, createdAt])
+  @@index([labels], type: Gin)
   @@map("products")
 }
 

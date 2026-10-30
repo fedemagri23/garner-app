@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { Prisma } from '../../../generated/prisma/core/index.js';
 import { CorePrismaService } from '../../common/database/core-prisma.service.js';
 import { asTranslations } from '../../common/i18n/language.js';
+import { asLabels } from '../domain/product-label.js';
 import type {
   CreateProductInput,
   Product,
@@ -108,6 +109,7 @@ export class PrismaProductRepository implements ProductRepository {
         unit: input.unit,
         imageUrl: input.imageUrl,
         imageSource: input.imageSource ?? null,
+        labels: input.labels ?? [],
         origin: input.origin,
         createdById: input.createdById,
         weight: input.weight,
@@ -132,6 +134,7 @@ export class PrismaProductRepository implements ProductRepository {
         packageSize: input.packageSize,
         unit: input.unit,
         imageUrl: input.imageUrl,
+        labels: input.labels,
         isActive: input.isActive,
       },
       include: PRODUCT_INCLUDE,
@@ -193,6 +196,11 @@ export class PrismaProductRepository implements ProductRepository {
       where.brandId = criteria.brandId;
     }
 
+    // Every label asked for: "sin TACC y vegano" means both.
+    if (criteria.labels?.length) {
+      where.labels = { hasEvery: criteria.labels };
+    }
+
     if (criteria.term) {
       // The term arrives already normalized, so both sides of the comparison
       // have been through the same transformation — which is what lets
@@ -233,6 +241,7 @@ export class PrismaProductRepository implements ProductRepository {
       unit: row.unit as UnitOfMeasure,
       imageUrl: row.imageUrl,
       imageSource: row.imageSource === 'OPEN_FOOD_FACTS' ? 'OPEN_FOOD_FACTS' : null,
+      labels: asLabels(row.labels),
       isActive: row.isActive,
       barcodes: row.barcodes.map((barcode) => ({
         code: barcode.code,

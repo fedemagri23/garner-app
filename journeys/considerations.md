@@ -390,3 +390,9 @@ Notation: [`README.md`](README.md).
 - **What:** The `icon` column, the taxonomy file's `icon` fields and `CategoryResponse.icon` are removed (migration `20261023200000_drop_category_icon`). Categories are shown by name only. Amends CON-060.
 - **Why:** Decided by the user.
 - **Revisit when:** The user asks for icons.
+
+### CON-062 — Diet and lifestyle labels on products
+- **Phase:** post-plan (mobile phase 10, checkpoint 19) · **Area:** products · **Status:** accepted
+- **What:** `products.labels` (text array, GIN index) holds any of `gluten-free`, `vegan`, `vegetarian`, `organic`, `lactose-free`, `sugar-free`, `kosher`, `halal` (`PRODUCT_LABELS`). Shoppers set them when adding a product (unverified like the rest of it), the team can correct them (`PATCH`), the barcode lookup suggests them from Open Food Facts' `labels_tags`, and `GET /v1/products?labels=vegan,gluten-free` returns products carrying every one. Unknown labels are refused (400) on the way in and dropped when read back. The seed's rice is gluten-free and vegan.
+- **Why:** Diet is how many people shop (sin TACC above all in Argentina), and it cuts across categories: a gluten-free pasta is still a pasta.
+- **Revisit when:** Shoppers need to correct labels on others' products (today only the team can), or more labels are wanted.
