@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsString,
+  Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -58,4 +59,29 @@ export class TokenPairResponse {
 
   @ApiProperty()
   refreshToken!: string;
+}
+
+export class PasswordResetRequest {
+  @ApiProperty({ format: 'email', maxLength: 254 })
+  @IsEmail()
+  @MaxLength(254)
+  email!: string;
+}
+
+export class PasswordResetConfirmRequest {
+  @ApiProperty({ format: 'email', maxLength: 254 })
+  @IsEmail()
+  @MaxLength(254)
+  email!: string;
+
+  @ApiProperty({ example: '042137', description: 'The six digits from the email' })
+  @IsString()
+  @Matches(/^\s*\d{6}\s*$/, { message: 'code must be six digits' })
+  code!: string;
+
+  @ApiProperty({ minLength: 10, maxLength: 128 })
+  @IsString()
+  @MinLength(10)
+  @MaxLength(128)
+  newPassword!: string;
 }

@@ -18,6 +18,8 @@ export interface UserRepository {
     email: string,
   ): Promise<UserWithCredentials | null>;
   create(input: CreateUserInput): Promise<User>;
+  /** For a password reset or change; the hash only, never the password. */
+  updatePasswordHash(id: string, passwordHash: string): Promise<void>;
 }
 
 export const USER_REPOSITORY = Symbol('USER_REPOSITORY');

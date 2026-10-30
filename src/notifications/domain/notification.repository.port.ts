@@ -156,17 +156,7 @@ export interface ChannelDeliveryLedger {
 
 export const CHANNEL_DELIVERY_LEDGER = Symbol('CHANNEL_DELIVERY_LEDGER');
 
-export interface EmailMessage {
-  to: string;
-  subject: string;
-  text: string;
-  headers: Record<string, string>;
-}
-
-/** Hands an email to a mail server. Throws when it is not accepted. */
-export interface EmailSender {
-  send(message: EmailMessage): Promise<void>;
-}
+export type { EmailMessage, EmailSender } from '../../common/email/email-sender.js';
 
 /**
  * Signed, non-expiring tokens for unsubscribe links. An email can sit in an

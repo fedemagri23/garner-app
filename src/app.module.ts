@@ -11,6 +11,7 @@ import { MetricsController } from './common/observability/metrics.controller.js'
 import { MetricsInterceptor } from './common/observability/metrics.interceptor.js';
 import { ObservabilityModule } from './common/observability/observability.module.js';
 import { QueueModule } from './common/queue/queue.module.js';
+import { EmailModule } from './common/email/email.module.js';
 import { RedisModule } from './common/redis/redis.module.js';
 import { ContributionsModule } from './contributions/contributions.module.js';
 import { ExternalPriceSourcesModule } from './external-price-sources/external-price-sources.module.js';
@@ -36,6 +37,7 @@ import { UsersModule } from './users/users.module.js';
     ObservabilityModule,
     DatabaseModule,
     RedisModule,
+    EmailModule,
     QueueModule,
     EventsModule,
     SecurityModule,

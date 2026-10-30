@@ -1229,6 +1229,61 @@
         ]
       }
     },
+    "/v1/auth/password-reset": {
+      "post": {
+        "description": "Always 202, whether or not the email has an account. At most three codes an hour per account.",
+        "operationId": "authRequestPasswordReset",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "summary": "Email a six-digit code to reset a forgotten password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/password-reset/confirm": {
+      "post": {
+        "description": "The code works once, for 30 minutes, and dies after five wrong tries. Signs the account out everywhere.",
+        "operationId": "authConfirmPasswordReset",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetConfirmRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "The code is wrong or has expired, or the password is too short"
+          }
+        },
+        "summary": "Set a new password with the emailed code",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/v1/supermarkets": {
       "get": {
         "operationId": "supermarketsList",
@@ -4906,6 +4961,44 @@
         },
         "required": [
           "refreshToken"
+        ]
+      },
+      "PasswordResetRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "PasswordResetConfirmRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "code": {
+            "type": "string",
+            "example": "042137",
+            "description": "The six digits from the email"
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "email",
+          "code",
+          "newPassword"
         ]
       },
       "SupermarketResponse": {

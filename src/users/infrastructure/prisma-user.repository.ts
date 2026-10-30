@@ -49,6 +49,10 @@ export class PrismaUserRepository implements UserRepository {
     return this.toDomain(row);
   }
 
+  async updatePasswordHash(id: string, passwordHash: string): Promise<void> {
+    await this.prisma.user.update({ where: { id }, data: { passwordHash } });
+  }
+
   async create(input: CreateUserInput): Promise<User> {
     const row = await this.prisma.user.create({
       data: {

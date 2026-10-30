@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { PasswordResetUseCase } from './application/password-reset.use-case.js';
+import { PASSWORD_RESET_REPOSITORY } from './domain/password-reset.js';
+import { PrismaPasswordResetRepository } from './infrastructure/prisma-password-reset.repository.js';
 import { UsersModule } from '../users/users.module.js';
 import { IssueTokenPairService } from './application/issue-token-pair.service.js';
 import { LoginUseCase } from './application/login.use-case.js';
@@ -23,6 +26,8 @@ import { AuthController } from './presentation/auth.controller.js';
     RefreshTokensUseCase,
     LogoutUseCase,
     IssueTokenPairService,
+    PasswordResetUseCase,
+    { provide: PASSWORD_RESET_REPOSITORY, useClass: PrismaPasswordResetRepository },
     {
       provide: REFRESH_TOKEN_REPOSITORY,
       useClass: PrismaRefreshTokenRepository,

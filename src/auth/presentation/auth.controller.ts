@@ -1,5 +1,7 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import {
+  ApiAcceptedResponse,
+  ApiBadRequestResponse,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiNoContentResponse,
@@ -11,10 +13,13 @@ import {
 import { Public } from '../../security/presentation/public.decorator.js';
 import { LoginUseCase } from '../application/login.use-case.js';
 import { LogoutUseCase } from '../application/logout.use-case.js';
+import { PasswordResetUseCase } from '../application/password-reset.use-case.js';
 import { RefreshTokensUseCase } from '../application/refresh-tokens.use-case.js';
 import { RegisterUseCase } from '../application/register.use-case.js';
 import {
   LoginRequest,
+  PasswordResetConfirmRequest,
+  PasswordResetRequest,
   RefreshRequest,
   RegisterRequest,
   TokenPairResponse,
@@ -28,6 +33,7 @@ export class AuthController {
     private readonly login: LoginUseCase,
     private readonly refreshTokens: RefreshTokensUseCase,
     private readonly logout: LogoutUseCase,
+    private readonly passwordReset: PasswordResetUseCase,
   ) {}
 
   @Public()
@@ -66,5 +72,30 @@ export class AuthController {
   @ApiNoContentResponse()
   async logoutUser(@Body() body: RefreshRequest): Promise<void> {
     await this.logout.execute(body.refreshToken);
+  }
+
+  @Public()
+  @Post('password-reset')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({
+    summary: 'Email a six-digit code to reset a forgotten password',
+    description: 'Always 202, whether or not the email has an account. At most three codes an hour per account.',
+  })
+  @ApiAcceptedResponse()
+  async requestPasswordReset(@Body() body: PasswordResetRequest): Promise<void> {
+    await this.passwordReset.request(body.email);
+  }
+
+  @Public()
+  @Post('password-reset/confirm')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Set a new password with the emailed code',
+    description: 'The code works once, for 30 minutes, and dies after five wrong tries. Signs the account out everywhere.',
+  })
+  @ApiNoContentResponse()
+  @ApiBadRequestResponse({ description: 'The code is wrong or has expired, or the password is too short' })
+  async confirmPasswordReset(@Body() body: PasswordResetConfirmRequest): Promise<void> {
+    await this.passwordReset.reset(body.email, body.code, body.newPassword);
   }
 }

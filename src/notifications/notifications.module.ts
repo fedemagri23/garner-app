@@ -6,6 +6,7 @@ import { DevicesController } from './presentation/devices.controller.js';
 import { SubjectNamesLoader } from './application/notification-names.js';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+import { EMAIL_SENDER, type EmailSender } from '../common/email/email-sender.js';
 import { AppConfigService } from '../common/config/app-config.service.js';
 import { PriceIntelligenceModule } from '../price-intelligence/price-intelligence.module.js';
 import { ProductsModule } from '../products/products.module.js';
@@ -35,7 +36,6 @@ import {
 import { EmailChannel } from './infrastructure/email-channel.js';
 import { HmacUnsubscribeTokens } from './infrastructure/hmac-unsubscribe-tokens.js';
 import { InAppChannel } from './infrastructure/in-app-channel.js';
-import { SmtpEmailSender } from './infrastructure/smtp-email-sender.js';
 import {
   BullmqNotificationJobs,
   NOTIFICATIONS_QUEUE,
@@ -91,6 +91,7 @@ import { NotificationsController } from './presentation/notifications.controller
         PUSH_SENDER,
         DEVICE_TOKEN_REPOSITORY,
         SubjectNamesLoader,
+        EMAIL_SENDER,
       ],
       useFactory: (
         inApp: InAppChannel,
@@ -99,14 +100,15 @@ import { NotificationsController } from './presentation/notifications.controller
         push: PushSender,
         devices: DeviceTokenRepository,
         names: SubjectNamesLoader,
+        email: EmailSender | null,
       ): NotificationChannel[] => {
         // Push is always there; it applies only to phones that registered.
         const channels: NotificationChannel[] = [inApp, new PushChannel(push, devices, names)];
 
-        if (config.smtpUrl) {
+        if (email) {
           channels.push(
             new EmailChannel(
-              new SmtpEmailSender(config.smtpUrl, config.emailFrom),
+              email,
               tokens,
               config.publicBaseUrl,
               names,

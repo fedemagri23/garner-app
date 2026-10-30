@@ -314,4 +314,75 @@ describe('Auth (e2e)', () => {
       expect(response.headers['access-control-allow-origin']).toBeUndefined();
     });
   });
+
+  describe('password reset', () => {
+    const MAILPIT = 'http://127.0.0.1:8025/api/v1';
+    const http = () => request(app.getHttpServer());
+
+    /** The six-digit code in the newest email to this address, as a person reads it. */
+    const codeSentTo = async (address: string): Promise<string | null> => {
+      const { messages } = (await (await fetch(`${MAILPIT}/messages?limit=50`)).json()) as {
+        messages: { ID: string; To: { Address: string }[] }[];
+      };
+      const mail = messages.find((m) => m.To.some((to) => to.Address === address));
+      if (!mail) return null;
+      const { Text } = (await (await fetch(`${MAILPIT}/message/${mail.ID}`)).json()) as { Text: string };
+      return /\b(\d{6})\b/.exec(Text)?.[1] ?? null;
+    };
+
+    it('emails a code, and the code sets a new password and signs out every device', async () => {
+      const email = uniqueEmail('reset');
+      const before = await register(email);
+
+      await http().post('/v1/auth/password-reset').send({ email }).expect(202);
+      const code = await codeSentTo(email);
+      expect(code).toMatch(/^\d{6}$/);
+
+      await http()
+        .post('/v1/auth/password-reset/confirm')
+        .send({ email, code, newPassword: 'a-brand-new-password' })
+        .expect(204);
+
+      await http().post('/v1/auth/login').send({ email, password: 'correct-horse-battery' }).expect(401);
+      await http().post('/v1/auth/login').send({ email, password: 'a-brand-new-password' }).expect(200);
+      await http().post('/v1/auth/refresh').send({ refreshToken: before.refreshToken }).expect(401);
+
+      // Used once, it does not work again.
+      await http()
+        .post('/v1/auth/password-reset/confirm')
+        .send({ email, code, newPassword: 'yet-another-password' })
+        .expect(400);
+    });
+
+    it('answers the same for an email with no account, and sends nothing', async () => {
+      const email = uniqueEmail('nobody');
+      await http().post('/v1/auth/password-reset').send({ email }).expect(202);
+      expect(await codeSentTo(email)).toBeNull();
+    });
+
+    it('kills a code after five wrong guesses', async () => {
+      const email = uniqueEmail('guess');
+      await register(email);
+      await http().post('/v1/auth/password-reset').send({ email }).expect(202);
+      const code = await codeSentTo(email);
+      const wrong = code === '000000' ? '111111' : '000000';
+
+      for (let i = 0; i < 5; i += 1) {
+        await http().post('/v1/auth/password-reset/confirm').send({ email, code: wrong, newPassword: 'whatever-long-1' }).expect(400);
+      }
+      await http().post('/v1/auth/password-reset/confirm').send({ email, code, newPassword: 'whatever-long-1' }).expect(400);
+    });
+
+    it('sends at most three codes an hour to one account', async () => {
+      const email = uniqueEmail('flood');
+      await register(email);
+      for (let i = 0; i < 4; i += 1) {
+        await http().post('/v1/auth/password-reset').send({ email }).expect(202);
+      }
+      const { messages } = (await (await fetch(`${MAILPIT}/messages?limit=100`)).json()) as {
+        messages: { To: { Address: string }[] }[];
+      };
+      expect(messages.filter((m) => m.To.some((to) => to.Address === email))).toHaveLength(3);
+    });
+  });
 });

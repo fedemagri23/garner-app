@@ -1,8 +1,5 @@
 import { createTransport, type Transporter } from 'nodemailer';
-import type {
-  EmailMessage,
-  EmailSender,
-} from '../domain/notification.repository.port.js';
+import type { EmailMessage, EmailSender } from './email-sender.js';
 
 /**
  * Any SMTP server — a provider's relay (SES, Postmark, Mailgun all speak it)

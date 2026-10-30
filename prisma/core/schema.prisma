@@ -55,6 +55,7 @@ model User {
   updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 
   refreshTokens           RefreshToken[]
+  passwordResetCodes      PasswordResetCode[]
   preferences             UserPreferences?
   shoppingLists           ShoppingList[]
   shoppingSessions        ShoppingSession[]
@@ -76,6 +77,23 @@ model User {
 
 /// One row per issued refresh token. Tokens are stored hashed, and rotation
 /// marks the previous row revoked so a replayed token can be detected.
+/// A six-digit code emailed to reset a forgotten password. Only its hash is
+/// kept; it is single use, short-lived, and dies after a few wrong guesses.
+model PasswordResetCode {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  codeHash  String    @db.VarChar(128)
+  expiresAt DateTime  @db.Timestamptz(3)
+  usedAt    DateTime? @db.Timestamptz(3)
+  attempts  Int       @default(0)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("password_reset_codes")
+}
+
 model RefreshToken {
   id        String    @id @default(uuid()) @db.Uuid
   userId    String    @db.Uuid
