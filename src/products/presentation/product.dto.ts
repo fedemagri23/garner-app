@@ -124,6 +124,13 @@ export class ProductResponse {
   origin!: 'VERIFIED' | 'COMMUNITY';
   @ApiProperty({ description: 'People other than its creator who confirmed it' })
   confirmationCount!: number;
+  @ApiProperty({
+    type: String,
+    format: 'uuid',
+    nullable: true,
+    description: 'Set when this was a duplicate: the product to show instead',
+  })
+  mergedIntoId!: string | null;
   @ApiProperty({ format: 'date-time' }) createdAt!: string;
 
   static from(product: Product): ProductResponse {
@@ -142,6 +149,7 @@ export class ProductResponse {
       isActive: product.isActive,
       barcodes: product.barcodes,
       origin: product.origin,
+      mergedIntoId: product.mergedIntoId,
       confirmationCount: product.confirmationCount,
       createdAt: product.createdAt.toISOString(),
     };

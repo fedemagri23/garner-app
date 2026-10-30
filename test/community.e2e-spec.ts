@@ -2,6 +2,7 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 import { CorePrismaService } from '../src/common/database/core-prisma.service.js';
+import { PricingPrismaService } from '../src/common/database/pricing-prisma.service.js';
 import { PriceAcceptedListener } from '../src/community/application/price-accepted.listener.js';
 import {
   createTestApp,
@@ -365,6 +366,50 @@ describe('Shopper-added products and shops (e2e)', () => {
 
       await http().post(`/v1/moderation/potatoes/${product}/hide`).set(auth(admin)).expect(400);
       expect(await core.catalogAuditLog.count({ where: { targetId: product } })).toBe(4);
+    });
+
+    it('folds a duplicate into the product that stays: lists, barcodes, confirmations and prices follow', async () => {
+      const ana = await shopper(90);
+      const ben = await shopper(90, true);
+      const store = (await core.storeLocation.findFirstOrThrow({ where: { origin: 'VERIFIED' } })).id;
+      const kept = (await addProduct(ana.token, { name: 'Leche Descremada Uno' }).expect(201)).body.id;
+      const dup = (
+        await addProduct(ana.token, { name: 'Leche Descremada Dos', barcodes: ['7790070410139'] }).expect(201)
+      ).body.id;
+
+      const list = (
+        await http().post('/v1/shopping-lists').set(auth(ben.token)).send({ name: 'Semana', currency: 'ARS' }).expect(201)
+      ).body.id;
+      for (const [productId, quantity] of [[kept, 1], [dup, 2]] as const) {
+        await http().post(`/v1/shopping-lists/${list}/items`).set(auth(ben.token)).send({ productId, quantity }).expect(201);
+      }
+      await http().post(`/v1/products/${dup}/confirmations`).set(auth(ben.token)).expect(200);
+      await http().post(`/v1/products/${kept}/confirmations`).set(auth(ben.token)).expect(200);
+      await http()
+        .post('/v1/price-observations')
+        .set(auth(ben.token))
+        .send({ productId: dup, storeId: store, currency: 'ARS', priceCents: 1500 })
+        .expect(201);
+
+      await http().post(`/v1/moderation/products/${dup}/merge`).set(auth(ana.token)).send({ intoId: kept }).expect(403);
+      await http().post(`/v1/moderation/products/${dup}/merge`).set(auth(admin)).send({ intoId: dup }).expect(400);
+      await http().post(`/v1/moderation/products/${dup}/merge`).set(auth(admin)).send({ intoId: kept }).expect(204);
+
+      const lines = await core.shoppingListItem.findMany({ where: { listId: list } });
+      expect(lines.map((line) => [line.productId, Number(line.quantity)])).toEqual([[kept, 3]]);
+      expect((await core.productBarcode.findUniqueOrThrow({ where: { code: '7790070410139' } })).productId).toBe(kept);
+      expect(await core.productConfirmation.count({ where: { productId: kept } })).toBe(1);
+      expect(await app.get(PricingPrismaService).priceObservation.count({ where: { productId: dup } })).toBe(0);
+      expect(await app.get(PricingPrismaService).priceObservation.count({ where: { productId: kept } })).toBe(1);
+
+      const duplicate = await http().get(`/v1/products/${dup}`).set(auth(ben.token)).expect(200);
+      expect(duplicate.body).toMatchObject({ mergedIntoId: kept });
+      const found = await http().get('/v1/products').query({ search: 'leche descremada' }).set(auth(ben.token)).expect(200);
+      expect(found.body.data.map((p: { id: string }) => p.id)).toEqual([kept]);
+      expect(await core.catalogAuditLog.count({ where: { targetId: dup, action: 'merged' } })).toBe(1);
+
+      // Merged once, it cannot be merged again.
+      await http().post(`/v1/moderation/products/${dup}/merge`).set(auth(admin)).send({ intoId: kept }).expect(400);
     });
 
     it('publishes a private shop the team verifies', async () => {

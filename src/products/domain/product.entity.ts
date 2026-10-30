@@ -63,6 +63,8 @@ export interface Product {
   origin: CatalogOrigin;
   createdById: string | null;
   moderationStatus: ModerationStatus;
+  /** Set when this was a duplicate folded into another product. */
+  mergedIntoId: string | null;
   /** People other than its creator who said it exists and is right. */
   confirmationCount: number;
   createdAt: Date;

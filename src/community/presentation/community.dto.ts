@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min, MinLength } from 'class-validator';
 import { additionStatus, ADDITION_STATUSES, type AdditionStatus } from '../domain/addition-status.js';
 import { publicationProgress } from '../domain/store-publication.js';
 import type { AddedProduct, AddedStore, ReviewItem, SimilarProduct } from '../domain/community.port.js';
@@ -11,6 +11,12 @@ export class FlagRequest {
   @ApiProperty({ enum: FLAG_REASONS })
   @IsIn(FLAG_REASONS)
   reason!: (typeof FLAG_REASONS)[number];
+}
+
+export class MergeProductRequest {
+  @ApiProperty({ format: 'uuid', description: 'The product that stays' })
+  @IsUUID()
+  intoId!: string;
 }
 
 export class ConfirmationsResponse {

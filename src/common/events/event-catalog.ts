@@ -25,6 +25,8 @@ import type { DomainEvent } from './domain-event.js';
  * | OptimizationRequested    | optimization (7)   | optimization worker  |
  * | OptimizationCompleted    | optimization (7)   | notifications (8)    |
  * | PriceAlertTriggered      | notifications (8)  | delivery worker      |
+ * | ProductsMerged           | community (post-plan) | pricing           |
+ * | ProductPricesMoved       | pricing (post-plan)   | price-intelligence|
  */
 export const DomainEventName = {
   UserCreated: 'UserCreated',
@@ -44,6 +46,8 @@ export const DomainEventName = {
   OptimizationRequested: 'OptimizationRequested',
   OptimizationCompleted: 'OptimizationCompleted',
   PriceAlertTriggered: 'PriceAlertTriggered',
+  ProductsMerged: 'ProductsMerged',
+  ProductPricesMoved: 'ProductPricesMoved',
 } as const;
 
 export type DomainEventName =
@@ -297,3 +301,20 @@ export type PriceAlertTriggeredEvent = DomainEvent<
   'PriceAlertTriggered',
   PriceAlertTriggeredPayload
 >;
+
+/** A duplicate product folded into another; the core database is already done. */
+export interface ProductsMergedPayload {
+  fromProductId: string;
+  intoProductId: string;
+}
+
+export type ProductsMergedEvent = DomainEvent<'ProductsMerged', ProductsMergedPayload>;
+
+/** The pricing database moved the duplicate's prices; these stores need recomputing. */
+export interface ProductPricesMovedPayload {
+  fromProductId: string;
+  intoProductId: string;
+  storeIds: string[];
+}
+
+export type ProductPricesMovedEvent = DomainEvent<'ProductPricesMoved', ProductPricesMovedPayload>;

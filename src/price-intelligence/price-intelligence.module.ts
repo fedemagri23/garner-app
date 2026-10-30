@@ -1,5 +1,8 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+import { ProductPricesMovedListener } from './application/product-prices-moved.listener.js';
+import { MERGED_PRODUCT_CLEANUP } from './domain/merged-product-cleanup.port.js';
+import { PrismaMergedProductCleanup } from './infrastructure/prisma-merged-product-cleanup.js';
 import { PricingModule } from '../pricing/pricing.module.js';
 import { ProductsModule } from '../products/products.module.js';
 import { SupermarketsModule } from '../supermarkets/supermarkets.module.js';
@@ -45,6 +48,8 @@ import { ProductPricesController } from './presentation/product-prices.controlle
   ],
   controllers: [ProductPricesController, PriceDropsController],
   providers: [
+    ProductPricesMovedListener,
+    { provide: MERGED_PRODUCT_CLEANUP, useClass: PrismaMergedProductCleanup },
     RecomputeDerivedPriceUseCase,
     AggregateDailyPricesUseCase,
     ComparePricesUseCase,

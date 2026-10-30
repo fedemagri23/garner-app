@@ -38,6 +38,7 @@ import {
   AddedStoreResponse,
   ConfirmationsResponse,
   FlagRequest,
+  MergeProductRequest,
   MyAdditionsResponse,
   ProductSuggestionResponse,
   ReviewItemResponse,
@@ -192,6 +193,25 @@ export class ModerationController {
   @ApiOkResponse({ type: [ReviewItemResponse] })
   async queue(): Promise<ReviewItemResponse[]> {
     return (await this.moderation.queue()).map(ReviewItemResponse.from);
+  }
+
+  // Before the general route, whose last segment is verify, hide or restore.
+  @Post('products/:id/merge')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Fold a duplicate product into the one that stays',
+    description:
+      'Moves its barcodes, list lines, trips, alerts, confirmations, reports and prices to the kept product; ' +
+      'the duplicate is left MERGED. Cannot be undone.',
+  })
+  @ApiNoContentResponse()
+  @ApiNotFoundResponse({ description: 'No such product' })
+  async merge(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: MergeProductRequest,
+  ): Promise<void> {
+    await this.moderation.merge(actor, id, body.intoId);
   }
 
   @Post(':target/:id/:action')

@@ -1072,6 +1072,49 @@
         ]
       }
     },
+    "/v1/moderation/products/{id}/merge": {
+      "post": {
+        "description": "Moves its barcodes, list lines, trips, alerts, confirmations, reports and prices to the kept product; the duplicate is left MERGED. Cannot be undone.",
+        "operationId": "moderationMerge",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeProductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "No such product"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Fold a duplicate product into the one that stays",
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
     "/v1/moderation/{target}/{id}/{action}": {
       "post": {
         "operationId": "moderationAct",
@@ -4443,6 +4486,12 @@
             "type": "number",
             "description": "People other than its creator who confirmed it"
           },
+          "mergedIntoId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Set when this was a duplicate: the product to show instead"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -4464,6 +4513,7 @@
           "barcodes",
           "origin",
           "confirmationCount",
+          "mergedIntoId",
           "createdAt"
         ]
       },
@@ -4919,6 +4969,19 @@
           "flagCount",
           "confirmationCount",
           "createdAt"
+        ]
+      },
+      "MergeProductRequest": {
+        "type": "object",
+        "properties": {
+          "intoId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The product that stays"
+          }
+        },
+        "required": [
+          "intoId"
         ]
       },
       "AddedProductResponse": {

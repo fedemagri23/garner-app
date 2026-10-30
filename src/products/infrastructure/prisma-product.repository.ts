@@ -250,6 +250,7 @@ export class PrismaProductRepository implements ProductRepository {
       origin: row.origin,
       createdById: row.createdById,
       moderationStatus: row.moderationStatus,
+      mergedIntoId: row.mergedIntoId,
       confirmationCount: row.confirmationCount,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

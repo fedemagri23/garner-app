@@ -9,6 +9,8 @@ import { MyAdditionsUseCase } from './application/my-additions.use-case.js';
 import { SuggestProductsUseCase } from './application/suggest-products.use-case.js';
 import { COMMUNITY_REPOSITORY } from './domain/community.port.js';
 import { PrismaCommunityRepository } from './infrastructure/prisma-community.repository.js';
+import { PrismaProductMerger } from './infrastructure/prisma-product-merger.js';
+import { PRODUCT_MERGER } from './domain/product-merge.port.js';
 import {
   ModerationController,
   MyAdditionsController,
@@ -42,6 +44,7 @@ import {
     MyAdditionsUseCase,
     PriceAcceptedListener,
     { provide: COMMUNITY_REPOSITORY, useClass: PrismaCommunityRepository },
+    { provide: PRODUCT_MERGER, useClass: PrismaProductMerger },
   ],
   exports: [CommunityPolicy, COMMUNITY_REPOSITORY],
 })

@@ -1,5 +1,8 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+import { ProductsMergedListener } from './application/products-merged.listener.js';
+import { PRODUCT_PRICE_MOVER } from './domain/product-price-mover.port.js';
+import { PrismaProductPriceMover } from './infrastructure/prisma-product-price-mover.js';
 import { ProductsModule } from '../products/products.module.js';
 import { SupermarketsModule } from '../supermarkets/supermarkets.module.js';
 import { UsersModule } from '../users/users.module.js';
@@ -37,6 +40,8 @@ import { RedisSubmissionCounter } from './infrastructure/redis-submission-counte
       useClass: PrismaPriceObservationRepository,
     },
     { provide: SUBMISSION_COUNTER, useClass: RedisSubmissionCounter },
+    ProductsMergedListener,
+    { provide: PRODUCT_PRICE_MOVER, useClass: PrismaProductPriceMover },
   ],
   exports: [IngestPriceObservationService, PRICE_OBSERVATION_REPOSITORY],
 })
