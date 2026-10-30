@@ -62,7 +62,7 @@ async function upsertUser(email, displayName, role) {
   return core.user.upsert({
     where: { email },
     create: { email, displayName, role, passwordHash },
-    update: { displayName, role, locale: 'es' },
+    update: { displayName, role, locale: 'es', termsVersion: null, termsAcceptedAt: null },
   });
 }
 
