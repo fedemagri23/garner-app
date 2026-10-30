@@ -1,4 +1,8 @@
 import { Module } from '@nestjs/common';
+import { DeleteAccountUseCase } from './application/delete-account.use-case.js';
+import { ACCOUNT_DELETION } from './domain/account-deletion.port.js';
+import { PrismaAccountDeletion } from './infrastructure/prisma-account-deletion.js';
+import { AccountDeletionPageController } from './presentation/account-deletion-page.controller.js';
 import { ProductsModule } from '../products/products.module.js';
 import { GetUserProfileUseCase } from './application/get-user-profile.use-case.js';
 import { UpdateUserProfileUseCase } from './application/update-user-profile.use-case.js';
@@ -20,11 +24,13 @@ import { UsersController } from './presentation/users.controller.js';
  */
 @Module({
   imports: [ProductsModule],
-  controllers: [UsersController],
+  controllers: [UsersController, AccountDeletionPageController],
   providers: [
     GetUserProfileUseCase,
     UpdateUserProfileUseCase,
     UserPreferencesUseCase,
+    DeleteAccountUseCase,
+    { provide: ACCOUNT_DELETION, useClass: PrismaAccountDeletion },
     { provide: USER_REPOSITORY, useClass: PrismaUserRepository },
     {
       provide: USER_PREFERENCES_REPOSITORY,

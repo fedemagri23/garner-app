@@ -166,3 +166,9 @@ Defects found and repaired, oldest first. Notation: [`README.md`](README.md).
 - **Symptom:** `GET /v1/supermarkets` returned every active chain, so a chain a shopper named for their still-private shop appeared in everyone's chain list, telling others that shop existed and what it was called.
 - **Cause:** Chains had no visibility of their own; checkpoint 12 hid private shops everywhere but left their chains in the plain list.
 - **Fix:** The list shows the team's chains, shopper-named ones with at least one published, active shop, and the viewer's own. An e2e test covers both sides.
+
+### BUG-026 — A password change or reset would have signed out the device that made it
+- **Phase:** post-plan (mobile phase 11, checkpoints 22–23) · **Area:** auth · **Scope:** production code (caught before release) · **Found by:** the e2e test for changing the password · **Fixed in:** "feat(account): change password, sign out everywhere, delete the account"
+- **Symptom:** After a password reset or change, another phone still holding its old refresh token would refresh, and the server answered by signing out every session — including the fresh one on the phone where the password had just changed.
+- **Cause:** Signing everyone out revoked the tokens, and presenting a revoked token is how the server detects a stolen one (refresh reuse), which drops all of the account's sessions.
+- **Fix:** Deliberate sign-outs (reset, change, "sign out everywhere") now delete the tokens (`endAllForUser`), so an old one is simply unknown (401); revoking stays for rotation and the theft response.

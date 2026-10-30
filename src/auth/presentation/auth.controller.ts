@@ -1,6 +1,10 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import type { AuthenticatedUser } from '../../security/domain/authenticated-user.js';
+import { CurrentUser } from '../../security/presentation/current-user.decorator.js';
 import {
   ApiAcceptedResponse,
+  ApiBearerAuth,
+  ApiForbiddenResponse,
   ApiBadRequestResponse,
   ApiConflictResponse,
   ApiCreatedResponse,
@@ -11,12 +15,14 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Public } from '../../security/presentation/public.decorator.js';
+import { AccountSecurityUseCase } from '../application/account-security.use-case.js';
 import { LoginUseCase } from '../application/login.use-case.js';
 import { LogoutUseCase } from '../application/logout.use-case.js';
 import { PasswordResetUseCase } from '../application/password-reset.use-case.js';
 import { RefreshTokensUseCase } from '../application/refresh-tokens.use-case.js';
 import { RegisterUseCase } from '../application/register.use-case.js';
 import {
+  ChangePasswordRequest,
   LoginRequest,
   PasswordResetConfirmRequest,
   PasswordResetRequest,
@@ -34,6 +40,7 @@ export class AuthController {
     private readonly refreshTokens: RefreshTokensUseCase,
     private readonly logout: LogoutUseCase,
     private readonly passwordReset: PasswordResetUseCase,
+    private readonly security: AccountSecurityUseCase,
   ) {}
 
   @Public()
@@ -97,5 +104,30 @@ export class AuthController {
   @ApiBadRequestResponse({ description: 'The code is wrong or has expired, or the password is too short' })
   async confirmPasswordReset(@Body() body: PasswordResetConfirmRequest): Promise<void> {
     await this.passwordReset.reset(body.email, body.code, body.newPassword);
+  }
+
+  @Post('password')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Change the password, given the current one',
+    description: 'Signs out every other device; answers a fresh pair for this one.',
+  })
+  @ApiOkResponse({ type: TokenPairResponse })
+  @ApiForbiddenResponse({ description: 'The current password is wrong' })
+  async changePassword(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Body() body: ChangePasswordRequest,
+  ): Promise<TokenPairResponse> {
+    return this.security.changePassword(actor, body.currentPassword, body.newPassword);
+  }
+
+  @Post('logout-all')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Sign out of every device, this one included' })
+  @ApiNoContentResponse()
+  async logoutEverywhere(@CurrentUser() actor: AuthenticatedUser): Promise<void> {
+    await this.security.signOutEverywhere(actor);
   }
 }

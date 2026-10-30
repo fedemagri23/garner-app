@@ -85,3 +85,16 @@ export class PasswordResetConfirmRequest {
   @MaxLength(128)
   newPassword!: string;
 }
+
+export class ChangePasswordRequest {
+  @ApiProperty({ maxLength: 128 })
+  @IsString()
+  @MaxLength(128)
+  currentPassword!: string;
+
+  @ApiProperty({ minLength: 10, maxLength: 128 })
+  @IsString()
+  @MinLength(10)
+  @MaxLength(128)
+  newPassword!: string;
+}

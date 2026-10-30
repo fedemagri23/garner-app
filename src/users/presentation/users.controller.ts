@@ -1,17 +1,21 @@
-import { Body, Controller, Get, Patch } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
 import type { AuthenticatedUser } from '../../security/domain/authenticated-user.js';
 import { CurrentUser } from '../../security/presentation/current-user.decorator.js';
+import { DeleteAccountUseCase } from '../application/delete-account.use-case.js';
 import { GetUserProfileUseCase } from '../application/get-user-profile.use-case.js';
 import { UpdateUserProfileUseCase } from '../application/update-user-profile.use-case.js';
 import { UserPreferencesUseCase } from '../application/user-preferences.use-case.js';
 import {
+  DeleteAccountRequest,
   UpdateUserPreferencesRequest,
   UpdateUserProfileRequest,
   UserPreferencesResponse,
@@ -31,6 +35,7 @@ export class UsersController {
     private readonly getUserProfile: GetUserProfileUseCase,
     private readonly updateUserProfile: UpdateUserProfileUseCase,
     private readonly preferences: UserPreferencesUseCase,
+    private readonly deleteAccount: DeleteAccountUseCase,
   ) {}
 
   @Get('me')
@@ -39,6 +44,20 @@ export class UsersController {
   async me(@CurrentUser() actor: AuthenticatedUser): Promise<UserResponse> {
     const user = await this.getUserProfile.execute(actor.id);
     return UserResponse.from(user);
+  }
+
+  @Delete('me')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete the account',
+    description:
+      'Asks for the password again. Erases lists, trips, alerts, messages, phones and preferences; ' +
+      'prices, products and shops given stay, anonymised. Cannot be undone.',
+  })
+  @ApiNoContentResponse()
+  @ApiForbiddenResponse({ description: 'Wrong password' })
+  async deleteMe(@CurrentUser() actor: AuthenticatedUser, @Body() body: DeleteAccountRequest): Promise<void> {
+    await this.deleteAccount.byId(actor.id, body.password);
   }
 
   @Patch('me')

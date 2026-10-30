@@ -1,6 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import type { App } from 'supertest/types';
+import { CorePrismaService } from '../src/common/database/core-prisma.service.js';
 import {
   createTestApp,
   registerWithRole,
@@ -195,6 +196,81 @@ describe('User profile and preferences (e2e)', () => {
       await request(app.getHttpServer())
         .get('/v1/users/me/preferences')
         .expect(401);
+    });
+  });
+
+  describe('account security and deletion', () => {
+    const http = () => request(app.getHttpServer());
+    const signUp = async (prefix: string) => {
+      const email = uniqueEmail(prefix);
+      const pair = (
+        await http().post('/v1/auth/register').send({ email, password: 'correct-horse-battery', displayName: 'Ana' }).expect(201)
+      ).body as { accessToken: string; refreshToken: string };
+      return { email, ...pair };
+    };
+
+    it('changes the password with the current one, signing out every other device', async () => {
+      const ana = await signUp('change');
+      await http()
+        .post('/v1/auth/password')
+        .set(auth(ana.accessToken))
+        .send({ currentPassword: 'wrong-password-1', newPassword: 'a-new-password-1' })
+        .expect(403);
+
+      const fresh = await http()
+        .post('/v1/auth/password')
+        .set(auth(ana.accessToken))
+        .send({ currentPassword: 'correct-horse-battery', newPassword: 'a-new-password-1' })
+        .expect(200);
+      expect(fresh.body.refreshToken).toEqual(expect.any(String));
+
+      await http().post('/v1/auth/refresh').send({ refreshToken: ana.refreshToken }).expect(401);
+      await http().post('/v1/auth/refresh').send({ refreshToken: fresh.body.refreshToken }).expect(200);
+      await http().post('/v1/auth/login').send({ email: ana.email, password: 'a-new-password-1' }).expect(200);
+    });
+
+    it('signs out of every device', async () => {
+      const ana = await signUp('everywhere');
+      await http().post('/v1/auth/logout-all').set(auth(ana.accessToken)).expect(204);
+      await http().post('/v1/auth/refresh').send({ refreshToken: ana.refreshToken }).expect(401);
+    });
+
+    it('deletes an account after the password, erasing its lists and keeping what it gave, anonymised', async () => {
+      const ana = await signUp('delete');
+      const core = app.get(CorePrismaService);
+      const user = await core.user.findUniqueOrThrow({ where: { email: ana.email } });
+      await http().post('/v1/shopping-lists').set(auth(ana.accessToken)).send({ name: 'Semana', currency: 'ARS' }).expect(201);
+
+      await http().delete('/v1/users/me').set(auth(ana.accessToken)).send({ password: 'nope-nope-nope' }).expect(403);
+      await http().delete('/v1/users/me').set(auth(ana.accessToken)).send({ password: 'correct-horse-battery' }).expect(204);
+
+      expect(await core.shoppingList.count({ where: { ownerId: user.id } })).toBe(0);
+      expect(await core.refreshToken.count({ where: { userId: user.id } })).toBe(0);
+      const gone = await core.user.findUniqueOrThrow({ where: { id: user.id } });
+      expect(gone).toMatchObject({ isActive: false, displayName: 'Cuenta eliminada' });
+      expect(gone.email).not.toBe(ana.email);
+      expect(gone.deletedAt).not.toBeNull();
+
+      await http().post('/v1/auth/login').send({ email: ana.email, password: 'correct-horse-battery' }).expect(401);
+      // The email is free again.
+      await http().post('/v1/auth/register').send({ email: ana.email, password: 'correct-horse-battery', displayName: 'Ana' }).expect(201);
+    });
+
+    it('offers a web page to delete an account without the app', async () => {
+      const ana = await signUp('webdelete');
+      const form = await http().get('/v1/account-deletion').expect(200);
+      expect(form.text).toContain('<form method="post">');
+
+      const wrong = await http().post('/v1/account-deletion').type('form').send({ email: ana.email, password: 'nope' }).expect(200);
+      expect(wrong.text).toContain('No pudimos eliminarla');
+
+      const done = await http()
+        .post('/v1/account-deletion')
+        .type('form')
+        .send({ email: ana.email, password: 'correct-horse-battery' })
+        .expect(200);
+      expect(done.text).toContain('Cuenta eliminada');
+      await http().post('/v1/auth/login').send({ email: ana.email, password: 'correct-horse-battery' }).expect(401);
     });
   });
 });

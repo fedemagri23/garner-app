@@ -141,3 +141,10 @@ export class UpdateUserPreferencesRequest {
   })
   interests?: string[];
 }
+
+export class DeleteAccountRequest {
+  @ApiProperty({ maxLength: 128, description: 'The password again, to be sure' })
+  @IsString()
+  @MaxLength(128)
+  password!: string;
+}

@@ -76,6 +76,6 @@ export class PasswordResetUseCase {
     await this.users.updatePasswordHash(user.id, await this.hasher.hash(newPassword));
     await this.codes.markUsed(record.id, now);
     // Whoever might have had the old password is signed out too.
-    await this.sessions.revokeAllForUser(user.id);
+    await this.sessions.endAllForUser(user.id);
   }
 }

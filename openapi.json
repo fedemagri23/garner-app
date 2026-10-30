@@ -77,6 +77,38 @@
           "users"
         ]
       },
+      "delete": {
+        "description": "Asks for the password again. Erases lists, trips, alerts, messages, phones and preferences; prices, products and shops given stay, anonymised. Cannot be undone.",
+        "operationId": "usersDeleteMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "403": {
+            "description": "Wrong password"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete the account",
+        "tags": [
+          "users"
+        ]
+      },
       "patch": {
         "operationId": "usersUpdateMe",
         "parameters": [],
@@ -1279,6 +1311,67 @@
           }
         },
         "summary": "Set a new password with the emailed code",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/password": {
+      "post": {
+        "description": "Signs out every other device; answers a fresh pair for this one.",
+        "operationId": "authChangePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPairResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The current password is wrong"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change the password, given the current one",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/logout-all": {
+      "post": {
+        "operationId": "authLogoutEverywhere",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sign out of every device, this one included",
         "tags": [
           "auth"
         ]
@@ -3985,6 +4078,19 @@
           "createdAt"
         ]
       },
+      "DeleteAccountRequest": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "description": "The password again, to be sure"
+          }
+        },
+        "required": [
+          "password"
+        ]
+      },
       "UpdateUserProfileRequest": {
         "type": "object",
         "properties": {
@@ -4998,6 +5104,24 @@
         "required": [
           "email",
           "code",
+          "newPassword"
+        ]
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "currentPassword",
           "newPassword"
         ]
       },
